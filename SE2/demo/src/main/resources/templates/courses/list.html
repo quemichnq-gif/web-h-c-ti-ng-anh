@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Courses</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+    <div>
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Academic Course Catalog</h1>
+        <p style="color:#94a3b8;font-size:14px">Manage available English learning courses</p>
+    </div>
+    <a th:href="@{/courses/create}" class="primary-button">+ Create Course</a>
+</div>
+<div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
+
+<article class="chart-card" style="margin-bottom:20px">
+    <form method="get" th:action="@{/courses}" style="display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:end">
+        <input name="search" th:value="${search}" placeholder="Search course by name..." style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+        <select name="status" style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+            <option value="ALL">All Status</option>
+            <option value="Upcoming" th:selected="${filterStatus == 'Upcoming'}">Upcoming</option>
+            <option value="Ongoing" th:selected="${filterStatus == 'Ongoing'}">Ongoing</option>
+            <option value="Ended" th:selected="${filterStatus == 'Ended'}">Ended</option>
+        </select>
+        <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Filter</button>
+    </form>
+</article>
+
+<article class="chart-card">
+    <table class="data-table">
+        <thead><tr><th>#</th><th>Course Name</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Students</th><th>Actions</th></tr></thead>
+        <tbody>
+            <tr th:each="c,stat : ${courses}">
+                <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
+                <td>
+                    <div style="font-weight:700" th:text="${c.name}">Name</div>
+                    <div style="font-size:12px;color:#94a3b8;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" th:text="${c.description}">desc</div>
+                </td>
+                <td style="font-size:13px" th:text="${c.startDate != null ? c.startDate : '-'}">Date</td>
+                <td style="font-size:13px" th:text="${c.endDate != null ? c.endDate : '-'}">Date</td>
+                <td>
+                    <span th:text="${now.isBefore(c.startDate != null ? c.startDate : now) ? 'Upcoming' : (c.endDate != null and now.isAfter(c.endDate) ? 'Ended' : 'Ongoing')}"
+                          th:style="${now.isBefore(c.startDate != null ? c.startDate : now.plusDays(1)) ? 'background:#eff6ff;color:#2563eb;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800' : (c.endDate != null and now.isAfter(c.endDate) ? 'background:#f1f5f9;color:#64748b;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800' : 'background:#f0fdf4;color:#166534;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800')}">Status</span>
+                </td>
+                <td style="font-weight:700" th:text="${enrollmentCounts[c.id] != null ? enrollmentCounts[c.id] : 0}">0</td>
+                <td>
+                    <div style="display:flex;gap:8px">
+                        <a th:href="@{'/courses/' + ${c.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
+                        <form th:action="@{'/courses/' + ${c.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this course?')">
+                            <button style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(courses)}">
+                <td colspan="7" style="text-align:center;color:#94a3b8;padding:60px">No courses found.</td>
+            </tr>
+        </tbody>
+    </table>
+</article>
+
+</div>
+</body>
+</html>

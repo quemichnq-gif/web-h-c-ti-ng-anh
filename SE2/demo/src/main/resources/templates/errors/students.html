@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Student Error View</title></head>
+<body>
+<div layout:fragment="content">
+
+<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+        <div>
+            <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Student Error Records</h1>
+            <p style="color:#94a3b8;font-size:14px">Track individual student error history and assigned remediation</p>
+        </div>
+        <a th:href="@{/errors}" class="secondary-button">← Back to Error Types</a>
+    </div>
+
+    <!-- Student Selector -->
+    <article class="chart-card" style="margin-bottom:24px">
+        <form method="get" th:action="@{/errors/students}" style="display:grid;grid-template-columns:1fr auto;gap:14px">
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Select Student</label>
+                <select name="studentId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                    <option value="">-- Select a Student --</option>
+                    <option th:each="s : ${students}" th:value="${s.id}" th:selected="${selectedStudent != null and s.id == selectedStudent.id}"
+                            th:text="${(s.fullName != null ? s.fullName : s.username) + ' [' + s.email + ']'}">Student</option>
+                </select>
+            </div>
+            <div style="align-self:flex-end">
+                <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Load Records</button>
+            </div>
+        </form>
+    </article>
+
+    <!-- Student Detail -->
+    <div th:if="${selectedStudent != null}">
+        <!-- Student Card -->
+        <article class="chart-card" style="margin-bottom:20px">
+            <div style="display:flex;align-items:center;gap:20px">
+                <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800"
+                     th:text="${selectedStudent.fullName != null ? selectedStudent.fullName.substring(0,1).toUpperCase() : 'S'}">S</div>
+                <div>
+                    <div style="font-weight:800;font-size:16px" th:text="${selectedStudent.fullName != null ? selectedStudent.fullName : selectedStudent.username}">Name</div>
+                    <div style="font-size:13px;color:#94a3b8" th:text="${selectedStudent.email}">email</div>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                    <div style="font-size:28px;font-weight:800;color:#ef4444" th:text="${#lists.size(studentErrors)}">0</div>
+                    <div style="font-size:12px;color:#94a3b8">Total Errors</div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Errors Table -->
+        <article class="chart-card">
+            <table class="data-table">
+                <thead><tr><th>#</th><th>Error Type</th><th>Recorded At</th></tr></thead>
+                <tbody>
+                    <tr th:each="se,stat : ${studentErrors}">
+                        <td style="color:#94a3b8;font-size:13px" th:text="${stat.index+1}">1</td>
+                        <td>
+                            <div style="font-weight:700" th:text="${se.errorType.name}">Error</div>
+                            <div style="font-size:12px;color:#94a3b8" th:text="${se.errorType.description}">desc</div>
+                        </td>
+                        <td style="font-size:12px;color:#94a3b8" th:text="${#temporals.format(se.createdAt,'dd/MM/yyyy HH:mm')}">Date</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(studentErrors)}">
+                        <td colspan="3" style="text-align:center;color:#94a3b8;padding:60px">No errors recorded for this student.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+    </div>
+</div>
+
+</div>
+</body>
+</html>

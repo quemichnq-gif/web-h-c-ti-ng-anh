@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Create User</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="max-width:680px">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Create New Account</h1>
+        <p style="color:#94a3b8;font-size:14px">Onboard a new student or academic staff member</p>
+    </div>
+    <div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
+    <article class="chart-card">
+        <form th:action="@{/users/create}" method="post" id="createForm">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Full Name *</label>
+                    <input name="fullName" placeholder="Nguyen Van A" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Username * <span style="font-weight:400;color:#94a3b8">(no spaces/diacritics)</span></label>
+                    <input name="username" id="usernameField" placeholder="student001" required pattern="[a-zA-Z0-9_]+" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    <span id="usernameErr" style="color:#ef4444;font-size:12px;display:none">Username must be alphanumeric only</span>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Email Address *</label>
+                    <input name="email" type="email" placeholder="user@university.edu" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Phone Number</label>
+                    <input name="phone" placeholder="0901234567" pattern="[0-9]{10}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    <span style="font-size:12px;color:#94a3b8">10 digits only</span>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Password *</label>
+                    <div style="position:relative">
+                        <input name="rawPassword" id="pwField" type="password" required minlength="8" placeholder="Min. 8 characters" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 42px 10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                        <button type="button" onclick="togglePw('pwField',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8">👁</button>
+                    </div>
+                    <div id="strengthBar" style="margin-top:8px;height:4px;border-radius:99px;background:#f1f5f9;overflow:hidden"><div id="strengthFill" style="height:100%;width:0;border-radius:99px;transition:all 0.3s"></div></div>
+                    <span id="strengthText" style="font-size:12px;color:#94a3b8;margin-top:4px;display:block"></span>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Confirm Password *</label>
+                    <div style="position:relative">
+                        <input name="confirmPassword" id="cpField" type="password" required placeholder="Repeat password" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 42px 10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                        <button type="button" onclick="togglePw('cpField',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8">👁</button>
+                    </div>
+                    <span id="cpErr" style="color:#ef4444;font-size:12px;display:none">Passwords do not match</span>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Portal Role *</label>
+                    <select name="role" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                        <option value="STUDENT">Student</option>
+                        <option value="ACADEMIC_STAFF">Academic Staff</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Account Status</label>
+                    <div style="display:flex;gap:20px;margin-top:4px">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="status" value="ACTIVE" checked> <span style="font-size:14px">Active</span></label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="status" value="INACTIVE"> <span style="font-size:14px">Inactive</span></label>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
+                <button type="submit" class="primary-button">Create Account</button>
+                <a th:href="@{/users}" class="secondary-button">Cancel</a>
+            </div>
+        </form>
+    </article>
+</div>
+<script>
+function togglePw(id, btn) {
+    const f = document.getElementById(id);
+    f.type = f.type === 'password' ? 'text' : 'password';
+}
+document.getElementById('pwField').addEventListener('input', function() {
+    const pw = this.value;
+    let strength = 0;
+    if (pw.length >= 8) strength++;
+    if (/[A-Z]/.test(pw)) strength++;
+    if (/[0-9]/.test(pw)) strength++;
+    if (/[^a-zA-Z0-9]/.test(pw)) strength++;
+    const colors = ['#ef4444','#f97316','#eab308','#10b981'];
+    const labels = ['Weak','Fair','Good','Strong'];
+    const pct = (strength / 4) * 100;
+    document.getElementById('strengthFill').style.width = pct + '%';
+    document.getElementById('strengthFill').style.background = colors[strength-1] || '#f1f5f9';
+    document.getElementById('strengthText').textContent = strength > 0 ? labels[strength-1] : '';
+});
+document.getElementById('cpField').addEventListener('input', function() {
+    const match = this.value === document.getElementById('pwField').value;
+    document.getElementById('cpErr').style.display = this.value && !match ? 'block' : 'none';
+});
+document.getElementById('usernameField').addEventListener('input', function() {
+    const valid = /^[a-zA-Z0-9_]+$/.test(this.value);
+    document.getElementById('usernameErr').style.display = this.value && !valid ? 'block' : 'none';
+});
+</script>
+
+</div>
+</body>
+</html>

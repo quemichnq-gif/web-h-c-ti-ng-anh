@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+
+<head>
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <div layout:fragment="content">
+
+        <div class="dashboard-header">
+            <h1>Dashboard Overview</h1>
+            <p>Real-time institutional performance metrics &amp; operational status</p>
+        </div>
+
+        <!-- ADMIN Dashboard -->
+        <div th:if="${isAdmin}">
+            <div class="stat-grid-premium">
+                <article class="stat-card-premium">
+                    <div class="stat-icon" style="background:#fdf2ff;color:#7c3aed">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Total Users</div>
+                    <div class="stat-value-p" th:text="${userCount}">0</div>
+                </article>
+                <article class="stat-card-premium">
+                    <div class="stat-icon" style="background:#f0f9ff;color:#0ea5e9">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Total Courses</div>
+                    <div class="stat-value-p" th:text="${courseCount}">0</div>
+                </article>
+                <article class="stat-card-premium" style="border-color:#fbbf24">
+                    <div class="stat-icon" style="background:#fffbeb;color:#d97706">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <div class="trend"
+                        style="color:#d97706;position:absolute;top:24px;right:24px;font-size:12px;font-weight:700;"
+                        th:if="${pendingEnrollmentCount > 0}">⚠ Needs Review</div>
+                    <div class="stat-label-p">Pending Enrollments</div>
+                    <div class="stat-value-p" th:text="${pendingEnrollmentCount}">0</div>
+                </article>
+                <article class="stat-card-premium">
+                    <div class="stat-icon" style="background:#fef2f2;color:#ef4444">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Student Errors Today</div>
+                    <div class="stat-value-p" th:text="${todayErrorCount}">0</div>
+                </article>
+            </div>
+
+            <div class="dashboard-main-grid">
+                <article class="chart-card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+                        <div>
+                            <h3 style="font-size:16px;font-weight:800">Enrollment Trends</h3>
+                            <p style="font-size:13px;color:#94a3b8">Monthly student registration growth</p>
+                        </div>
+                    </div>
+                    <div style="height:280px;position:relative;">
+                        <svg viewBox="0 0 800 280" style="width:100%;height:100%">
+                            <defs>
+                                <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:0.2" />
+                                    <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <line x1="0" y1="60" x2="800" y2="60" stroke="#f1f5f9" stroke-width="1" />
+                            <line x1="0" y1="140" x2="800" y2="140" stroke="#f1f5f9" stroke-width="1" />
+                            <line x1="0" y1="220" x2="800" y2="220" stroke="#f1f5f9" stroke-width="1" />
+                            <path
+                                d="M0,230 C120,200 160,140 220,150 S320,100 400,170 S570,140 680,70 S780,40 800,40 L800,280 L0,280 Z"
+                                fill="url(#grad)" />
+                            <path d="M0,230 C120,200 160,140 220,150 S320,100 400,170 S570,140 680,70 S780,40 800,40"
+                                fill="none" stroke="#7c3aed" stroke-width="3.5" stroke-linecap="round" />
+                            <circle cx="0" cy="230" r="5" fill="#7c3aed" />
+                            <circle cx="114" cy="190" r="5" fill="#7c3aed" />
+                            <circle cx="228" cy="150" r="5" fill="#7c3aed" />
+                            <circle cx="342" cy="120" r="5" fill="#7c3aed" />
+                            <circle cx="456" cy="160" r="5" fill="#7c3aed" />
+                            <circle cx="571" cy="110" r="5" fill="#7c3aed" />
+                            <circle cx="685" cy="65" r="5" fill="#7c3aed" />
+                            <circle cx="800" cy="40" r="5" fill="#7c3aed" />
+                        </svg>
+                        <div
+                            style="display:flex;justify-content:space-between;margin-top:10px;color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;">
+                            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="activity-card">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+                        <h3 style="font-size:16px;font-weight:800">Recent Activity</h3>
+                        <a th:href="@{/errors}" style="color:#7c3aed;font-size:12px;font-weight:700">View All</a>
+                    </div>
+                    <div th:if="${#lists.isEmpty(recentErrors)}" style="text-align:center;color:#94a3b8;padding:40px 0">
+                        <p>No recent errors recorded today.</p>
+                    </div>
+                    <div th:each="err,stat : ${recentErrors}" class="activity-item">
+                        <div class="activity-icon" style="background:#fef2f2;color:#ef4444">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            </svg>
+                        </div>
+                        <div class="activity-content">
+                            <h4 th:text="${err.student.fullName != null ? err.student.fullName : err.student.username}">
+                                Student</h4>
+                            <p th:text="${err.errorType.name}">Error Type</p>
+                            <span th:text="${#temporals.format(err.createdAt, 'dd/MM HH:mm')}">Time</span>
+                        </div>
+                    </div>
+                    <div class="status-box">
+                        <div class="status-header"><span class="status-dot"></span>Live Server Status</div>
+                        <h2 style="font-size:16px;font-weight:800;color:#7c3aed">All Systems Operational</h2>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- ACADEMIC STAFF Dashboard -->
+        <div th:unless="${isAdmin}">
+            <div class="stat-grid-premium" style="grid-template-columns: repeat(3,1fr)">
+                <article class="stat-card-premium" style="border-color:#fbbf24">
+                    <div class="stat-icon" style="background:#fffbeb;color:#d97706">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Pending Enrollments</div>
+                    <div class="stat-value-p" th:text="${pendingEnrollmentCount}">0</div>
+                </article>
+                <article class="stat-card-premium">
+                    <div class="stat-icon" style="background:#f0fdf4;color:#10b981">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Active Tests</div>
+                    <div class="stat-value-p" th:text="${activeTestCount}">0</div>
+                </article>
+                <article class="stat-card-premium">
+                    <div class="stat-icon" style="background:#fef2f2;color:#ef4444">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        </svg>
+                    </div>
+                    <div class="stat-label-p">Unassigned Error Students</div>
+                    <div class="stat-value-p" th:text="${unassignedErrorCount}">0</div>
+                </article>
+            </div>
+
+            <article class="chart-card" style="margin-top:24px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <div>
+                        <h3 style="font-size:16px;font-weight:800">Pending Enrollments — Action Required</h3>
+                        <p style="font-size:13px;color:#94a3b8"
+                            th:text="${pendingEnrollmentCount + ' requests are waiting for your review'}">0 requests
+                            pending</p>
+                    </div>
+                    <a th:href="@{/enrollments}" class="primary-button"
+                        style="min-height:40px;padding:0 16px;border-radius:10px">Go to Enrollments</a>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="e : ${pendingEnrollments}">
+                            <td>
+                                <div style="font-weight:700"
+                                    th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">
+                                    Student</div>
+                                <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
+                            </td>
+                            <td th:text="${e.course.name}">Course</td>
+                            <td style="font-size:12px;color:#94a3b8"
+                                th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">
+                                Date</td>
+                            <td class="action-cell">
+                                <form th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post"
+                                    style="display:inline">
+                                    <button class="secondary-button" style="padding:6px 14px;font-size:12px">✓
+                                        Approve</button>
+                                </form>
+                                <form th:action="@{'/enrollments/' + ${e.id} + '/reject'}" method="post"
+                                    style="display:inline">
+                                    <button class="ghost-button" style="padding:6px 14px;font-size:12px;color:#ef4444">✗
+                                        Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(pendingEnrollments)}">
+                            <td colspan="4" style="text-align:center;color:#94a3b8;padding:40px">No pending enrollments
+                                at this time.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </div>
+
+    </div>
+</body>
+
+</html>

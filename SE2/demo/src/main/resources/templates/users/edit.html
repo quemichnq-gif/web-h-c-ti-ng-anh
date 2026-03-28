@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Edit User</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="max-width:680px">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Edit Account</h1>
+        <p style="color:#94a3b8;font-size:14px" th:text="'Editing: ' + ${user.username}">Editing user</p>
+    </div>
+    <div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
+    <article class="chart-card">
+        <form th:action="@{'/users/' + ${user.id} + '/edit'}" method="post">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Full Name *</label>
+                    <input name="fullName" th:value="${user.fullName}" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Username</label>
+                    <input th:value="${user.username}" disabled style="width:100%;border:1px solid #f1f5f9;border-radius:10px;padding:10px 14px;font-size:14px;background:#f8fafc;color:#94a3b8;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Email Address *</label>
+                    <input name="email" type="email" th:value="${user.email}" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Phone Number</label>
+                    <input name="phone" th:value="${user.phone}" pattern="[0-9]{10}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">New Password <span style="color:#94a3b8;font-weight:400">(leave blank to keep current)</span></label>
+                    <div style="position:relative">
+                        <input name="rawPassword" id="pwField" type="password" placeholder="Leave blank to keep" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 42px 10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                        <button type="button" onclick="document.getElementById('pwField').type = document.getElementById('pwField').type === 'password' ? 'text' : 'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8">👁</button>
+                    </div>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Portal Role *</label>
+                    <select name="role" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                        <option value="STUDENT" th:selected="${user.role.name() == 'STUDENT'}">Student</option>
+                        <option value="ACADEMIC_STAFF" th:selected="${user.role.name() == 'ACADEMIC_STAFF'}">Academic Staff</option>
+                        <option value="ADMIN" th:selected="${user.role.name() == 'ADMIN'}">Admin</option>
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Account Status</label>
+                    <div style="display:flex;gap:20px;margin-top:4px">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="status" value="ACTIVE" th:checked="${user.status == 'ACTIVE'}"> <span style="font-size:14px">Active</span></label>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="status" value="INACTIVE" th:checked="${user.status == 'INACTIVE'}"> <span style="font-size:14px">Inactive</span></label>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
+                <button type="submit" class="primary-button">Save Changes</button>
+                <a th:href="@{/users}" class="secondary-button">Cancel</a>
+            </div>
+        </form>
+    </article>
+</div>
+
+</div>
+</body>
+</html>

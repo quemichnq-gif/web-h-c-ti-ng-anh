@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Create Error Type</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="max-width:540px">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Create Error Type</h1>
+        <p style="color:#94a3b8;font-size:14px">Define a new student error category for tracking</p>
+    </div>
+    <article class="chart-card">
+        <form th:action="@{/errors/create}" method="post">
+            <div style="display:grid;gap:20px">
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Error Type Name *</label>
+                    <input name="name" required placeholder="e.g. Grammar - Verb Tense" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    <span style="font-size:12px;color:#94a3b8">Examples: Vocabulary - Spelling, Pronunciation - Consonants</span>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
+                    <textarea name="description" rows="4" placeholder="Detailed description of the student error pattern..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
+                <button type="submit" class="primary-button">Create Error Type</button>
+                <a th:href="@{/errors}" class="secondary-button">Cancel</a>
+            </div>
+        </form>
+    </article>
+</div>
+
+</div>
+</body>
+</html>

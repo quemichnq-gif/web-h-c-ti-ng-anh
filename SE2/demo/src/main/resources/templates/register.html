@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal | Create Account</title>
+    <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/login}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                </span>
+            </a>
+            <a href="#" class="chip-button">Help Center</a>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <section class="auth-layout">
+            <article class="surface-card auth-showcase-card">
+                <div class="auth-visual">
+                    <div class="auth-photo"></div>
+                    <div class="auth-visual-copy">
+                        <h2>Elevate your learning experience.</h2>
+                        <p>Join thousands of students and faculty members in the most advanced academic management system.</p>
+                    </div>
+
+                    <ul class="feature-checks">
+                        <li><span class="feature-check">&#10003;</span><span>Real-time grade tracking</span></li>
+                        <li><span class="feature-check">&#10003;</span><span>Digital resource library</span></li>
+                        <li><span class="feature-check">&#10003;</span><span>Collaborative workspace</span></li>
+                    </ul>
+                </div>
+
+                <div class="auth-form-panel">
+                    <h1 class="panel-title">Create Account</h1>
+                    <p class="panel-copy">Enter your details to register your academic profile</p>
+
+                    <div th:if="${param.error != null}" class="alert alert-error">
+                        <span th:if="${param.error[0] == 'exists'}">This email is already registered. Please sign in or use another email.</span>
+                        <span th:if="${param.error[0] == 'password_mismatch'}">Password confirmation does not match. Please try again.</span>
+                        <span th:if="${param.error[0] == 'google_not_configured'}">Google sign-up is not configured yet. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to enable it.</span>
+                        <span th:if="${param.error[0] != 'exists' and param.error[0] != 'password_mismatch' and param.error[0] != 'google_not_configured'}">We could not create your account. Please check your information and try again.</span>
+                    </div>
+
+                    <div class="auth-stack">
+                        <a th:href="@{/auth/google(from='register')}" class="secondary-button google-button">
+                            <span class="google-mark" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="img">
+                                    <path fill="#EA4335" d="M12.2 10.1v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C17 3.3 14.9 2.4 12.2 2.4a9.6 9.6 0 1 0 0 19.2c5.5 0 9.1-3.8 9.1-9.2 0-.6-.1-1.1-.2-1.5h-8.9Z"></path>
+                                    <path fill="#4285F4" d="M3.8 7.8 7 10.2c.8-2.3 2.9-4 5.2-4 1.9 0 3.1.8 3.8 1.5l2.6-2.5C17 3.3 14.9 2.4 12.2 2.4 8.5 2.4 5.2 4.5 3.8 7.8Z"></path>
+                                    <path fill="#FBBC05" d="M12.2 21.6c2.6 0 4.8-.9 6.4-2.4l-3.1-2.5c-.8.6-1.9 1-3.3 1-3.9 0-5.2-2.6-5.5-3.9l-3.2 2.5c1.4 3.4 4.7 5.3 8.7 5.3Z"></path>
+                                    <path fill="#34A853" d="M3.8 16.3 7 13.8c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8L3.8 7.8A9.4 9.4 0 0 0 2.6 12c0 1.5.4 3 1.2 4.3Z"></path>
+                                </svg>
+                            </span>
+                            Sign up with Google
+                        </a>
+
+                        <form th:action="@{/register}" method="post" class="auth-form">
+                        <div class="field-grid">
+                            <div class="field">
+                                <label for="fullName">Full Name</label>
+                                <input id="fullName" name="fullName" type="text" placeholder="John Doe">
+                            </div>
+                            <div class="field">
+                                <label for="identifier">Student/Faculty ID</label>
+                                <input id="identifier" name="identifier" type="text" placeholder="ID-2024-001">
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="email">Email Address</label>
+                            <input id="email" name="email" type="email" placeholder="email@university.edu" required>
+                        </div>
+
+                        <div class="field-grid">
+                            <div class="field">
+                                <label for="password">Password</label>
+                                <input id="password" name="password" type="password" placeholder="........" required>
+                            </div>
+                            <div class="field">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input id="confirmPassword" name="confirmPassword" type="password" placeholder="........" required>
+                            </div>
+                        </div>
+
+                        <label class="checkbox-row">
+                            <input type="checkbox" required>
+                            <span>I agree to the <a href="#" class="text-link">Terms of Service</a> and <a href="#" class="text-link">Privacy Policy</a></span>
+                        </label>
+
+                        <button type="submit" class="primary-button">Sign Up</button>
+                    </form>
+                    </div>
+
+                    <p class="inline-note compact-note">Already have an account? <a th:href="@{/login}">Log in</a></p>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2024 Academic Portal. All rights reserved.</span>
+            <div class="footer-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Accessibility</a>
+            </div>
+        </div>
+    </footer>
+</div>
+</body>
+</html>

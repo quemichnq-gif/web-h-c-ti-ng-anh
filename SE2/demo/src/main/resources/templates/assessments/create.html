@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>Create Test</title>
+    <style>
+        .sticky-actions {
+            position: sticky; bottom: -32px; margin: 0 -32px;
+            padding: 20px 32px; background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px); border-top: 1px solid #eff2f7;
+            display: flex; gap: 12px; z-index: 10;
+        }
+        .form-container { padding-bottom: 20px; }
+        .q-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; position: relative; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .mc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+
+<div class="form-container">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Create New Assessment</h1>
+        <p style="color:#94a3b8;font-size:14px">Set up a new test, duration, and question bank</p>
+    </div>
+    
+    <div th:if="${error}" style="padding:16px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;margin-bottom:24px;font-weight:600">
+        <span th:text="${error}">Error message</span>
+    </div>
+
+    <form th:action="@{/assessments/create}" method="post" id="testForm">
+        <article class="chart-card" style="margin-bottom:20px">
+            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">📋 General Configuration</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Test Title *</label>
+                    <input name="title" required placeholder="e.g. Midterm Proficiency Exam" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
+                    <textarea name="description" rows="2" placeholder="Explain the purpose of this test..." style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Time (Minutes) *</label>
+                    <input name="duration" type="number" required min="1" value="60" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Course *</label>
+                    <select name="courseId" required style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;background:#fff">
+                        <option value="">-- Choose a course --</option>
+                        <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">Course</option>
+                    </select>
+                </div>
+            </div>
+        </article>
+
+        <article class="chart-card" style="margin-bottom:40px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h3 style="font-size:15px;font-weight:800">✍️ Question Bank (<span id="qCount">0</span>)</h3>
+                <div style="display:flex;gap:10px">
+                    <button type="button" onclick="addQuestion('SHORT_ANSWER')" style="padding:10px 16px;background:#fff;border:1px solid #7c3aed;color:#7c3aed;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">+ Short Answer</button>
+                    <button type="button" onclick="addQuestion('MULTIPLE_CHOICE')" style="padding:10px 16px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">+ Multiple Choice</button>
+                </div>
+            </div>
+            
+            <div id="questionsContainer" style="display:grid;gap:16px"></div>
+            
+            <div id="noQMsg" style="text-align:center;color:#94a3b8;padding:60px;border:2px dashed #e2e8f0;border-radius:24px;background:#fcfcfc">
+                <p style="font-weight:600">Your question bank is empty.</p>
+                <p style="font-size:12px">Choose a question type above to start building.</p>
+            </div>
+        </article>
+
+        <div class="sticky-actions">
+            <button type="submit" class="primary-button" style="min-width:160px">🚀 Save & Publish</button>
+            <a th:href="@{/assessments}" class="secondary-button" style="padding:12px 24px">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+let qIndex = 0;
+function addQuestion(type) {
+    const container = document.getElementById('questionsContainer');
+    document.getElementById('noQMsg').style.display = 'none';
+    const div = document.createElement('div');
+    div.className = 'q-card';
+    div.id = 'q' + qIndex;
+    
+    let optionsHtml = '';
+    if (type === 'MULTIPLE_CHOICE') {
+        optionsHtml = `
+            <div class="mc-options">
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8">Option A</label>
+                    <input name="optionAs" required placeholder="Option A" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:13px;outline:none;box-sizing:border-box">
+                </div>
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8">Option B</label>
+                    <input name="optionBs" required placeholder="Option B" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:13px;outline:none;box-sizing:border-box">
+                </div>
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8">Option C</label>
+                    <input name="optionCs" required placeholder="Option C" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:13px;outline:none;box-sizing:border-box">
+                </div>
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8">Option D</label>
+                    <input name="optionDs" required placeholder="Option D" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:13px;outline:none;box-sizing:border-box">
+                </div>
+            </div>
+        `;
+    } else {
+        // Need to send empty values so the lists in controller stay aligned by index
+        optionsHtml = `
+            <input name="optionAs" type="hidden" value="">
+            <input name="optionBs" type="hidden" value="">
+            <input name="optionCs" type="hidden" value="">
+            <input name="optionDs" type="hidden" value="">
+        `;
+    }
+
+    div.innerHTML = `
+        <input type="hidden" name="questionTypes" value="${type}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px">
+                <span style="background:#f5f3ff;color:#7c3aed;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px">Q${qIndex+1}</span>
+                <span style="font-weight:700;font-size:13px;color:#94a3b8">${type === 'MULTIPLE_CHOICE' ? 'MULTIPLE CHOICE' : 'SHORT ANSWER'}</span>
+            </div>
+            <button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:#fef2f2;border:none;color:#ef4444;width:28px;height:28px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+        </div>
+        <div style="display:grid;gap:12px">
+            <textarea name="questionContents" required placeholder="Question content..." rows="2" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+            ${optionsHtml}
+            <div>
+                <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">Correct Answer ${type === 'MULTIPLE_CHOICE' ? '(Enter A, B, C, or D)' : ''}</label>
+                <input name="correctAnswers" required placeholder="Answer..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:13px;outline:none;box-sizing:border-box">
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+    qIndex++;
+    updateCount();
+    div.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function updateCount() {
+    const c = document.getElementById('questionsContainer').children.length;
+    document.getElementById('qCount').textContent = c;
+    document.getElementById('noQMsg').style.display = c === 0 ? 'block' : 'none';
+}
+
+document.getElementById('testForm').onsubmit = function() {
+    const c = document.getElementById('questionsContainer').children.length;
+    if (c === 0) { alert('Please add at least one question.'); return false; }
+    return true;
+};
+</script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>Take Assessment</title>
+    <style>
+        .test-header { position: sticky; top: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); padding: 20px 32px; border-bottom: 1px solid #eff2f7; z-index: 100; display: flex; justify-content: space-between; align-items: center; margin: -32px -32px 32px; }
+        .timer-badge { background: #fee2e2; color: #ef4444; padding: 10px 20px; border-radius: 99px; font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; border: 2px solid #fecaca; }
+        .q-card { background: #fff; padding: 32px; border-radius: 24px; border: 1px solid #eff2f7; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 0.2s; }
+        .q-card:hover { border-color: #7c3aed; }
+        .option-label { display: block; padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 12px; margin-top: 10px; cursor: pointer; transition: all 0.2s; font-weight: 600; font-size: 14px; position: relative; }
+        .option-label:hover { background: #f5f3ff; border-color: #7c3aed; }
+        .option-input { display: none; }
+        .option-input:checked + .option-label { background: #7c3aed; color: #fff; border-color: #7c3aed; box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
+        .option-prefix { width: 24px; height: 24px; background: rgba(0,0,0,0.05); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-right: 12px; }
+        .option-input:checked + .option-label .option-prefix { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+
+<div class="test-header">
+    <div>
+        <h1 style="font-size:20px;font-weight:900" th:text="${test.title}">Test Title</h1>
+        <p style="font-size:12px;color:#94a3b8" th:text="${test.course.name}">Course Name</p>
+    </div>
+    <div class="timer-badge">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="countdown" th:data-duration="${test.duration}">00:00</span>
+    </div>
+</div>
+
+<form th:action="@{'/portal/tests/' + ${test.id} + '/submit'}" method="post" id="submissionForm">
+    <div style="max-width:800px;margin:0 auto">
+        <div th:each="q,stat : ${questions}" class="q-card">
+            <div style="display:flex;gap:16px;margin-bottom:20px">
+                <span style="background:#f5f3ff;color:#7c3aed;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;flex-shrink:0" th:text="${stat.index + 1}">1</span>
+                <div>
+                    <p style="font-size:16px;font-weight:700;color:#374151;line-height:1.6" th:text="${q.content}">Question Content</p>
+                </div>
+            </div>
+
+            <!-- Multiple Choice -->
+            <div th:if="${q.questionType.name() == 'MULTIPLE_CHOICE'}" style="margin-left:48px">
+                <div th:each="opt : ${ {'A', 'B', 'C', 'D'} }">
+                    <input type="radio" th:name="'q_' + ${q.id}" th:value="${opt}" th:id="'opt_' + ${q.id} + '_' + ${opt}" class="option-input">
+                    <label th:for="'opt_' + ${q.id} + '_' + ${opt}" class="option-label">
+                        <span class="option-prefix" th:text="${opt}">A</span>
+                        <span th:text="${opt == 'A' ? q.optionA : (opt == 'B' ? q.optionB : (opt == 'C' ? q.optionC : q.optionD))}">Option Content</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Short Answer -->
+            <div th:if="${q.questionType.name() == 'SHORT_ANSWER'}" style="margin-left:48px">
+                <textarea th:name="'q_' + ${q.id}" placeholder="Type your answer here..." rows="3" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:16px;font-size:14px;outline:none;resize:vertical;font-weight:600;display:block;box-sizing:border-box"></textarea>
+            </div>
+        </div>
+
+        <div style="margin:40px 0 80px;text-align:center">
+            <button type="button" onclick="confirmSubmit()" class="primary-button" style="padding:16px 48px;font-size:18px;border-radius:16px;box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3)">
+                Submit Final Answers
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Results are not shown here, redirected back to tests list with flash message -->
+
+<script th:inline="javascript">
+    const durationMin = parseInt(document.getElementById('countdown').dataset.duration);
+    let timeSeconds = durationMin * 60;
+
+    function updateTimer() {
+        const m = Math.floor(timeSeconds / 60);
+        const s = timeSeconds % 60;
+        document.getElementById('countdown').textContent = 
+            (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        
+        if (timeSeconds <= 0) {
+            alert('Time is up! Your assessment will be submitted automatically.');
+            document.getElementById('submissionForm').submit();
+        } else {
+            timeSeconds--;
+            setTimeout(updateTimer, 1000);
+        }
+    }
+
+    function confirmSubmit() {
+        if (confirm('Are you sure you want to submit your answers? You cannot undo this.')) {
+            document.getElementById('submissionForm').submit();
+        }
+    }
+
+    updateTimer();
+</script>
+
+</div>
+</body>
+</html>

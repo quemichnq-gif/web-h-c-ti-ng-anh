@@ -1,0 +1,58 @@
+package com.example.demo.controller;
+
+import com.example.demo.model.ErrorType;
+import com.example.demo.model.ErrorTestMapping;
+import com.example.demo.repository.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/errors")
+public class ErrorController {
+    private final ErrorTypeRepository errorTypeRepository;
+    private final ErrorTestMappingRepository mappingRepository;
+    private final TestRepository testRepository;
+    private final StudentErrorRepository studentErrorRepository;
+
+    public ErrorController(ErrorTypeRepository errorTypeRepository, ErrorTestMappingRepository mappingRepository,
+                           TestRepository testRepository, StudentErrorRepository studentErrorRepository) {
+        this.errorTypeRepository = errorTypeRepository;
+        this.mappingRepository = mappingRepository;
+        this.testRepository = testRepository;
+        this.studentErrorRepository = studentErrorRepository;
+    }
+
+    @GetMapping
+    public String list(Model model) {
+        model.addAttribute("errorTypes", errorTypeRepository.findAll());
+        model.addAttribute("mappings", mappingRepository.findAll());
+        model.addAttribute("tests", testRepository.findAll());
+        model.addAttribute("studentErrors", studentErrorRepository.findAll());
+        return "errors/list";
+    }
+
+    @PostMapping("/types/create")
+    public String createType(@RequestParam String name, @RequestParam(required = false) String description) {
+        ErrorType et = new ErrorType();
+        et.setName(name);
+        et.setDescription(description);
+        errorTypeRepository.save(et);
+        return "redirect:/errors?success=type_created";
+    }
+
+    @PostMapping("/types/{id}/delete")
+    public String deleteType(@PathVariable Long id) {
+        errorTypeRepository.deleteById(id);
+        return "redirect:/errors?success=type_deleted";
+    }
+
+    @PostMapping("/mappings/create")
+    public String assignTest(@RequestParam Long errorTypeId, @RequestParam Long testId) {
+        ErrorTestMapping m = new ErrorTestMapping();
+        m.setErrorType(errorTypeRepository.findById(errorTypeId).orElse(null));
+        m.setTest(testRepository.findById(testId).orElse(null));
+        mappingRepository.save(m);
+        return "redirect:/errors?success=mapping_created";
+    }
+}

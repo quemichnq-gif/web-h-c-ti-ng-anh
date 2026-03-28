@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>Student Dashboard</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+<div class="dashboard-header">
+    <h1 th:text="'Welcome back, ' + ${currentUser.fullName != null ? currentUser.fullName : currentUser.username} + '!'">Welcome!</h1>
+    <p>Track your academic progress and continue your learning journey.</p>
+</div>
+
+<div class="stat-grid-premium">
+    <article class="stat-card-premium">
+        <div class="stat-icon" style="background:#f5f3ff;color:#7c3aed"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="stat-label-p">Registered Courses</div>
+        <div class="stat-value-p" th:text="${enrollmentCount}">0</div>
+    </article>
+    <article class="stat-card-premium">
+        <div class="stat-icon" style="background:#ecfdf5;color:#10b981"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
+        <div class="stat-label-p">Average Score</div>
+        <div class="stat-value-p" th:text="${avgScore}">0.0</div>
+    </article>
+    <article class="stat-card-premium">
+        <div class="stat-icon" style="background:#eff6ff;color:#2563eb"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="stat-label-p">Tests Completed</div>
+        <div class="stat-value-p" th:text="${resultCount}">0</div>
+    </article>
+    <article class="stat-card-premium">
+        <div class="stat-icon" style="background:#fff7ed;color:#ea580c"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="stat-label-p">Active Concerns</div>
+        <div class="stat-value-p" th:text="${myErrors.size()}">0</div>
+    </article>
+</div>
+
+<div class="dashboard-main-grid">
+    <section>
+        <h3 style="font-size:18px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#7c3aed" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Recent Results
+        </h3>
+        <article class="chart-card">
+            <table class="data-table">
+                <thead><tr><th>Test</th><th>Score</th><th>Level</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody>
+                    <tr th:each="r : ${recentResults}">
+                        <td style="font-weight:700" th:text="${r.test != null ? r.test.title : 'Deleted Test'}">Test</td>
+                        <td th:text="${r.score + '/10.0'}" style="font-weight:800;color:#7c3aed">8.5</td>
+                        <td><span th:text="${r.bloomLevel}" style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:800">Application</span></td>
+                        <td><span th:if="${r.passed}" style="color:#10b981;font-weight:700">✓ PASS</span><span th:unless="${r.passed}" style="color:#ef4444;font-weight:700">✗ FAIL</span></td>
+                        <td style="font-size:12px;color:#94a3b8" th:text="${r.submittedAt}">Date</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentResults)}"><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8">No test results yet. GO to Explore Courses to begin!</td></tr>
+                </tbody>
+            </table>
+        </article>
+    </section>
+    
+    <aside>
+        <h3 style="font-size:18px;font-weight:800;margin-bottom:20px">Learning Warnings</h3>
+        <article class="activity-card">
+            <div th:each="err : ${myErrors}" class="activity-item">
+                <div class="activity-icon" style="background:#fef2f2;color:#ef4444">!</div>
+                <div class="activity-content">
+                    <h4 th:text="${err.errorType != null ? err.errorType.name : 'Unknown Error'}">Error Type</h4>
+                    <p th:text="${'Detected on ' + err.createdAt}">Date</p>
+                    <span style="color:#ef4444;font-size:10px">NEEDS REVIEW</span>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(myErrors)}" style="text-align:center;color:#94a3b8;padding:20px">
+                No learning issues detected. Great job!
+            </div>
+        </article>
+    </aside>
+</div>
+
+</div>
+</body>
+</html>

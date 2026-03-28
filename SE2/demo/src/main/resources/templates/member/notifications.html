@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal | Notifications</title>
+    <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/member/home}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                    <span class="brand-subtitle">Notifications</span>
+                </span>
+            </a>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <section class="table-card">
+            <div class="table-header">
+                <div>
+                    <h2>Notifications</h2>
+                    <p class="table-subtitle">Workspace alerts from accounts, courses, and security flows.</p>
+                </div>
+                <div class="toolbar-actions">
+                    <a th:href="@{/member/home}" class="ghost-button">Back to dashboard</a>
+                </div>
+            </div>
+            <div class="quick-list">
+                <div class="notification-card" th:each="item : ${notifications}">
+                    <div class="notification-header">
+                        <strong th:text="${item.title}">Notification title</strong>
+                        <span th:text="${item.time}">2 minutes ago</span>
+                    </div>
+                    <p th:text="${item.detail}">Notification detail</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

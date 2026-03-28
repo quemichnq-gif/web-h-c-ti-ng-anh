@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal | Search</title>
+    <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/member/home}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                    <span class="brand-subtitle">Search</span>
+                </span>
+            </a>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <section class="surface-card workspace-toolbar">
+            <form th:action="@{/member/search}" method="get" class="workspace-search">
+                <label for="keyword" class="sr-only">Search students, records, or logs</label>
+                <input id="keyword" name="keyword" type="text" th:value="${keyword}" placeholder="Search students, records, or logs...">
+                <button type="submit" class="primary-button">Search</button>
+            </form>
+            <div class="workspace-shortcuts">
+                <a th:href="@{/member/home}" class="utility-chip">Dashboard</a>
+                <a th:href="@{/member/notifications}" class="utility-chip">Notifications</a>
+                <a th:href="@{/member/chat}" class="utility-chip">Chat</a>
+            </div>
+        </section>
+
+        <section class="section-grid">
+            <article class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h2>Student Results</h2>
+                        <p class="table-subtitle">Matching user records from the Academic Portal directory.</p>
+                    </div>
+                </div>
+                <div class="quick-list">
+                    <div class="quick-list-row" th:each="student : ${studentResults}">
+                        <div>
+                            <strong th:text="${student.name != null ? student.name : student.studentId}">Student</strong>
+                            <span th:text="${student.studentId + ' | ' + (student.email != null ? student.email : 'No email')}">ST-001 | student@university.edu</span>
+                        </div>
+                        <a th:href="@{/students}" class="ghost-button">Open directory</a>
+                    </div>
+                    <div class="quick-list-empty" th:if="${#lists.isEmpty(studentResults)}">No matching students found.</div>
+                </div>
+            </article>
+
+            <article class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h2>Course Results</h2>
+                        <p class="table-subtitle">Matching academic course records from the synced course dashboard.</p>
+                    </div>
+                </div>
+                <div class="quick-list">
+                    <div class="quick-list-row" th:each="course : ${courseResults}">
+                        <div>
+                            <strong th:text="${course.name}">Course</strong>
+                            <span th:text="${course.courseId + ' | ' + course.status}">ENG-402 | DRAFT</span>
+                        </div>
+                        <a th:href="@{/courses}" class="ghost-button">Open courses</a>
+                    </div>
+                    <div class="quick-list-empty" th:if="${#lists.isEmpty(courseResults)}">No matching courses found.</div>
+                </div>
+            </article>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Edit Course</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="max-width:640px">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Edit Course</h1>
+        <p style="color:#94a3b8;font-size:14px" th:text="'Editing: ' + ${course.name}">Course name</p>
+    </div>
+    <article class="chart-card">
+        <form th:action="@{'/courses/' + ${course.id} + '/edit'}" method="post">
+            <div style="display:grid;gap:20px">
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Course Title *</label>
+                    <input name="name" th:value="${course.name}" maxlength="100" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
+                    <textarea name="description" rows="4" maxlength="500" th:text="${course.description}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Start Date</label>
+                        <input name="startDate" type="date" th:value="${course.startDate}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    </div>
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">End Date</label>
+                        <input name="endDate" type="date" th:value="${course.endDate}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
+                <button type="submit" class="primary-button">Save Changes</button>
+                <a th:href="@{/courses}" class="secondary-button">Cancel</a>
+            </div>
+        </form>
+    </article>
+</div>
+
+</div>
+</body>
+</html>

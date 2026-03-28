@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal | Chat</title>
+    <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/member/home}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                    <span class="brand-subtitle">Chat</span>
+                </span>
+            </a>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <section class="chat-layout">
+            <aside class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h2>Channels</h2>
+                        <p class="table-subtitle">Team communication shortcuts.</p>
+                    </div>
+                </div>
+                <div class="quick-list">
+                    <div class="channel-card" th:each="channel : ${channels}">
+                        <strong th:text="${channel.name}">Channel</strong>
+                        <span th:text="${channel.status}">Online</span>
+                        <p th:text="${channel.preview}">Preview text</p>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="table-card">
+                <div class="table-header">
+                    <div>
+                        <h2>Messages</h2>
+                        <p class="table-subtitle">Latest synced admin conversation.</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <a th:href="@{/member/home}" class="ghost-button">Back to dashboard</a>
+                    </div>
+                </div>
+                <div class="chat-thread">
+                    <div class="chat-bubble" th:each="message : ${messages}">
+                        <div class="notification-header">
+                            <strong th:text="${message.author}">Author</strong>
+                            <span th:text="${message.time}">09:15</span>
+                        </div>
+                        <p th:text="${message.body}">Message body</p>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Test Results</title></head>
+<body>
+<div layout:fragment="content">
+
+<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+        <div>
+            <h1 style="font-size:24px;font-weight:800;margin-bottom:4px" th:text="${test.title}">Test Title</h1>
+            <p style="color:#94a3b8;font-size:14px" th:text="${test.course.name + ' · ' + test.duration + ' minutes'}">Course</p>
+        </div>
+        <div style="display:flex;gap:12px">
+            <a th:href="@{'/assessments/' + ${test.id} + '/edit'}" class="secondary-button">Edit Test</a>
+            <a th:href="@{/assessments}" class="secondary-button">← Back</a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:28px">
+        <article class="stat-card-premium">
+            <div class="stat-label-p">Total Submissions</div>
+            <div class="stat-value-p" th:text="${totalCount}">0</div>
+        </article>
+        <article class="stat-card-premium">
+            <div class="stat-label-p">Average Score</div>
+            <div class="stat-value-p" th:text="${avgScore}">N/A</div>
+        </article>
+        <article class="stat-card-premium">
+            <div class="stat-label-p">Pass Rate</div>
+            <div class="stat-value-p" th:text="${totalCount > 0 ? #numbers.formatDecimal(results.stream().filter(r -> r.isPassed()).count() * 100.0 / totalCount, 1, 1) + '%' : 'N/A'}">N/A</div>
+        </article>
+    </div>
+
+    <!-- Filters -->
+    <article class="chart-card" style="margin-bottom:20px">
+        <form method="get" style="display:flex;gap:14px;align-items:end">
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Bloom Level</label>
+                <select name="bloomFilter" style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                    <option value="">All Levels</option>
+                    <option value="Remember" th:selected="${bloomFilter == 'Remember'}">Remember (1-3)</option>
+                    <option value="Understand" th:selected="${bloomFilter == 'Understand'}">Understand (4-5)</option>
+                    <option value="Apply" th:selected="${bloomFilter == 'Apply'}">Apply (6-7)</option>
+                    <option value="Analyze" th:selected="${bloomFilter == 'Analyze'}">Analyze (8-9)</option>
+                    <option value="Create" th:selected="${bloomFilter == 'Create'}">Create (10)</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Result</label>
+                <select name="passFilter" style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                    <option value="">All</option>
+                    <option value="pass" th:selected="${passFilter == 'pass'}">Pass only</option>
+                    <option value="fail" th:selected="${passFilter == 'fail'}">Fail only</option>
+                </select>
+            </div>
+            <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Apply</button>
+        </form>
+    </article>
+
+    <article class="chart-card">
+        <table class="data-table">
+            <thead><tr><th>#</th><th>Student</th><th>Score</th><th>Bloom Level</th><th>Submitted</th><th>Status</th></tr></thead>
+            <tbody>
+                <tr th:each="r,stat : ${results}">
+                    <td style="color:#94a3b8;font-size:13px" th:text="${stat.index+1}">1</td>
+                    <td>
+                        <div style="font-weight:700" th:text="${r.student.fullName != null ? r.student.fullName : r.student.username}">Name</div>
+                        <div style="font-size:12px;color:#94a3b8" th:text="${r.student.email}">email</div>
+                    </td>
+                    <td><strong style="font-size:18px" th:text="${r.score}">0</strong><span style="font-size:12px;color:#94a3b8">/10</span></td>
+                    <td>
+                        <span th:text="${r.bloomLevel}"
+                              th:style="${r.bloomColor == 'red' ? 'background:#fef2f2;color:#dc2626' : (r.bloomColor == 'orange' ? 'background:#fff7ed;color:#ea580c' : (r.bloomColor == 'yellow' ? 'background:#fefce8;color:#ca8a04' : (r.bloomColor == 'blue' ? 'background:#eff6ff;color:#2563eb' : 'background:#fdf4ff;color:#9333ea')))} + ';padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800'">Level</span>
+                    </td>
+                    <td style="font-size:12px;color:#94a3b8" th:text="${r.submittedAt != null ? #temporals.format(r.submittedAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
+                    <td>
+                        <span th:text="${r.isPassed() ? 'Pass' : 'Fail'}"
+                              th:style="${r.isPassed() ? 'background:#dcfce7;color:#166534' : 'background:#fef2f2;color:#991b1b'} + ';padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800'">Status</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(results)}">
+                    <td colspan="6" style="text-align:center;color:#94a3b8;padding:60px">No results match the selected filters.</td>
+                </tr>
+            </tbody>
+        </table>
+    </article>
+</div>
+
+</div>
+</body>
+</html>

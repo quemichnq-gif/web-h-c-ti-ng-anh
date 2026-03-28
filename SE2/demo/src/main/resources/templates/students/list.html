@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Students Directory</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px">
+    <div>
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Students Directory</h1>
+        <p style="color:#94a3b8;font-size:14px">Manage student profiles, view enrollments and academic performance</p>
+    </div>
+</div>
+
+<article class="chart-card">
+    <div style="display:flex;gap:14px;margin-bottom:20px">
+        <form method="get" th:action="@{/students}" style="flex:1">
+            <input name="search" th:value="${search}" placeholder="Search by name or username..." style="width:100%;max-width:400px;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+        </form>
+    </div>
+    
+    <table class="data-table">
+        <thead><tr><th>#</th><th>Full Name</th><th>Username</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+            <tr th:each="s,stat : ${students}">
+                <td style="color:#94a3b8;font-size:13px" th:text="${stat.index+1}">1</td>
+                <td>
+                    <div style="font-weight:700" th:text="${s.fullName != null ? s.fullName : 'N/A'}">Full Name</div>
+                    <div style="font-size:11px;color:#94a3b8" th:text="${'ID: #' + s.id}">ID</div>
+                </td>
+                <td th:text="${s.username}">username</td>
+                <td th:text="${s.email}" style="font-size:13px">email</td>
+                <td>
+                    <span th:if="${s.status == 'ACTIVE'}" style="background:#f0fdf4;color:#166534;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700">Active</span>
+                    <span th:unless="${s.status == 'ACTIVE'}" style="background:#fef2f2;color:#991b1b;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700" th:text="${s.status}">Status</span>
+                </td>
+                <td>
+                    <a th:href="@{'/students/' + ${s.id}}" style="padding:6px 16px;background:#7c3aed;color:#fff;border-radius:10px;font-size:12px;font-weight:700;text-decoration:none">View Detail</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(students)}">
+                <td colspan="6" style="text-align:center;color:#94a3b8;padding:60px">No students found.</td>
+            </tr>
+        </tbody>
+    </table>
+</article>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal | Update Student Account</title>
+    <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+</head>
+<body>
+<div class="page-shell">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/member/home}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                    <span class="brand-subtitle">Update Account</span>
+                </span>
+            </a>
+            <div class="account-chip">
+                <button type="button" class="account-trigger" onclick="toggleMenu()">
+                    <span>Admin</span>
+                    <span>v</span>
+                </button>
+                <div id="menu" class="account-menu">
+                    <a th:href="@{/logout}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <nav class="surface-card app-nav">
+            <div class="nav-pills">
+                <a th:href="@{/member/home}" class="nav-pill">Overview</a>
+                <a th:href="@{/students}" class="nav-pill active">Manage Accounts</a>
+                <a th:href="@{/courses}" class="nav-pill">Courses</a>
+            </div>
+            <a th:href="@{/students}" class="chip-button">Back to Directory</a>
+        </nav>
+
+        <section class="form-layout">
+            <aside class="surface-card form-sidebar">
+                <span class="eyebrow">Edit Portal Profile</span>
+                <h1>Update an existing student record</h1>
+                <p class="panel-copy">Review the current data, adjust status or contact information, and save the record back into the synchronized user list.</p>
+
+                <div class="helper-card">
+                    <strong>Recommended checks</strong>
+                    <ul class="mini-list">
+                        <li><span class="bullet">1</span><span>Keep the student ID stable once the account has been shared across systems.</span></li>
+                        <li><span class="bullet">2</span><span>Use the status field to control whether the account is currently active.</span></li>
+                        <li><span class="bullet">3</span><span>Confirm email and phone are current before saving the update.</span></li>
+                    </ul>
+                </div>
+            </aside>
+
+            <section class="surface-card form-card">
+                <div class="form-heading">
+                    <h1>Update account profile</h1>
+                    <p class="panel-copy">Edit the fields below and save your changes to refresh this student inside Academic Portal.</p>
+                </div>
+
+                <form th:action="@{'/students/' + ${student.id} + '/edit'}" th:object="${student}" method="post" class="record-form">
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="record-grid">
+                        <div class="field">
+                            <label for="name">Full Name</label>
+                            <input id="name" type="text" th:field="*{name}">
+                        </div>
+
+                        <div class="field">
+                            <label for="studentId">Student ID</label>
+                            <input id="studentId" type="text" th:field="*{studentId}" required>
+                        </div>
+
+                        <div class="field">
+                            <label for="username">Username</label>
+                            <input id="username" type="text" th:field="*{username}">
+                        </div>
+
+                        <div class="field">
+                            <label for="email">Email</label>
+                            <input id="email" type="email" th:field="*{email}">
+                        </div>
+
+                        <div class="field">
+                            <label for="phone">Phone</label>
+                            <input id="phone" type="text" th:field="*{phone}">
+                        </div>
+
+                        <div class="select-field">
+                            <label for="studentClass">Class</label>
+                            <select id="studentClass" th:field="*{studentClass}">
+                                <option value="">Select class</option>
+                                <option value="Class A">Class A</option>
+                                <option value="Class B">Class B</option>
+                                <option value="Class C">Class C</option>
+                            </select>
+                        </div>
+
+                        <div class="select-field">
+                            <label for="status">Status</label>
+                            <select id="status" th:field="*{status}">
+                                <option value="">Select status</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="INACTIVE">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="record-actions">
+                        <button type="submit" class="primary-button">Save Changes</button>
+                        <a th:href="@{/students}" class="ghost-button">Cancel</a>
+                    </div>
+                </form>
+            </section>
+        </section>
+    </main>
+</div>
+
+<script>
+    function toggleMenu() {
+        document.getElementById("menu").classList.toggle("open");
+    }
+
+    document.addEventListener("click", function (event) {
+        const menu = document.getElementById("menu");
+        const trigger = document.querySelector(".account-trigger");
+        if (menu && trigger && !menu.contains(event.target) && !trigger.contains(event.target)) {
+            menu.classList.remove("open");
+        }
+    });
+</script>
+</body>
+</html>

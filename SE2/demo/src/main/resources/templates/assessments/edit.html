@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Edit Assessment</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="max-width:760px">
+    <div style="margin-bottom:28px">
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Edit Assessment</h1>
+        <p style="color:#94a3b8;font-size:14px" th:text="'Editing: ' + ${test.title}">Test title</p>
+    </div>
+    <div th:if="${resultCount > 0}" style="padding:14px 20px;border-radius:12px;background:#fffbeb;border:1px solid #fbbf24;color:#92400e;font-weight:600;margin-bottom:20px">
+        ⚠️ <strong th:text="${resultCount}">0</strong> students have taken this test. Editing questions may affect their results.
+    </div>
+    <form th:action="@{'/assessments/' + ${test.id} + '/edit'}" method="post" id="testForm">
+        <article class="chart-card" style="margin-bottom:20px">
+            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">📋 Test Information</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Test Title *</label>
+                    <input name="title" th:value="${test.title}" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
+                    <textarea name="description" rows="3" th:text="${test.description}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Time Limit (minutes)</label>
+                    <input name="duration" type="number" min="5" max="180" th:value="${test.duration}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Course</label>
+                    <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                        <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == test.course.id}" th:text="${c.name}">Course</option>
+                    </select>
+                </div>
+            </div>
+        </article>
+
+        <article class="chart-card" style="margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <h3 style="font-size:15px;font-weight:800">❓ Questions <span id="qCount" style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:99px;font-size:12px">0</span></h3>
+                <button type="button" onclick="addQuestion()" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">+ Add Question</button>
+            </div>
+            <div id="questionsContainer" style="display:grid;gap:16px">
+                <div th:each="q,stat : ${questions}" style="border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;background:#fafafa">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <span style="font-weight:700;font-size:13px;color:#7c3aed" th:text="'Question ' + ${stat.index+1}">Q1</span>
+                        <button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button>
+                    </div>
+                    <div style="display:grid;gap:12px">
+                        <textarea name="questionContents" required rows="2" th:text="${q.content}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                        <input name="correctAnswers" th:value="${q.correctAnswer}" placeholder="Correct answer..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <div style="display:flex;gap:12px">
+            <button type="submit" class="primary-button">Save Assessment</button>
+            <a th:href="@{/assessments}" class="secondary-button">Cancel</a>
+        </div>
+    </form>
+</div>
+<script>
+let qIndex = document.getElementById('questionsContainer').children.length;
+function updateCount() {
+    document.getElementById('qCount').textContent = document.getElementById('questionsContainer').children.length;
+}
+function addQuestion() {
+    const container = document.getElementById('questionsContainer');
+    const div = document.createElement('div');
+    div.style.cssText = 'border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;background:#fafafa';
+    div.innerHTML = \`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:13px;color:#7c3aed">Question \${qIndex+1}</span><button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button></div>
+    <div style="display:grid;gap:12px"><textarea name="questionContents" required rows="2" placeholder="Question content..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+    <input name="correctAnswers" placeholder="Correct answer..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box"></div>\`;
+    container.appendChild(div);
+    qIndex++;
+    updateCount();
+}
+updateCount();
+</script>
+
+</div>
+</body>
+</html>
