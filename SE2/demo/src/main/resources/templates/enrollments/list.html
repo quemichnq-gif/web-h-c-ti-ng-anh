@@ -24,7 +24,7 @@
 <!-- Quick Enroll -->
 <article class="chart-card" style="margin-bottom:24px">
     <h3 style="font-size:15px;font-weight:800;margin-bottom:16px">Quick Enrollment</h3>
-    <form th:action="@{/enrollments/create}" method="post" style="display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end">
+    <form th:action="@{/enrollments/create}" method="post" class="filter-form quick-enroll-form">
         <div class="field" style="margin:0">
             <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Select Student</label>
             <select name="studentId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
@@ -44,7 +44,7 @@
 
 <!-- Course filter -->
 <article class="chart-card" style="margin-bottom:20px">
-    <form method="get" th:action="@{/enrollments}" style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:14px;align-items:end">
+    <form method="get" th:action="@{/enrollments}" class="filter-form">
         <div>
             <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Select Course</label>
             <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
@@ -63,46 +63,65 @@
         </div>
         <div>
             <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Search</label>
-            <input name="search" th:value="${search}" placeholder="Student name or email..." style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+            <input name="search" th:value="${search}" placeholder="Student name or email..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
         </div>
         <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Apply</button>
     </form>
 </article>
 
 <article class="chart-card" th:if="${enrollments != null}">
-    <table class="data-table">
-        <thead><tr><th>#</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody>
-            <tr th:each="e,stat : ${enrollments}">
-                <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
-                <td>
-                    <div style="font-weight:700" th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">Student</div>
-                    <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
-                </td>
-                <td th:text="${e.course.name}">Course</td>
-                <td style="font-size:12px;color:#94a3b8" th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
-                <td>
-                    <span th:text="${e.status}"
-                          th:style="${e.status == 'APPROVED' ? 'background:#dcfce7;color:#166534;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : (e.status == 'REJECTED' ? 'background:#fef2f2;color:#991b1b;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : 'background:#fffbeb;color:#92400e;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800')}">STATUS</span>
-                </td>
-                <td>
-                    <div style="display:flex;gap:8px">
-                        <form th:if="${e.status == 'PENDING'}" th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post" style="display:inline">
-                            <button style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534;background:none;cursor:pointer">✓ Approve</button>
-                        </form>
-                        <button th:if="${e.status == 'PENDING'}" onclick="openRejectModal([[${e.id}]])" style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">✗ Reject</button>
-                        <form th:action="@{'/enrollments/' + ${e.id} + '/remove'}" method="post" style="display:inline" onsubmit="return confirm('Remove this enrollment?')">
-                            <button style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;background:none;cursor:pointer">Remove</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(enrollments)}">
-                <td colspan="6" style="text-align:center;color:#94a3b8;padding:60px">No enrollments found. Select a course above.</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead><tr><th>#</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+                <tr th:each="e,stat : ${enrollments}">
+                    <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <div style="font-weight:700" th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">Student</div>
+                        <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
+                    </td>
+                    <td th:text="${e.course.name}">Course</td>
+                    <td style="font-size:12px;color:#94a3b8" th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
+                    <td>
+                        <span th:text="${e.status}"
+                              th:style="${e.status == 'APPROVED' ? 'background:#dcfce7;color:#166534;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : (e.status == 'REJECTED' ? 'background:#fef2f2;color:#991b1b;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : 'background:#fffbeb;color:#92400e;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800')}">STATUS</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px">
+                            <form th:if="${e.status == 'PENDING'}" th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post" style="display:inline">
+                                <button style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534;background:none;cursor:pointer">✓ Approve</button>
+                            </form>
+                            <button th:if="${e.status == 'PENDING'}" th:onclick="|openRejectModal('${e.id}')|" style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">✗ Reject</button>
+                            <form th:action="@{'/enrollments/' + ${e.id} + '/remove'}" method="post" style="display:inline" onsubmit="return confirm('Remove this enrollment?')">
+                                <button style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;background:none;cursor:pointer">Remove</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(enrollments)}">
+                    <td colspan="6" style="text-align:center;color:#94a3b8;padding:60px">No enrollments found. Select a course above.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </article>
+
+<style>
+.filter-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 14px;
+    align-items: end;
+}
+.quick-enroll-form {
+    grid-template-columns: 1fr 1fr auto;
+}
+@media (max-width: 768px) {
+    .filter-form, .quick-enroll-form {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 <!-- Reject Modal -->
 <div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center">
