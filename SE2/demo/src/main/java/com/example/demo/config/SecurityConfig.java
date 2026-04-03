@@ -43,7 +43,7 @@ public class SecurityConfig {
                 
                 // Admin-only routes
                 .requestMatchers("/users/**", "/users").hasRole("ADMIN")
-                .requestMatchers("/admin/reports/**", "/admin/reports").hasRole("ADMIN")
+                    .requestMatchers("/admin/reports/**", "/admin/reports").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                 
                 // Admin + Academic Staff routes
                 .requestMatchers("/enrollments/**", "/enrollments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .requestMatchers("/portal/**", "/portal", "/student/**", "/student").hasRole("STUDENT")
                 
                 // General authenticated routes
+                .requestMatchers("/reports/my").authenticated()
                 .requestMatchers("/courses/**", "/courses", "/profile/**", "/profile").authenticated()
                 
                 .anyRequest().authenticated()

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>My Report</title></head>
+<body>
+<div layout:fragment="content">
+
+    <div style="margin-bottom:28px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+            <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">My Academic Report</h1>
+            <p style="color:#94a3b8;font-size:14px"
+               th:text="${currentUser.fullName + ' · ' + currentUser.email}">Student</p>
+        </div>
+        <button onclick="window.print()"
+                class="primary-button"
+                style="min-height:40px;padding:0 20px;border-radius:10px">
+            🖨️ Export / Print PDF
+        </button>
+    </div>
+
+    <!-- Stat Summary -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:28px">
+        <article class="chart-card" style="text-align:center">
+            <div style="font-size:32px;font-weight:900;color:#7c3aed" th:text="${results.size()}">0</div>
+            <div style="color:#94a3b8;font-size:13px;font-weight:700;margin-top:8px">Total Tests</div>
+        </article>
+        <article class="chart-card" style="text-align:center">
+            <div style="font-size:32px;font-weight:900;color:#10b981" th:text="${avgScore}">0.0</div>
+            <div style="color:#94a3b8;font-size:13px;font-weight:700;margin-top:8px">Average Score</div>
+        </article>
+        <article class="chart-card" style="text-align:center">
+            <div style="font-size:32px;font-weight:900;color:#166534" th:text="${passCount}">0</div>
+            <div style="color:#94a3b8;font-size:13px;font-weight:700;margin-top:8px">Passed</div>
+        </article>
+        <article class="chart-card" style="text-align:center">
+            <div style="font-size:32px;font-weight:900;color:#dc2626" th:text="${failCount}">0</div>
+            <div style="color:#94a3b8;font-size:13px;font-weight:700;margin-top:8px">Failed</div>
+        </article>
+    </div>
+
+    <!-- Test Results Table -->
+    <article class="chart-card" style="margin-bottom:24px">
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">📝 Test Results</h3>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Test Name</th>
+                <th>Score</th>
+                <th>Bloom Level</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r,stat : ${results}">
+                <td th:text="${stat.index+1}">1</td>
+                <td style="font-weight:700"
+                    th:text="${r.test != null ? r.test.title : 'N/A'}">Test</td>
+                <td>
+                    <span style="font-weight:900;color:#7c3aed"
+                          th:text="${r.score + '/10'}">8.5</span>
+                </td>
+                <td>
+                    <span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800"
+                          th:text="${r.bloomLevel}">Apply</span>
+                </td>
+                <td>
+                    <span th:if="${r.passed}"
+                          style="background:#dcfce7;color:#166534;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800">
+                        PASSED
+                    </span>
+                    <span th:unless="${r.passed}"
+                          style="background:#fee2e2;color:#991b1b;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800">
+                        FAILED
+                    </span>
+                </td>
+                <td style="color:#94a3b8;font-size:13px"
+                    th:text="${r.submittedAt != null ? #temporals.format(r.submittedAt,'dd/MM/yyyy HH:mm') : 'N/A'}">
+                    Date
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(results)}">
+                <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8">
+                    No test results yet.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+
+    <!-- Errors Table -->
+    <article class="chart-card">
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:16px">⚠️ Academic Errors</h3>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Error Type</th>
+                <th>Description</th>
+                <th>Recorded At</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="e,stat : ${errors}">
+                <td th:text="${stat.index+1}">1</td>
+                <td style="font-weight:700;color:#dc2626"
+                    th:text="${e.errorType.name}">Error</td>
+                <td style="color:#64748b;font-size:13px"
+                    th:text="${e.errorType.description}">desc</td>
+                <td style="color:#94a3b8;font-size:13px"
+                    th:text="${#temporals.format(e.createdAt,'dd/MM/yyyy HH:mm')}">Date</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(errors)}">
+                <td colspan="4" style="text-align:center;padding:40px;color:#94a3b8">
+                    No errors recorded. Keep it up! 🎉
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+
+    <!-- Print styles -->
+    <style>
+        @media print {
+            .admin-sidebar, .top-nav, button { display: none !important; }
+            .admin-main { padding: 0 !important; }
+        }
+    </style>
+
+</div>
+</body>
+</html>
