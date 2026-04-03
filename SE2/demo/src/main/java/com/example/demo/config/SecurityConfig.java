@@ -47,6 +47,7 @@ public class SecurityConfig {
                 
                 // Admin + Academic Staff routes
                 .requestMatchers("/enrollments/**", "/enrollments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                .requestMatchers("/lessons/**", "/lessons").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                 .requestMatchers("/assessments/**", "/assessments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                 .requestMatchers("/errors/**", "/errors").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                 .requestMatchers("/students/**", "/students").hasAnyRole("ADMIN", "ACADEMIC_STAFF")

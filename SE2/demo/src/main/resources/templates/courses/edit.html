@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{fragments/layout}">
@@ -7,7 +7,7 @@
 <body>
 <div layout:fragment="content">
 
-<div style="max-width:640px">
+<div style="max-width:760px">
     <div style="margin-bottom:28px">
         <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Edit Course</h1>
         <p style="color:#94a3b8;font-size:14px" th:text="'Editing: ' + ${course.name}">Course name</p>
@@ -15,6 +15,18 @@
     <article class="chart-card">
         <form th:action="@{'/courses/' + ${course.id} + '/edit'}" method="post">
             <div style="display:grid;gap:20px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Course Code *</label>
+                        <input name="code" th:value="${course.code}" maxlength="50" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    </div>
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Status *</label>
+                        <select name="status" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
+                            <option th:each="status : ${statuses}" th:value="${status.name()}" th:selected="${status == course.status}" th:text="${status.name()}">OPEN</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="field">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Course Title *</label>
                     <input name="name" th:value="${course.name}" maxlength="100" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
@@ -31,6 +43,16 @@
                     <div class="field">
                         <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">End Date</label>
                         <input name="endDate" type="date" th:value="${course.endDate}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
+                        <input type="text" readonly th:value="${course.createdAt != null ? #temporals.format(course.createdAt,'dd/MM/yyyy HH:mm') : 'Auto on create'}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
+                    </div>
+                    <div class="field">
+                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Last Updated</label>
+                        <input type="text" readonly th:value="${course.updatedAt != null ? #temporals.format(course.updatedAt,'dd/MM/yyyy HH:mm') : 'Auto on save'}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
                     </div>
                 </div>
             </div>

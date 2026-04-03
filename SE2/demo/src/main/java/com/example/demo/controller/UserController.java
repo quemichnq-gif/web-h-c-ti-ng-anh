@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -136,6 +137,7 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(Role.valueOf(role));
         user.setStatus(status);
+        user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
 
         ra.addFlashAttribute("success", "Tạo tài khoản " + username + " thành công!");

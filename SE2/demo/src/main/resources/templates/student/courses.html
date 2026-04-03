@@ -38,9 +38,14 @@
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         Pending Approval
                     </div>
-                    <div th:if="${status == 'APPROVED'}" style="width:100%;height:44px;border-radius:12px;background:#f0fdf4;color:#166534;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:1px solid #bbf7d0">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px"><polyline points="20 6 9 17 4 12"/></svg>
-                        Enrolled
+                    <div th:if="${status == 'APPROVED'}" style="display:grid;gap:10px">
+                        <div style="width:100%;height:44px;border-radius:12px;background:#f0fdf4;color:#166534;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:1px solid #bbf7d0">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:8px"><polyline points="20 6 9 17 4 12"/></svg>
+                            Enrolled
+                        </div>
+                        <a th:href="@{'/portal/courses/' + ${c.id} + '/lessons'}" class="primary-button" style="width:100%;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-decoration:none">
+                            View Lessons
+                        </a>
                     </div>
                     <div th:if="${status == 'REJECTED'}" style="width:100%;height:44px;border-radius:12px;background:#fef2f2;color:#991b1b;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;border:1px solid #fecaca">
                         Rejected

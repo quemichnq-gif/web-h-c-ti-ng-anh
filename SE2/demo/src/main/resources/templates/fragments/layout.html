@@ -276,23 +276,23 @@
                 <li sec:authorize="hasRole('ADMIN')" class="menu-item"><a th:href="@{/courses}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
                     Courses</a></li>
+                <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/lessons}" class="menu-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12"></path><path d="M6 12h12"></path><path d="M4 4h16v16H4z"></path></svg>
+                    Lessons</a></li>
                 <!-- Admin/Staff Menu -->
                 <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/enrollments}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
-                    Enrollment</a></li>
+                    Enrollments</a></li>
                 <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/assessments}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
-                    Assessment</a></li>
+                    Assessments</a></li>
                 <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/errors}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
-                    Error Management</a></li>
+                    Errors</a></li>
                 
                 <li sec:authorize="hasRole('ADMIN')" class="menu-item"><a th:href="@{/users}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path></svg>
-                    Manage Users</a></li>
-                <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/students}" class="menu-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    Students Directory</a></li>
+                    Users</a></li>
 
                 <!-- Student Menu -->
                 <li sec:authorize="hasRole('STUDENT')" class="menu-item"><a th:href="@{/portal/courses}" class="menu-link">
@@ -304,7 +304,7 @@
                 
                 <li class="menu-item"><a th:href="@{/profile}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                    Profile Settings</a></li>
+                    Profile</a></li>
             </ul>
         </div>
         

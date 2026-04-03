@@ -58,6 +58,7 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Created</th>
                 <th>Role</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -79,6 +80,7 @@
                 <td style="color:#64748b;font-size:13px;font-family:monospace" th:text="${u.username}">username</td>
                 <td style="color:#64748b;font-size:13px" th:text="${u.email}">email</td>
                 <td style="color:#64748b;font-size:13px" th:text="${u.phone != null ? u.phone : '-'}">phone</td>
+                <td style="color:#64748b;font-size:13px" th:text="${u.createdAt != null ? #temporals.format(u.createdAt,'dd/MM/yyyy HH:mm') : '-'}">created</td>
                 <td>
                     <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800"
                           th:classappend="${u.role.name() == 'ADMIN' ? 'badge-admin' : (u.role.name() == 'ACADEMIC_STAFF' ? 'badge-staff' : 'badge-student')}"
@@ -105,7 +107,7 @@
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="8" style="text-align:center;color:#94a3b8;padding:60px">No users found matching your criteria.</td>
+                <td colspan="9" style="text-align:center;color:#94a3b8;padding:60px">No users found matching your criteria.</td>
             </tr>
         </tbody>
     </table>

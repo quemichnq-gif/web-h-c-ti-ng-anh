@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head><title>Lesson Form</title></head>
+<body>
+<div layout:fragment="content">
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:26px">
+    <div>
+        <a th:href="@{/lessons}" style="display:inline-flex;align-items:center;gap:8px;color:#64748b;font-weight:700;font-size:13px;margin-bottom:12px;text-decoration:none">← Back to Lessons</a>
+        <h1 style="font-size:26px;font-weight:900;margin:0 0 6px" th:text="${pageTitle}">Create Lesson</h1>
+        <p style="margin:0;color:#64748b;font-size:14px;max-width:760px" th:text="${pageSubtitle}">Subtitle</p>
+    </div>
+    <a th:href="@{/lessons/create}" style="padding:11px 16px;border-radius:12px;border:1px solid #cbd5e1;font-weight:800;color:#334155;text-decoration:none;background:#fff">New Blank Lesson</a>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px" class="lesson-form-layout">
+    <section class="chart-card" style="padding:24px">
+        <form th:attr="action=${formAction}" method="post" enctype="multipart/form-data" style="display:grid;gap:16px">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <div style="display:grid;grid-template-columns:1fr 160px;gap:14px" class="lesson-course-grid">
+                <div>
+                    <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Course</label>
+                    <select name="courseId" required style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+                        <option value="">Select course</option>
+                        <option th:each="course : ${courses}" th:value="${course.id}" th:selected="${selectedCourseId == course.id}" th:text="${course.code + ' - ' + course.name}">Course</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Order</label>
+                    <input type="number" min="1" name="sortOrder" th:value="${lesson.sortOrder != null ? lesson.sortOrder : 1}" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+                </div>
+            </div>
+
+            <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Title</label>
+                <input name="title" required th:value="${lesson.title}" placeholder="Ex: Linking ideas in persuasive writing" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+            </div>
+
+            <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Short Summary</label>
+                <input name="summary" th:value="${lesson.summary}" placeholder="One short overview sentence for the lesson card" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+            </div>
+
+            <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Content</label>
+                <textarea name="content" rows="14" required placeholder="Main lesson content, examples, scripts, homework instructions..." style="width:100%;padding:14px;border-radius:14px;border:1px solid #cbd5e1;outline:none;resize:vertical" th:text="${lesson.content}"></textarea>
+            </div>
+
+            <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Upload File</label>
+                <input type="file" name="attachment" style="width:100%;padding:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff">
+                <div th:if="${lesson.hasAttachment()}" style="margin-top:8px;font-size:13px;color:#475569">
+                    Current file:
+                    <a th:href="@{'/lessons/' + ${lesson.id} + '/file'}" th:text="${lesson.attachmentOriginalName}" style="font-weight:800;color:#1d4ed8;text-decoration:none">file</a>
+                </div>
+            </div>
+
+            <div style="padding:18px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+                    <div>
+                        <div style="font-weight:900;color:#0f172a">Lesson Review Quiz</div>
+                        <div style="font-size:13px;color:#64748b">Add or replace the review questions for this lesson.</div>
+                    </div>
+                    <button type="button" onclick="addQuizQuestion()" class="primary-button" style="padding:10px 14px;border-radius:10px;font-size:12px">+ Add Question</button>
+                </div>
+                <div id="quiz-builder" style="display:grid;gap:14px"></div>
+            </div>
+
+            <button type="submit" class="primary-button" style="height:48px;border-radius:14px" th:text="${submitLabel}">Save</button>
+        </form>
+    </section>
+
+    <aside class="chart-card" style="padding:24px;display:grid;gap:16px;align-content:start">
+        <div>
+            <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;color:#0f172a">Lesson Admin Flow</h2>
+            <p style="margin:0;color:#64748b;font-size:14px;line-height:1.7">Lessons now live in their own admin module. Create them here, then come back any time to edit the content, swap files, or rebuild the quiz.</p>
+        </div>
+        <div style="padding:16px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe">
+            <div style="font-size:12px;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Tips</div>
+            <div style="display:grid;gap:8px;color:#1e3a8a;font-size:13px;line-height:1.6">
+                <div>Keep one lesson focused on one learning outcome.</div>
+                <div>Upload worksheets or slides as the attached file.</div>
+                <div>Use 3-5 questions for a quick review, not a full assessment.</div>
+            </div>
+        </div>
+        <div style="padding:16px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa">
+            <div style="font-size:12px;font-weight:800;color:#9a3412;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Visibility</div>
+            <div style="color:#9a3412;font-size:13px;line-height:1.7">Students only see lesson content from the portal after their enrollment is approved.</div>
+        </div>
+    </aside>
+</div>
+
+<script th:inline="javascript">
+const existingQuizQuestions = /*[[${quizQuestions}]]*/ [];
+let quizIndex = 0;
+
+function addQuizQuestion(seed) {
+    quizIndex += 1;
+    const wrap = document.getElementById('quiz-builder');
+    const item = document.createElement('div');
+    item.className = 'quiz-item';
+    item.style.cssText = 'padding:16px;border-radius:16px;background:#fff;border:1px solid #dbeafe;display:grid;gap:10px';
+    item.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+            <div style="font-weight:800;color:#1d4ed8">Question ${quizIndex}</div>
+            <button type="button" onclick="this.closest('.quiz-item').remove()" style="padding:6px 10px;border-radius:10px;border:1px solid #fecaca;background:#fff;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer">Remove</button>
+        </div>
+        <textarea name="quizQuestionTexts" rows="3" placeholder="Question text" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none;resize:vertical">${seed?.questionText ?? ''}</textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="quiz-option-grid">
+            <input name="optionAs" placeholder="Option A" value="${seed?.optionA ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionBs" placeholder="Option B" value="${seed?.optionB ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionCs" placeholder="Option C" value="${seed?.optionC ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionDs" placeholder="Option D" value="${seed?.optionD ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px" class="quiz-answer-grid">
+            <select name="correctAnswers" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+                <option value="A" ${seed?.correctAnswer === 'A' ? 'selected' : ''}>Correct: A</option>
+                <option value="B" ${seed?.correctAnswer === 'B' ? 'selected' : ''}>Correct: B</option>
+                <option value="C" ${seed?.correctAnswer === 'C' ? 'selected' : ''}>Correct: C</option>
+                <option value="D" ${seed?.correctAnswer === 'D' ? 'selected' : ''}>Correct: D</option>
+            </select>
+            <input name="explanations" placeholder="Explanation or teaching note" value="${seed?.explanation ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+        </div>
+    `;
+    wrap.appendChild(item);
+}
+
+if (existingQuizQuestions.length > 0) {
+    existingQuizQuestions.forEach(addQuizQuestion);
+} else {
+    addQuizQuestion();
+}
+</script>
+
+<style>
+@media (max-width: 1100px) {
+    .lesson-form-layout {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .lesson-course-grid,
+    .quiz-option-grid,
+    .quiz-answer-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+</div>
+</body>
+</html>

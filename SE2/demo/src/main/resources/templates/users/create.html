@@ -65,6 +65,11 @@
                         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="status" value="INACTIVE"> <span style="font-size:14px">Inactive</span></label>
                     </div>
                 </div>
+                <div class="field" style="grid-column: span 2">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
+                    <input type="text" id="createdAtPreview" readonly style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
+                    <span style="font-size:12px;color:#94a3b8">This timestamp is stored automatically when the account is created.</span>
+                </div>
             </div>
             <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
                 <button type="submit" class="primary-button">Create Account</button>
@@ -100,6 +105,7 @@ document.getElementById('usernameField').addEventListener('input', function() {
     const valid = /^[a-zA-Z0-9_]+$/.test(this.value);
     document.getElementById('usernameErr').style.display = this.value && !valid ? 'block' : 'none';
 });
+document.getElementById('createdAtPreview').value = new Date().toLocaleString();
 </script>
 
 </div>

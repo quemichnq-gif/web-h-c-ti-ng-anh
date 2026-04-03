@@ -17,6 +17,12 @@ import java.util.stream.Stream;
 @Configuration
 public class BootstrapConfig {
 
+    private static final String ADMIN_USERNAME = "maitrang";
+    private static final String ADMIN_EMAIL = "maitrang@university.edu";
+    private static final String ADMIN_PASSWORD = "maitrang123";
+    private static final String ADMIN_FULL_NAME = "Mai Trang (Admin)";
+    private static final String ADMIN_PHONE = "0901234567";
+
     private final Random random = new Random();
 
     @Bean
@@ -31,17 +37,10 @@ public class BootstrapConfig {
                                StudentErrorRepository studentErrorRepository,
                                PasswordEncoder passwordEncoder) {
         return args -> {
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                User admin = new User();
-                admin.setUsername("admin");
-                admin.setEmail("admin@university.edu");
-                admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setRole(Role.ADMIN);
-                admin.setStatus("ACTIVE");
-                admin.setFullName("Le Quang Que (Admin)");
-                admin.setPhone("0901234567");
-                userRepository.save(admin);
+            upsertAdminUser(userRepository, passwordEncoder);
+            backfillLegacyCourses(courseRepository);
 
+            if (userRepository.findByUsername("staff").isEmpty()) {
                 User staff = new User();
                 staff.setUsername("staff");
                 staff.setEmail("staff@university.edu");
@@ -66,22 +65,28 @@ public class BootstrapConfig {
 
             if (courseRepository.count() == 0) {
                 Course c1 = new Course();
+                c1.setCode("IELTS-WRITING-T2");
                 c1.setName("IELTS Academic Writing Task 2");
                 c1.setDescription("Hoc cach viet luan Academic IELTS dat band 7.0+");
+                c1.setStatus(CourseStatus.OPEN);
                 c1.setStartDate(LocalDate.now().minusWeeks(2));
                 c1.setEndDate(LocalDate.now().plusMonths(3));
                 courseRepository.save(c1);
 
                 Course c2 = new Course();
+                c2.setCode("BUSINESS-ENGLISH");
                 c2.setName("Communicative Business English");
                 c2.setDescription("Tieng Anh giao tiep chuyen sau cho moi truong van phong quoc te.");
+                c2.setStatus(CourseStatus.OPEN);
                 c2.setStartDate(LocalDate.now().plusWeeks(1));
                 c2.setEndDate(LocalDate.now().plusMonths(6));
                 courseRepository.save(c2);
 
                 Course c3 = new Course();
+                c3.setCode("TOEIC-800-PLUS");
                 c3.setName("TOEIC Intensive 800+");
                 c3.setDescription("Luyen de TOEIC than toc, nam vung meo thi dat diem cao.");
+                c3.setStatus(CourseStatus.OPEN);
                 c3.setStartDate(LocalDate.now().minusMonths(1));
                 c3.setEndDate(LocalDate.now().plusMonths(2));
                 courseRepository.save(c3);
@@ -173,6 +178,51 @@ public class BootstrapConfig {
 
             backfillLegacyResultDetails(studentResultRepository, questionRepository);
         };
+    }
+
+    private void backfillLegacyCourses(CourseRepository courseRepository) {
+        List<Course> courses = courseRepository.findAll();
+        int sequence = 1;
+        for (Course course : courses) {
+            boolean changed = false;
+            if (course.getCode() == null || course.getCode().isBlank()) {
+                course.setCode(buildCourseCode(course.getName(), sequence++));
+                changed = true;
+            }
+            if (course.getStatus() == null) {
+                course.setStatus(CourseStatus.OPEN);
+                changed = true;
+            }
+            if (changed) {
+                courseRepository.save(course);
+            }
+        }
+    }
+
+    private String buildCourseCode(String name, int fallbackIndex) {
+        String base = name == null ? "" : name.toUpperCase().replaceAll("[^A-Z0-9]+", "-").replaceAll("^-|-$", "");
+        if (base.isBlank()) {
+            return "COURSE-" + fallbackIndex;
+        }
+        if (base.length() > 40) {
+            base = base.substring(0, 40);
+        }
+        return base + "-" + fallbackIndex;
+    }
+
+    private void upsertAdminUser(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        User admin = userRepository.findByUsername(ADMIN_USERNAME)
+                .or(() -> userRepository.findByEmail(ADMIN_EMAIL))
+                .orElseGet(() -> userRepository.findByRole(Role.ADMIN).stream().findFirst().orElseGet(User::new));
+
+        admin.setUsername(ADMIN_USERNAME);
+        admin.setEmail(ADMIN_EMAIL);
+        admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
+        admin.setRole(Role.ADMIN);
+        admin.setStatus("ACTIVE");
+        admin.setFullName(ADMIN_FULL_NAME);
+        admin.setPhone(ADMIN_PHONE);
+        userRepository.save(admin);
     }
 
     private void seedQuestion(QuestionRepository questionRepository,
