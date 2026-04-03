@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.*;
@@ -38,21 +39,28 @@ public class ReportController {
     }
 
     @GetMapping("/admin/reports")
-    public String viewReports(Model model) {
-        // Tab 1: User Statistics
+    public String viewReports(Model model,
+                              @RequestParam(defaultValue = "users") String tab) {
+        Set<String> validTabs = Set.of("users", "courses", "errors", "assessments");
+        String activeTab = validTabs.contains(tab) ? tab : "users";
+        model.addAttribute("activeTab", activeTab);
+
         long adminCount = userRepository.countByRole(Role.ADMIN);
         long staffCount = userRepository.countByRole(Role.ACADEMIC_STAFF);
         long studentCount = userRepository.countByRole(Role.STUDENT);
+        long totalUsers = adminCount + staffCount + studentCount;
         model.addAttribute("adminCount", adminCount);
         model.addAttribute("staffCount", staffCount);
         model.addAttribute("studentCount", studentCount);
+        model.addAttribute("totalUsers", totalUsers);
 
         long activeUsers = userRepository.countByStatus("ACTIVE");
         long inactiveUsers = userRepository.countByStatus("INACTIVE");
+        long activeRate = totalUsers == 0 ? 0 : Math.round((activeUsers * 100.0) / totalUsers);
         model.addAttribute("activeUsers", activeUsers);
         model.addAttribute("inactiveUsers", inactiveUsers);
+        model.addAttribute("activeRate", activeRate);
 
-        // Tab 2: Course Statistics
         long totalCourses = courseRepository.count();
         model.addAttribute("totalCourses", totalCourses);
 
@@ -66,20 +74,35 @@ public class ReportController {
                 .limit(5)
                 .toList();
         model.addAttribute("topCourses", topCourses);
+        long maxCourseEnrollment = topCourses.stream()
+                .map(Course::getId)
+                .map(enrollmentPerCourse::get)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L);
+        model.addAttribute("maxCourseEnrollment", maxCourseEnrollment);
 
-        // Tab 3: Error Statistics
         List<ErrorType> errorTypes = errorTypeRepository.findAll();
+        List<StudentError> allStudentErrors = studentErrorRepository.findAll();
         Map<String, Long> errorTypeCounts = errorTypes.stream()
-                .collect(Collectors.toMap(ErrorType::getName, et -> studentErrorRepository.findAll().stream()
-                        .filter(se -> se.getErrorType().getId().equals(et.getId())).count()));
+                .collect(Collectors.toMap(ErrorType::getName, et -> allStudentErrors.stream()
+                        .filter(se -> se.getErrorType() != null && Objects.equals(se.getErrorType().getId(), et.getId()))
+                        .count()));
 
         List<Map.Entry<String, Long>> topErrors = errorTypeCounts.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
                 .limit(10)
                 .toList();
         model.addAttribute("topErrors", topErrors);
+        long maxErrorOccurrences = topErrors.stream()
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0L);
+        model.addAttribute("maxErrorOccurrences", maxErrorOccurrences);
 
-        // Tab 4: Assessment Statistics
         List<Test> allTests = testRepository.findAll();
         Map<Long, Double> avgScores = allTests.stream()
                 .collect(Collectors.toMap(Test::getId, t -> {
@@ -89,7 +112,6 @@ public class ReportController {
         model.addAttribute("avgScores", avgScores);
         model.addAttribute("allTests", allTests);
 
-        // Students with low scores (under 6)
         List<StudentResult> lowResults = studentResultRepository.findAll().stream()
                 .filter(r -> !r.isPassed())
                 .limit(20)
