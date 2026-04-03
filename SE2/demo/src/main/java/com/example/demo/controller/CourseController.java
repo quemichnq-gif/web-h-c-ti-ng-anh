@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.*;
-import com.example.demo.repository.*;
+import com.example.demo.model.Course;
+import com.example.demo.model.CourseStatus;
+import com.example.demo.repository.CourseRepository;
+import com.example.demo.repository.EnrollmentRepository;
+import com.example.demo.repository.TestRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,15 +36,15 @@ public class CourseController {
 
         if (search != null && !search.isBlank()) {
             String q = search.toLowerCase();
-            courses = courses.stream().filter(c -> c.getName().toLowerCase().contains(q)).toList();
+            courses = courses.stream()
+                    .filter(c -> safe(c.getName()).contains(q) || safe(c.getCode()).contains(q))
+                    .toList();
         }
 
         if (status != null && !status.isBlank() && !status.equals("ALL")) {
-            LocalDate now = LocalDate.now();
-            courses = courses.stream().filter(c -> {
-                String cs = getCourseStatus(c, now);
-                return cs.equalsIgnoreCase(status);
-            }).toList();
+            courses = courses.stream()
+                    .filter(c -> c.getStatus() != null && c.getStatus().name().equals(status))
+                    .toList();
         }
 
         model.addAttribute("courses", courses);
@@ -49,56 +52,85 @@ public class CourseController {
                 java.util.stream.Collectors.toMap(Course::getId, c -> enrollmentRepository.countByCourse(c))));
         model.addAttribute("search", search);
         model.addAttribute("filterStatus", status);
+        model.addAttribute("statuses", CourseStatus.values());
         model.addAttribute("now", LocalDate.now());
         return "courses/list";
     }
 
     @GetMapping("/create")
-    public String createForm() {
+    public String createForm(Model model) {
+        model.addAttribute("statuses", List.of(CourseStatus.DRAFT, CourseStatus.OPEN, CourseStatus.ARCHIVED));
         return "courses/create";
     }
 
     @PostMapping("/create")
-    public String create(@RequestParam String name,
+    public String create(@RequestParam String code,
+                         @RequestParam String name,
                          @RequestParam(required = false) String description,
+                         @RequestParam String status,
                          @RequestParam(required = false) String startDate,
                          @RequestParam(required = false) String endDate,
                          RedirectAttributes ra) {
+        if (courseRepository.findAll().stream().anyMatch(course -> course.getCode() != null && course.getCode().equalsIgnoreCase(code))) {
+            ra.addFlashAttribute("error", "Course code '" + code + "' da ton tai.");
+            return "redirect:/courses/create";
+        }
+
         Course course = new Course();
+        course.setCode(code.trim().toUpperCase());
         course.setName(name);
         course.setDescription(description);
+        course.setStatus(CourseStatus.valueOf(status));
         if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
         if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
-        ra.addFlashAttribute("success", "Đã tạo course '" + name + "' thành công!");
+        ra.addFlashAttribute("success", "Da tao course '" + name + "' thanh cong!");
         return "redirect:/courses";
     }
 
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         Optional<Course> opt = courseRepository.findById(id);
-        if (opt.isEmpty()) { ra.addFlashAttribute("error", "Course không tồn tại."); return "redirect:/courses"; }
+        if (opt.isEmpty()) {
+            ra.addFlashAttribute("error", "Course khong ton tai.");
+            return "redirect:/courses";
+        }
         model.addAttribute("course", opt.get());
+        model.addAttribute("statuses", CourseStatus.values());
         return "courses/edit";
     }
 
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
+                         @RequestParam String code,
                          @RequestParam String name,
                          @RequestParam(required = false) String description,
+                         @RequestParam String status,
                          @RequestParam(required = false) String startDate,
                          @RequestParam(required = false) String endDate,
                          RedirectAttributes ra) {
         Optional<Course> opt = courseRepository.findById(id);
-        if (opt.isEmpty()) { ra.addFlashAttribute("error", "Course không tồn tại."); return "redirect:/courses"; }
+        if (opt.isEmpty()) {
+            ra.addFlashAttribute("error", "Course khong ton tai.");
+            return "redirect:/courses";
+        }
+
+        boolean codeUsedByAnother = courseRepository.findAll().stream()
+                .anyMatch(course -> !course.getId().equals(id) && course.getCode() != null && course.getCode().equalsIgnoreCase(code));
+        if (codeUsedByAnother) {
+            ra.addFlashAttribute("error", "Course code '" + code + "' da duoc dung.");
+            return "redirect:/courses/" + id + "/edit";
+        }
 
         Course course = opt.get();
+        course.setCode(code.trim().toUpperCase());
         course.setName(name);
         course.setDescription(description);
+        course.setStatus(CourseStatus.valueOf(status));
         if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
         if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
-        ra.addFlashAttribute("success", "Đã cập nhật course thành công!");
+        ra.addFlashAttribute("success", "Da cap nhat course thanh cong!");
         return "redirect:/courses";
     }
 
@@ -109,17 +141,14 @@ public class CourseController {
         long tests = courseRepository.findById(id)
                 .map(testRepository::countByCourse).orElse(0L);
         courseRepository.deleteById(id);
-        String msg = "Đã xóa course.";
-        if (enrolled > 0) msg += " Đã xóa " + enrolled + " enrollment liên quan.";
-        if (tests > 0) msg += " Có " + tests + " test liên quan.";
+        String msg = "Da xoa course.";
+        if (enrolled > 0) msg += " Da xoa " + enrolled + " enrollment lien quan.";
+        if (tests > 0) msg += " Co " + tests + " test lien quan.";
         ra.addFlashAttribute("success", msg);
         return "redirect:/courses";
     }
 
-    private String getCourseStatus(Course c, LocalDate now) {
-        if (c.getStartDate() == null) return "Upcoming";
-        if (now.isBefore(c.getStartDate())) return "Upcoming";
-        if (c.getEndDate() != null && now.isAfter(c.getEndDate())) return "Ended";
-        return "Ongoing";
+    private String safe(String value) {
+        return value == null ? "" : value.toLowerCase();
     }
 }
