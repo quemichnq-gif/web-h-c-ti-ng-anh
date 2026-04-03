@@ -1,185 +1,261 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{fragments/layout}">
-<head><title>System Reports</title></head>
+<head>
+    <title>System Reports</title>
+</head>
 <body>
 <div layout:fragment="content">
 
-<div style="margin-bottom:28px">
-    <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">System Analytics & Reports</h1>
-    <p style="color:#94a3b8;font-size:14px">Comprehensive overview of portal usage and academic performance</p>
-</div>
+    <section class="admin-hero">
+        <div class="admin-hero-header">
+            <div class="admin-hero-copy">
+                <span class="eyebrow-pill">Analytics workspace</span>
+                <h1>Reports should explain the system, not fight the user.</h1>
+                <p>Explore people, courses, recurring errors, and assessment performance through a cleaner reporting surface with stronger hierarchy and safer empty states.</p>
+            </div>
+        </div>
+        <div class="hero-meta-grid">
+            <article class="hero-meta-card">
+                <span>Accounts</span>
+                <strong th:text="${totalUsers}">0</strong>
+                <p>All active and inactive identities currently stored in the portal.</p>
+            </article>
+            <article class="hero-meta-card">
+                <span>Courses</span>
+                <strong th:text="${totalCourses}">0</strong>
+                <p>Published course inventory available to the academic team.</p>
+            </article>
+            <article class="hero-meta-card">
+                <span>Assessments</span>
+                <strong th:text="${#lists.size(allTests)}">0</strong>
+                <p>Tracked tests included in current performance analytics.</p>
+            </article>
+        </div>
+    </section>
 
-<!-- Tabs Navigation -->
-<div style="display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid #e2e8f0;padding-bottom:12px">
-    <button onclick="showTab('users')" class="tab-btn active" id="btn-users">User Stats</button>
-    <button onclick="showTab('courses')" class="tab-btn" id="btn-courses">Course Stats</button>
-    <button onclick="showTab('errors')" class="tab-btn" id="btn-errors">Error Stats</button>
-    <button onclick="showTab('assessments')" class="tab-btn" id="btn-assessments">Assessment Stats</button>
-</div>
+    <nav class="analytics-tabs">
+        <a th:href="@{/admin/reports(tab='users')}" class="analytics-tab" th:classappend="${activeTab == 'users'} ? ' active' : ''">User Stats</a>
+        <a th:href="@{/admin/reports(tab='courses')}" class="analytics-tab" th:classappend="${activeTab == 'courses'} ? ' active' : ''">Course Stats</a>
+        <a th:href="@{/admin/reports(tab='errors')}" class="analytics-tab" th:classappend="${activeTab == 'errors'} ? ' active' : ''">Error Stats</a>
+        <a th:href="@{/admin/reports(tab='assessments')}" class="analytics-tab" th:classappend="${activeTab == 'assessments'} ? ' active' : ''">Assessment Stats</a>
+    </nav>
 
-<style>
-.tab-btn { padding:10px 20px; border:none; background:none; font-weight:700; color:#64748b; cursor:pointer; border-radius:10px; transition:all 0.2s; }
-.tab-btn.active { background:#7c3aed; color:#fff; }
-.tab-content { display:none; animation: fadeIn 0.3s ease; }
-.tab-content.active { display:block; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-</style>
-
-<!-- TAB 1: USERS -->
-<div id="tab-users" class="tab-content active">
-    <div style="display:grid;grid-template-columns:300px 1fr;gap:24px">
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">User Distribution</h3>
-            <div style="height:200px;display:flex;align-items:center;justify-content:center;position:relative">
-                <!-- Simple SVG Pie Chart -->
-                <svg viewBox="0 0 36 36" style="width:160px;height:160px;transform:rotate(-90deg)">
-                    <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#f1f5f9" stroke-width="3.8"></circle>
-                    <circle th:if="${studentCount > 0}" cx="18" cy="18" r="15.9" fill="transparent" stroke="#7c3aed" stroke-width="3.8" 
-                            th:stroke-dasharray="${(studentCount * 100.0 / (adminCount + staffCount + studentCount)) + ' ' + (100 - (studentCount * 100.0 / (adminCount + staffCount + studentCount)))}"></circle>
-                </svg>
-                <div style="position:absolute;text-align:center">
-                    <div style="font-size:24px;font-weight:800;color:#1e293b" th:text="${adminCount + staffCount + studentCount}">0</div>
-                    <div style="font-size:10px;color:#64748b;text-transform:uppercase;font-weight:700">Total Users</div>
-                </div>
-            </div>
-            <div style="margin-top:20px;display:grid;gap:10px">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;background:#7c3aed;border-radius:2px"></div><span style="font-size:13px;font-weight:600">Students</span></div>
-                    <span style="font-size:13px;font-weight:700" th:text="${studentCount}">0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;background:#2563eb;border-radius:2px"></div><span style="font-size:13px;font-weight:600">Staff</span></div>
-                    <span style="font-size:13px;font-weight:700" th:text="${staffCount}">0</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;background:#10b981;border-radius:2px"></div><span style="font-size:13px;font-weight:600">Admins</span></div>
-                    <span style="font-size:13px;font-weight:700" th:text="${adminCount}">0</span>
-                </div>
-            </div>
-        </article>
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">User Activity Status</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                <div style="background:#f0fdf4;padding:24px;border-radius:16px;text-align:center">
-                    <div style="font-size:32px;font-weight:800;color:#166534" th:text="${activeUsers}">0</div>
-                    <div style="font-size:13px;font-weight:700;color:#15803d">ACTIVE ACCOUNTS</div>
-                </div>
-                <div style="background:#f1f5f9;padding:24px;border-radius:16px;text-align:center">
-                    <div style="font-size:32px;font-weight:800;color:#475569" th:text="${inactiveUsers}">0</div>
-                    <div style="font-size:13px;font-weight:700;color:#64748b">INACTIVE ACCOUNTS</div>
-                </div>
-            </div>
-            <div style="margin-top:24px">
-                 <h4 style="font-size:14px;font-weight:800;margin-bottom:12px">Summary</h4>
-                 <p style="font-size:13px;color:#64748b;line-height:1.6">The system currently manages 
-                 <strong th:text="${studentCount}">0</strong> students and 
-                 <strong th:text="${staffCount + adminCount}">0</strong> personnel.
-                     <span th:text="${activeUsers * 100 / (activeUsers + inactiveUsers + 0.0001)}">0</span>%of all accounts are currently active.</p>
-            </div>
-        </article>
-    </div>
-</div>
-
-<!-- TAB 2: COURSES -->
-<div id="tab-courses" class="tab-content">
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Top 5 Enrolled Courses</h3>
-            <table class="data-table">
-                <thead><tr><th>Course Name</th><th>Enrollments</th><th>Trend</th></tr></thead>
-                <tbody>
-                    <tr th:each="c : ${topCourses}">
-                        <td style="font-weight:700" th:text="${c.name}">Course</td>
-                        <td th:text="${enrollmentPerCourse[c.id]}">0</td>
-                        <td><div style="width:100px;height:4px;background:#f1f5f9;border-radius:99px"><div th:style="'height:100%;background:#7c3aed;border-radius:99px;width:' + (topCourses[0].id == c.id ? 100 : enrollmentPerCourse[c.id]*100/enrollmentPerCourse[topCourses[0].id]) + '%'"></div></div></td>
-                    </tr>
-                </tbody>
-            </table>
-        </article>
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:12px">Course Catalog Overview</h3>
-            <div style="padding:20px;background:#fdf2ff;border-radius:16px;margin-bottom:16px">
-                <div style="font-size:24px;font-weight:800;color:#9333ea" th:text="${totalCourses}">0</div>
-                <div style="font-size:12px;font-weight:700;color:#a855f7">TOTAL COURSES PUBLISHED</div>
-            </div>
-            <p style="font-size:13px;color:#64748b;line-height:1.6">Students are distributed across multiple English proficiency levels. The most popular course is <strong th:if="${!topCourses.isEmpty()}" th:text="${topCourses[0].name}">N/A</strong>.</p>
-        </article>
-    </div>
-</div>
-
-<!-- TAB 3: ERRORS -->
-<div id="tab-errors" class="tab-content">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Top 10 Error Types Detected</h3>
-            <div th:each="entry,stat : ${topErrors}" style="margin-bottom:12px">
-                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-                    <span style="font-weight:700" th:text="${entry.key}">Error Type</span>
-                    <span style="color:#94a3b8" th:text="${entry.value + ' occurrences'}">0</span>
-                </div>
-                <div style="height:6px;background:#f1f5f9;border-radius:99px"><div th:style="'height:100%;border-radius:99px;background:#ef4444;width:' + (entry.value * 100 / topErrors[0].value) + '%'"></div></div>
-            </div>
-        </article>
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Error Insights</h3>
-            <div style="display:grid;gap:16px">
-                <div style="padding:16px;border:1px solid #fecaca;border-radius:12px;background:#fff5f5">
-                    <div style="font-size:12px;font-weight:800;color:#dc2626;margin-bottom:4px">CRITICAL AREA</div>
-                    <div style="font-weight:700" th:if="${!topErrors.isEmpty()}" th:text="${topErrors[0].key}">N/A</div>
-                    <div style="font-size:12px;color:#64748b;margin-top:2px">Highest frequency of student mistakes. Recommended to assign more remedial tests for this category.</div>
-                </div>
-            </div>
-        </article>
-    </div>
-</div>
-
-<!-- TAB 4: ASSESSMENTS -->
-<div id="tab-assessments" class="tab-content">
-    <div style="display:grid;gap:24px">
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Average Test Performance</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:20px">
-                <div th:each="t : ${allTests}" style="padding:16px;border:1px solid #e2e8f0;border-radius:12px">
-                    <div style="font-weight:700;font-size:13px;margin-bottom:12px" th:text="${t.title}">Test</div>
-                    <div style="display:flex;align-items:baseline;gap:4px">
-                        <span style="font-size:24px;font-weight:800;color:#2563eb" th:text="${#numbers.formatDecimal(avgScores[t.id],1,1)}">0.0</span>
-                        <span style="font-size:12px;color:#94a3b8">/ 10</span>
+    <section class="page-section" th:if="${activeTab == 'users'}">
+        <div class="analytics-grid">
+            <article class="surface-panel">
+                <div class="surface-panel-body">
+                    <div class="surface-panel-header">
+                        <div>
+                            <h2>User Distribution</h2>
+                            <p>Quick breakdown of user concentration across students, staff, and administrators.</p>
+                        </div>
                     </div>
-                    <div style="margin-top:12px;height:4px;background:#f1f5f9;border-radius:99px">
-                        <div th:style="'height:100%;border-radius:99px;background:#3b82f6;width:' + (avgScores[t.id] * 10) + '%'"></div>
+
+                    <div class="donut-shell">
+                        <div style="position:relative">
+                            <svg viewBox="0 0 36 36" style="width:180px;height:180px;transform:rotate(-90deg)">
+                                <circle cx="18" cy="18" r="15.9" fill="transparent" stroke="#e2e8f0" stroke-width="3.8"></circle>
+                                <circle th:if="${studentCount > 0 and totalUsers > 0}" cx="18" cy="18" r="15.9" fill="transparent" stroke="#8b5cf6" stroke-width="3.8"
+                                        th:stroke-dasharray="${(studentCount * 100.0 / totalUsers) + ' ' + (100 - (studentCount * 100.0 / totalUsers))}"></circle>
+                            </svg>
+                            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                                <strong style="font-size:2rem;line-height:1;color:#0f172a" th:text="${totalUsers}">0</strong>
+                                <span style="margin-top:6px;color:#64748b;font-size:0.78rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase">Total users</span>
+                            </div>
+                        </div>
+
+                        <div class="donut-summary">
+                            <div class="summary-line">
+                                <div class="summary-label" style="--summary-color:#8b5cf6">Students</div>
+                                <strong th:text="${studentCount}">0</strong>
+                            </div>
+                            <div class="summary-line">
+                                <div class="summary-label" style="--summary-color:#2563eb">Staff</div>
+                                <strong th:text="${staffCount}">0</strong>
+                            </div>
+                            <div class="summary-line">
+                                <div class="summary-label" style="--summary-color:#10b981">Admins</div>
+                                <strong th:text="${adminCount}">0</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </article>
+
+            <aside class="analytics-stats">
+                <article class="score-card">
+                    <strong th:text="${activeUsers}">0</strong>
+                    <span>Active accounts</span>
+                </article>
+                <article class="score-card">
+                    <strong th:text="${inactiveUsers}">0</strong>
+                    <span>Inactive accounts</span>
+                </article>
+                <article class="score-card">
+                    <strong th:text="${activeRate + '%'}">0%</strong>
+                    <span>Active rate</span>
+                </article>
+            </aside>
+        </div>
+    </section>
+
+    <section class="page-section" th:if="${activeTab == 'courses'}">
+        <div class="analytics-grid">
+            <article class="surface-panel">
+                <div class="surface-panel-body">
+                    <div class="surface-panel-header">
+                        <div>
+                            <h2>Top Enrolled Courses</h2>
+                            <p>Which programs are attracting the most student demand right now.</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(topCourses)}" class="empty-panel">No course data available.</div>
+
+                    <div th:unless="${#lists.isEmpty(topCourses)}" class="progress-list">
+                        <article th:each="c : ${topCourses}" class="progress-row">
+                            <div class="progress-row-head">
+                                <span th:text="${c.name}">Course</span>
+                                <strong th:text="${enrollmentPerCourse[c.id] + ' enrollments'}">0 enrollments</strong>
+                            </div>
+                            <div class="progress-bar">
+                                <span th:style="${'width:' + (maxCourseEnrollment == 0 ? 0 : (enrollmentPerCourse[c.id] * 100 / maxCourseEnrollment)) + '%'}"></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="analytics-stats">
+                <article class="score-card">
+                    <strong th:text="${totalCourses}">0</strong>
+                    <span>Total published courses</span>
+                </article>
+                <article class="attention-card">
+                    <strong>Most in demand</strong>
+                    <h3 th:text="${!topCourses.isEmpty() ? topCourses[0].name : 'No data yet'}">No data yet</h3>
+                    <p th:text="${!topCourses.isEmpty()} ? 'This course currently leads the portfolio by enrollment count.' : 'Publish and approve more enrollments to unlock course demand trends.'">
+                        This course currently leads the portfolio by enrollment count.
+                    </p>
+                </article>
+            </aside>
+        </div>
+    </section>
+
+    <section class="page-section" th:if="${activeTab == 'errors'}">
+        <div class="analytics-grid">
+            <article class="surface-panel">
+                <div class="surface-panel-body">
+                    <div class="surface-panel-header">
+                        <div>
+                            <h2>Top Error Types</h2>
+                            <p>See the recurring friction points most often detected in student performance.</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(topErrors)}" class="empty-panel">No error data available.</div>
+
+                    <div th:unless="${#lists.isEmpty(topErrors)}" class="progress-list">
+                        <article th:each="entry : ${topErrors}" class="progress-row">
+                            <div class="progress-row-head">
+                                <span th:text="${entry.key}">Error type</span>
+                                <strong th:text="${entry.value + ' occurrences'}">0 occurrences</strong>
+                            </div>
+                            <div class="progress-bar">
+                                <span style="background:linear-gradient(90deg, #fb7185 0%, #ef4444 100%)"
+                                      th:styleappend="${'width:' + (maxErrorOccurrences == 0 ? 0 : (entry.value * 100 / maxErrorOccurrences)) + '%'}"></span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="analytics-stats">
+                <article class="attention-card">
+                    <strong>Critical area</strong>
+                    <h3 th:text="${!topErrors.isEmpty() ? topErrors[0].key : 'No critical area detected'}">No critical area detected</h3>
+                    <p th:text="${!topErrors.isEmpty()} ? 'This pattern appears most often and should receive the next targeted remedial response.' : 'Once student errors are recorded, this panel will highlight the highest-risk pattern.'">
+                        This pattern appears most often and should receive the next targeted remedial response.
+                    </p>
+                </article>
+            </aside>
+        </div>
+    </section>
+
+    <section class="page-section" th:if="${activeTab == 'assessments'}">
+        <article class="surface-panel">
+            <div class="surface-panel-body">
+                <div class="surface-panel-header">
+                    <div>
+                        <h2>Average Test Performance</h2>
+                        <p>Assess how each test is performing before diving into individual low-score cases.</p>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(allTests)}" class="empty-panel">No assessment data available.</div>
+
+                <div th:unless="${#lists.isEmpty(allTests)}" class="metric-grid metric-grid-3">
+                    <article th:each="t : ${allTests}" class="metric-card is-blue">
+                        <div class="metric-card-header">
+                            <div class="metric-icon">
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                            </div>
+                            <span class="metric-kicker">Assessment</span>
+                        </div>
+                        <div class="metric-label" th:text="${t.title != null ? t.title : 'Unnamed test'}">Test</div>
+                        <div class="metric-value" th:text="${#numbers.formatDecimal(avgScores[t.id] != null ? avgScores[t.id] : 0.0,1,1)}">0.0</div>
+                        <div class="metric-copy">Average score out of 10 for this assessment.</div>
+                        <div class="progress-bar" style="margin-top:14px">
+                            <span th:style="${'width:' + ((avgScores[t.id] != null ? avgScores[t.id] : 0.0) * 10) + '%'}"></span>
+                        </div>
+                    </article>
+                </div>
             </div>
         </article>
-        
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Students Requiring Attention (Low Performance)</h3>
-            <table class="data-table">
-                <thead><tr><th>Student</th><th>Test</th><th>Score</th><th>Submitted</th></tr></thead>
-                <tbody>
-                    <tr th:each="r : ${lowResults}">
-                        <td><div style="font-weight:700" th:text="${r.student.fullName}">Name</div><div style="font-size:11px;color:#94a3b8" th:text="${r.student.email}">email</div></td>
-                        <td th:text="${r.test.title}">Test</td>
-                        <td><span style="color:#ef4444;font-weight:800" th:text="${r.score}">0</span><span style="font-size:11px;color:#94a3b8">/10</span></td>
-                        <td style="font-size:12px;color:#94a3b8" th:text="${#temporals.format(r.submittedAt,'dd/MM/yyyy')}">Date</td>
-                    </tr>
-                </tbody>
-            </table>
-        </article>
-    </div>
-</div>
 
-<script>
-function showTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tabId).classList.add('active');
-    document.getElementById('btn-' + tabId).classList.add('active');
-}
-</script>
+        <article class="surface-panel page-section">
+            <div class="surface-panel-body">
+                <div class="surface-panel-header">
+                    <div>
+                        <h2>Students Requiring Attention</h2>
+                        <p>Low-score submissions that deserve closer intervention or remedial planning.</p>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(lowResults)}" class="empty-panel">No low-performance students found.</div>
+
+                <div th:unless="${#lists.isEmpty(lowResults)}" class="table-wrapper">
+                    <table class="data-table report-table">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Test</th>
+                            <th>Score</th>
+                            <th>Submitted</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${lowResults}">
+                            <td>
+                                <div style="font-weight:800;color:#0f172a" th:text="${r.student != null && r.student.fullName != null && !r.student.fullName.isBlank() ? r.student.fullName : 'Unknown student'}">Name</div>
+                                <div style="font-size:12px;color:#94a3b8" th:text="${r.student != null && r.student.email != null ? r.student.email : 'No email'}">email</div>
+                            </td>
+                            <td th:text="${r.test != null && r.test.title != null ? r.test.title : 'Unknown test'}">Test</td>
+                            <td>
+                                <span style="display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 12px;border-radius:999px;background:#fee2e2;color:#b91c1c;font-size:0.84rem;font-weight:800"
+                                      th:text="${r.score != null ? #numbers.formatDecimal(r.score,1,1) + '/10' : '0.0/10'}">0.0/10</span>
+                            </td>
+                            <td style="color:#64748b;font-size:0.88rem" th:text="${r.submittedAt != null ? #temporals.format(r.submittedAt,'dd/MM/yyyy') : 'N/A'}">Date</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+    </section>
 
 </div>
 </body>
