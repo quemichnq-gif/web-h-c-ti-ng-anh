@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{fragments/layout}">
@@ -14,47 +14,25 @@
     </div>
 </div>
 <div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
 
-<!-- Pending alert -->
 <div th:if="${pendingCount > 0}" style="padding:14px 20px;border-radius:12px;background:#fffbeb;border:1px solid #fbbf24;color:#92400e;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-    <span>⚠️</span>
+    <span>Warning</span>
     <span><strong th:text="${pendingCount}">0</strong> enrollment request(s) are waiting for your review</span>
 </div>
 
-<!-- Quick Enroll -->
-<article class="chart-card" style="margin-bottom:24px">
-    <h3 style="font-size:15px;font-weight:800;margin-bottom:16px">Quick Enrollment</h3>
-    <form th:action="@{/enrollments/create}" method="post" class="filter-form quick-enroll-form">
-        <div class="field" style="margin:0">
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Select Student</label>
-            <select name="studentId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
-                <option th:each="s : ${students}" th:value="${s.id}" 
-                        th:text="${(s.fullName != null ? s.fullName : s.username) + ' [' + s.username + ']'}">Student</option>
-            </select>
-        </div>
-        <div class="field" style="margin:0">
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Assign to Course</label>
-            <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
-                <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">Course</option>
-            </select>
-        </div>
-        <button type="submit" class="primary-button" style="min-height:48px;padding:0 20px;border-radius:10px">Enroll Student</button>
-    </form>
-</article>
-
-<!-- Course filter -->
 <article class="chart-card" style="margin-bottom:20px">
     <form method="get" th:action="@{/enrollments}" class="filter-form">
         <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Select Course</label>
-            <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+            <label class="field-label">Select Course</label>
+            <select name="courseId" class="field-input">
                 <option value="">-- All Courses --</option>
                 <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == selectedCourseId}" th:text="${c.name}">Course</option>
             </select>
         </div>
         <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Filter Status</label>
-            <select name="status" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+            <label class="field-label">Filter Status</label>
+            <select name="status" class="field-input">
                 <option value="ALL">All Status</option>
                 <option value="PENDING" th:selected="${filterStatus == 'PENDING'}">Pending</option>
                 <option value="APPROVED" th:selected="${filterStatus == 'APPROVED'}">Approved</option>
@@ -62,8 +40,8 @@
             </select>
         </div>
         <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Search</label>
-            <input name="search" th:value="${search}" placeholder="Student name or email..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+            <label class="field-label">Search</label>
+            <input name="search" th:value="${search}" placeholder="Student name or email..." class="field-input">
         </div>
         <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Apply</button>
     </form>
@@ -71,8 +49,18 @@
 
 <article class="chart-card" th:if="${enrollments != null}">
     <div class="table-wrapper">
-        <table class="data-table">
-            <thead><tr><th>#</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <table class="data-table enrollment-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Enrollment Meta</th>
+                <th>Status</th>
+                <th>Staff / Notes</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
             <tbody>
                 <tr th:each="e,stat : ${enrollments}">
                     <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
@@ -80,59 +68,188 @@
                         <div style="font-weight:700" th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">Student</div>
                         <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
                     </td>
-                    <td th:text="${e.course.name}">Course</td>
-                    <td style="font-size:12px;color:#94a3b8" th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
                     <td>
-                        <span th:text="${e.status}"
-                              th:style="${e.status == 'APPROVED' ? 'background:#dcfce7;color:#166534;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : (e.status == 'REJECTED' ? 'background:#fef2f2;color:#991b1b;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : 'background:#fffbeb;color:#92400e;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800')}">STATUS</span>
+                        <div style="font-weight:700" th:text="${e.course.name}">Course</div>
+                        <div style="font-size:12px;color:#94a3b8" th:text="${e.course.code}">COURSE</div>
+                    </td>
+                    <td style="font-size:12px;color:#64748b;line-height:1.7">
+                        <div><strong>Requested:</strong> <span th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
+                        <div><strong>Created:</strong> <span th:text="${e.createdAt != null ? #temporals.format(e.createdAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
+                        <div><strong>Processed:</strong> <span th:text="${e.processedAt != null ? #temporals.format(e.processedAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
                     </td>
                     <td>
-                        <div style="display:flex;gap:8px">
-                            <form th:if="${e.status == 'PENDING'}" th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post" style="display:inline">
-                                <button style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534;background:none;cursor:pointer">✓ Approve</button>
+                        <span th:text="${e.status}"
+                              th:style="${e.status.name() == 'APPROVED' ? 'background:#dcfce7;color:#166534;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : (e.status.name() == 'REJECTED' ? 'background:#fef2f2;color:#991b1b;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800' : 'background:#fffbeb;color:#92400e;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800')}">STATUS</span>
+                    </td>
+                    <td style="font-size:12px;color:#64748b;line-height:1.7;max-width:260px">
+                        <div><strong>Staff:</strong> <span th:text="${e.academicStaff != null ? (e.academicStaff.fullName != null ? e.academicStaff.fullName : e.academicStaff.username) : 'N/A'}">Staff</span></div>
+                        <div th:if="${e.note != null}"><strong>Note:</strong> <span th:text="${e.note}">Note</span></div>
+                        <div th:if="${e.rejectReason != null}"><strong>Reject:</strong> <span th:text="${e.rejectReason}">Reason</span></div>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <form th:if="${e.status.name() == 'PENDING'}" th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post" style="display:inline">
+                                <button style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534;background:none;cursor:pointer">Approve</button>
                             </form>
-                            <button th:if="${e.status == 'PENDING'}" th:onclick="|openRejectModal('${e.id}')|" style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">✗ Reject</button>
-                            <form th:action="@{'/enrollments/' + ${e.id} + '/remove'}" method="post" style="display:inline" onsubmit="return confirm('Remove this enrollment?')">
+                            <button th:if="${e.status.name() == 'PENDING'}" th:onclick="|openRejectModal('${e.id}')|" style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Reject</button>
+                            <form sec:authorize="hasRole('ADMIN')" th:action="@{'/enrollments/' + ${e.id} + '/remove'}" method="post" style="display:inline" onsubmit="return confirm('Remove this enrollment?')">
                                 <button style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#64748b;background:none;cursor:pointer">Remove</button>
                             </form>
                         </div>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(enrollments)}">
-                    <td colspan="6" style="text-align:center;color:#94a3b8;padding:60px">No enrollments found. Select a course above.</td>
+                    <td colspan="7" style="text-align:center;color:#94a3b8;padding:60px">No enrollments found. Select a course above.</td>
                 </tr>
             </tbody>
         </table>
     </div>
 </article>
 
+<section class="enrollment-entry-grid" style="margin-top:32px">
+    <div style="margin-bottom:24px">
+        <button type="button" class="primary-button" style="min-height:44px;padding:0 20px;border-radius:10px" onclick="openQuickEnrollmentModal()">
+            Quick Enrollment
+        </button>
+    </div>
+
+    <article class="chart-card" style="margin-bottom:24px">
+        <h3 style="font-size:15px;font-weight:800;margin-bottom:16px">Detailed Enrollment</h3>
+        <form th:action="@{/enrollments/create-detailed}" method="post" class="stack-form" id="detailedEnrollmentForm">
+            <div class="two-col-grid">
+                <div class="field-block">
+                    <label class="field-label">Student</label>
+                    <select name="studentId" class="field-input">
+                        <option th:each="s : ${students}" th:value="${s.id}"
+                                th:text="${(s.fullName != null ? s.fullName : s.username) + ' [' + s.username + ']'}">Student</option>
+                    </select>
+                </div>
+                <div class="field-block">
+                    <label class="field-label">Course</label>
+                    <select name="courseId" class="field-input">
+                        <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">Course</option>
+                    </select>
+                </div>
+            </div>
+            <div class="two-col-grid">
+                <div class="field-block">
+                    <label class="field-label">Enrollment Date</label>
+                    <input type="datetime-local" name="enrolledAt" class="field-input" required>
+                </div>
+                <div class="field-block">
+                    <label class="field-label">Initial Status</label>
+                    <select name="status" class="field-input" id="detailedStatusSelect">
+                        <option th:each="statusOption : ${statusOptions}" th:value="${statusOption.name()}" th:text="${statusOption.name()}">PENDING</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field-block">
+                <label class="field-label">Internal Note</label>
+                <textarea name="note" rows="3" class="field-input area-input" placeholder="Reason for manual enrollment, supporting info, payment note..."></textarea>
+            </div>
+            <div class="field-block" id="rejectReasonBlock" style="display:none">
+                <label class="field-label">Reject Reason</label>
+                <textarea name="rejectReason" rows="3" class="field-input area-input" placeholder="Required when initial status is REJECTED."></textarea>
+            </div>
+            <p style="margin:0;color:#94a3b8;font-size:12px">Detailed mode stores the operator (`academic_staff_id`), request time, initial status, note, and processing metadata directly in the enrollment record.</p>
+            <button type="submit" class="primary-button" style="min-height:48px;padding:0 20px;border-radius:10px">Create Detailed Enrollment</button>
+        </form>
+    </article>
+</section>
+
 <style>
+.enrollment-entry-grid {
+    display:grid;
+    grid-template-columns:1fr;
+    gap:0;
+}
 .filter-form {
     display: grid;
-    grid-template-columns: 1fr 1fr auto auto;
+    grid-template-columns: 1fr 1fr 1fr auto;
     gap: 14px;
     align-items: end;
 }
-.quick-enroll-form {
-    grid-template-columns: 1fr 1fr auto;
+.stack-form {
+    display:grid;
+    gap:14px;
+}
+.two-col-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+.field-block {
+    margin:0;
+}
+.field-label {
+    font-size:12px;
+    font-weight:700;
+    color:#64748b;
+    display:block;
+    margin-bottom:6px;
+}
+.field-input {
+    width:100%;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:14px;
+    outline:none;
+    box-sizing:border-box;
+}
+.area-input {
+    resize:vertical;
+    min-height:90px;
+}
+.enrollment-table td {
+    vertical-align:top;
 }
 @media (max-width: 768px) {
-    .filter-form, .quick-enroll-form {
+    .filter-form, .two-col-grid {
         grid-template-columns: 1fr;
     }
 }
 </style>
 
-<!-- Reject Modal -->
 <div id="rejectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:20px;padding:32px;max-width:440px;width:90%">
         <h3 style="font-size:18px;font-weight:800;margin-bottom:8px">Reject Enrollment</h3>
         <p style="color:#64748b;font-size:14px;margin-bottom:16px">Provide an optional reason for rejection:</p>
         <form id="rejectForm" method="post">
-            <textarea name="reason" rows="3" placeholder="Reason (optional)..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:16px;box-sizing:border-box;resize:vertical"></textarea>
+            <textarea name="reason" rows="3" placeholder="Reason (optional)..." class="field-input area-input" style="margin-bottom:16px"></textarea>
             <div style="display:flex;gap:12px;justify-content:flex-end">
                 <button type="button" onclick="document.getElementById('rejectModal').style.display='none'" style="padding:10px 20px;border:1px solid #e2e8f0;border-radius:10px;font-weight:700;background:none;cursor:pointer">Cancel</button>
                 <button type="submit" style="padding:10px 20px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer">Confirm Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="quickEnrollmentModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.45);z-index:999;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:20px;padding:28px;max-width:520px;width:100%;box-shadow:0 24px 80px rgba(15,23,42,0.18)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px">
+            <div>
+                <h3 style="font-size:18px;font-weight:800;margin:0 0 8px 0">Quick Enrollment</h3>
+                <p style="margin:0;color:#64748b;font-size:14px">Create a pending enrollment and store the current staff account as the operator.</p>
+            </div>
+            <button type="button" onclick="closeQuickEnrollmentModal()" style="border:none;background:none;color:#94a3b8;font-size:22px;line-height:1;cursor:pointer">x</button>
+        </div>
+        <form th:action="@{/enrollments/create}" method="post" class="stack-form">
+            <div class="field-block">
+                <label class="field-label">Select Student</label>
+                <select name="studentId" class="field-input">
+                    <option th:each="s : ${students}" th:value="${s.id}"
+                            th:text="${(s.fullName != null ? s.fullName : s.username) + ' [' + s.username + ']'}">Student</option>
+                </select>
+            </div>
+            <div class="field-block">
+                <label class="field-label">Assign to Course</label>
+                <select name="courseId" class="field-input">
+                    <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.name}">Course</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap">
+                <button type="button" onclick="closeQuickEnrollmentModal()" style="padding:10px 20px;border:1px solid #e2e8f0;border-radius:10px;font-weight:700;background:none;cursor:pointer">Cancel</button>
+                <button type="submit" class="primary-button" style="min-height:44px;padding:0 20px;border-radius:10px">Enroll Student</button>
             </div>
         </form>
     </div>
@@ -142,6 +259,30 @@ function openRejectModal(id) {
     document.getElementById('rejectForm').action = '/enrollments/' + id + '/reject';
     document.getElementById('rejectModal').style.display = 'flex';
 }
+function openQuickEnrollmentModal() {
+    document.getElementById('quickEnrollmentModal').style.display = 'flex';
+}
+function closeQuickEnrollmentModal() {
+    document.getElementById('quickEnrollmentModal').style.display = 'none';
+}
+(function () {
+    const dateInput = document.querySelector('input[name="enrolledAt"]');
+    if (dateInput && !dateInput.value) {
+        const now = new Date();
+        const pad = (value) => String(value).padStart(2, '0');
+        dateInput.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    }
+
+    const statusSelect = document.getElementById('detailedStatusSelect');
+    const rejectReasonBlock = document.getElementById('rejectReasonBlock');
+    const toggleRejectReason = () => {
+        rejectReasonBlock.style.display = statusSelect && statusSelect.value === 'REJECTED' ? 'block' : 'none';
+    };
+    if (statusSelect) {
+        statusSelect.addEventListener('change', toggleRejectReason);
+        toggleRejectReason();
+    }
+})();
 </script>
 
 </div>

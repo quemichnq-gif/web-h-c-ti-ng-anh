@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Course;
+import com.example.demo.model.EnrollmentStatus;
 import com.example.demo.model.Lesson;
 import com.example.demo.model.LessonQuizQuestion;
 import com.example.demo.model.User;
@@ -124,7 +125,7 @@ public class LessonController {
 
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         if (courseOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Course does not exist.");
+
             return "redirect:/lessons/create";
         }
 
@@ -153,7 +154,7 @@ public class LessonController {
     public String editLessonForm(@PathVariable Long lessonId, Model model, RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         if (lessonOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Lesson does not exist.");
+
             return "redirect:/lessons";
         }
 
@@ -217,7 +218,7 @@ public class LessonController {
         lessonQuizQuestionRepository.deleteByLessonId(lessonId);
         saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
 
-        ra.addFlashAttribute("success", "Lesson '" + title + "' updated.");
+
         return "redirect:/lessons?courseId=" + courseId;
     }
 
@@ -238,7 +239,6 @@ public class LessonController {
             reorderLessonsAfterDeletion(courseId, deletedOrder);
         }
 
-        ra.addFlashAttribute("success", "Lesson deleted.");
         return courseId != null ? "redirect:/lessons?courseId=" + courseId : "redirect:/lessons";
     }
 
@@ -261,10 +261,7 @@ public class LessonController {
         }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
-                .anyMatch(e -> "APPROVED".equals(e.getStatus()));
 
-        if (!approved) {
-            ra.addFlashAttribute("error", "You need to be enrolled and approved to view this course.");
             return "redirect:/portal/courses";
         }
 
@@ -327,8 +324,6 @@ public class LessonController {
         }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
-                .anyMatch(e -> "APPROVED".equals(e.getStatus()));
-
         if (!approved) {
             throw new IOException("Unauthorized");
         }
@@ -457,5 +452,4 @@ public class LessonController {
         return value == null ? "" : value.toLowerCase();
     }
 
-    public record LessonView(Lesson lesson, List<LessonQuizQuestion> quizQuestions) {}
-}
+

@@ -84,7 +84,7 @@ public class ErrorManagementController {
         et.setName(name);
         et.setDescription(description);
         errorTypeRepository.save(et);
-        ra.addFlashAttribute("success", "Da tao Error Type '" + name + "' thanh cong.");
+        ra.addFlashAttribute("success", "Error type '" + name + "' created successfully.");
         return "redirect:/errors";
     }
 
@@ -94,7 +94,7 @@ public class ErrorManagementController {
         List<StudentError> related = studentErrorRepository.findByErrorTypeId(id);
         studentErrorRepository.deleteAll(related);
         errorTypeRepository.deleteById(id);
-        ra.addFlashAttribute("success", "Da xoa Error Type.");
+        ra.addFlashAttribute("success", "Error type deleted successfully.");
         return "redirect:/errors";
     }
 
@@ -104,11 +104,11 @@ public class ErrorManagementController {
         Optional<ErrorType> etOpt = errorTypeRepository.findById(errorTypeId);
         Optional<Test> testOpt = testRepository.findById(testId);
         if (etOpt.isEmpty() || testOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Du lieu khong hop le.");
+            ra.addFlashAttribute("error", "Invalid data.");
             return "redirect:/errors";
         }
         if (!testOpt.get().isRemedialTest()) {
-            ra.addFlashAttribute("error", "Chi co the gan Error Type voi remedial test.");
+            ra.addFlashAttribute("error", "Error types can only be linked to remedial tests.");
             return "redirect:/errors";
         }
         mappingRepository.findByErrorTypeId(errorTypeId).ifPresent(mappingRepository::delete);
@@ -117,7 +117,7 @@ public class ErrorManagementController {
         mapping.setErrorType(etOpt.get());
         mapping.setTest(testOpt.get());
         mappingRepository.save(mapping);
-        ra.addFlashAttribute("success", "Da gan test cho Error Type thanh cong.");
+        ra.addFlashAttribute("success", "Test linked to error type successfully.");
         return "redirect:/errors";
     }
 
@@ -248,3 +248,4 @@ public class ErrorManagementController {
         }
     }
 }
+

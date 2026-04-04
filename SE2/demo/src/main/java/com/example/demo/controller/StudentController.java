@@ -35,7 +35,7 @@ public class StudentController {
         if (search != null && !search.isBlank()) {
             String q = search.toLowerCase();
             students = students.stream()
-                    .filter(s -> (s.getFullName() != null && s.getFullName().toLowerCase().contains(q)) || 
+                    .filter(s -> (s.getFullName() != null && s.getFullName().toLowerCase().contains(q)) ||
                                  s.getUsername().toLowerCase().contains(q))
                     .toList();
         }
@@ -48,12 +48,12 @@ public class StudentController {
     public String detail(@PathVariable Long id, Model model, RedirectAttributes ra) {
         Optional<User> studentOpt = userRepository.findById(id);
         if (studentOpt.isEmpty() || studentOpt.get().getRole() != Role.STUDENT) {
-            ra.addFlashAttribute("error", "Học sinh không tồn tại.");
+            ra.addFlashAttribute("error", "Student not found.");
             return "redirect:/students";
         }
 
         User student = studentOpt.get();
-        model.addAttribute("user", student); // Use 'user' to be consistent with UserController and template
+        model.addAttribute("user", student);
         model.addAttribute("student", student);
         model.addAttribute("enrollments", enrollmentRepository.findByStudent(student));
         model.addAttribute("results", resultRepository.findByStudent(student));
