@@ -1,12 +1,14 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "lessons")
 public class Lesson {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,6 +44,30 @@ public class Lesson {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "test_id")
+    private Test test;
+
+    @Column(name = "duration")
+    private Integer duration;
+
+    @Column(name = "video_url")
+    private String videoUrl;
+
+    public enum LessonStatus {
+        DRAFT, PUBLISHED, ARCHIVED
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private LessonStatus status = LessonStatus.DRAFT;
+
+    // ✅ THÊM RELATIONSHIP NÀY - QUAN TRỌNG
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("sortOrder ASC")
+    private List<LessonQuizQuestion> quizQuestions = new ArrayList<>();
+
+    // ========== GETTERS & SETTERS ==========
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Course getCourse() { return course; }
@@ -64,6 +90,18 @@ public class Lesson {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public Test getTest() { return test; }
+    public void setTest(Test test) { this.test = test; }
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
+    public LessonStatus getStatus() { return status; }
+    public void setStatus(LessonStatus status) { this.status = status; }
+
+    // ✅ GETTER & SETTER CHO quizQuestions
+    public List<LessonQuizQuestion> getQuizQuestions() { return quizQuestions; }
+    public void setQuizQuestions(List<LessonQuizQuestion> quizQuestions) { this.quizQuestions = quizQuestions; }
 
     @PrePersist
     public void prePersist() {
@@ -72,6 +110,9 @@ public class Lesson {
             createdAt = now;
         }
         updatedAt = now;
+        if (status == null) {
+            status = LessonStatus.DRAFT;
+        }
     }
 
     @PreUpdate

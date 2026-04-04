@@ -59,7 +59,12 @@ public class CourseController {
 
     @GetMapping("/create")
     public String createForm(Model model) {
-        model.addAttribute("statuses", List.of(CourseStatus.DRAFT, CourseStatus.OPEN, CourseStatus.ARCHIVED));
+        // ✅ CÁCH 1: Dùng toàn bộ statuses có sẵn
+        model.addAttribute("statuses", CourseStatus.values());
+
+        // ✅ CÁCH 2: Hoặc chỉ chọn một số status cụ thể (nếu ARCHIVED chưa có)
+        // model.addAttribute("statuses", List.of(CourseStatus.DRAFT, CourseStatus.OPEN, CourseStatus.CLOSED));
+
         return "courses/create";
     }
 

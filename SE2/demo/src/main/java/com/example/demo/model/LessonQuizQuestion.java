@@ -1,10 +1,13 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "lesson_quiz_questions")
 public class LessonQuizQuestion {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -57,4 +60,20 @@ public class LessonQuizQuestion {
     public void setExplanation(String explanation) { this.explanation = explanation; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+
+    public boolean isCorrect(String studentAnswer) {
+        if (studentAnswer == null || correctAnswer == null) {
+            return false;
+        }
+        return correctAnswer.equalsIgnoreCase(studentAnswer.trim());
+    }
+
+    public Map<String, String> getAvailableOptions() {
+        Map<String, String> options = new LinkedHashMap<>();
+        if (optionA != null && !optionA.isBlank()) options.put("A", optionA);
+        if (optionB != null && !optionB.isBlank()) options.put("B", optionB);
+        if (optionC != null && !optionC.isBlank()) options.put("C", optionC);
+        if (optionD != null && !optionD.isBlank()) options.put("D", optionD);
+        return options;
+    }
 }
