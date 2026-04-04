@@ -87,8 +87,8 @@
                           th:text="${u.role}">ROLE</span>
                 </td>
                 <td>
-                    <span style="padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700"
-                          th:style="${u.status == 'ACTIVE' ? 'background:#dcfce7;color:#166534' : 'background:#f1f5f9;color:#64748b'}"
+                    <span style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;letter-spacing:0.02em"
+                          th:classappend="${u.status == 'ACTIVE' ? 'badge-status-active' : 'badge-status-inactive'}"
                           th:text="${u.status}">STATUS</span>
                 </td>
                 <td>
@@ -147,6 +147,8 @@
 .badge-admin{background:#fef2f2;color:#dc2626}
 .badge-staff{background:#eff6ff;color:#2563eb}
 .badge-student{background:#f8fafc;color:#64748b}
+.badge-status-active{background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0}
+.badge-status-inactive{background:#f8fafc;color:#64748b;border:1px solid #e2e8f0}
 </style>
 
 <script>

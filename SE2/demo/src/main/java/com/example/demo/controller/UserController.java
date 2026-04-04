@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.*;
+import com.example.demo.service.AuditLogService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,17 +24,20 @@ public class UserController {
     private final EnrollmentRepository enrollmentRepository;
     private final StudentResultRepository resultRepository;
     private final StudentErrorRepository errorRepository;
+    private final AuditLogService auditLogService;
 
     public UserController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           EnrollmentRepository enrollmentRepository,
                           StudentResultRepository resultRepository,
-                          StudentErrorRepository errorRepository) {
+                          StudentErrorRepository errorRepository,
+                          AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.enrollmentRepository = enrollmentRepository;
         this.resultRepository = resultRepository;
         this.errorRepository = errorRepository;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -137,6 +141,8 @@ public class UserController {
         user.setStatus(status);
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
+        auditLogService.log("USER_CREATED", "USER", user.getId(),
+                "Created user '" + user.getUsername() + "' with role " + user.getRole() + " and status " + user.getStatus() + ".");
 
         ra.addFlashAttribute("success", "Account '" + username + "' created successfully.");
         return "redirect:/users";
@@ -164,6 +170,9 @@ public class UserController {
         if (opt.isEmpty()) { ra.addFlashAttribute("error", "User not found."); return "redirect:/users"; }
 
         User user = opt.get();
+        String oldEmail = user.getEmail();
+        Role oldRole = user.getRole();
+        String oldStatus = user.getStatus();
         Optional<User> byEmail = userRepository.findByEmail(email);
         if (byEmail.isPresent() && !byEmail.get().getId().equals(id)) {
             ra.addFlashAttribute("error", "This email is already used by another account.");
@@ -179,34 +188,65 @@ public class UserController {
             user.setPassword(passwordEncoder.encode(rawPassword));
         }
         userRepository.save(user);
+        auditLogService.log("USER_UPDATED", "USER", user.getId(),
+                "Updated user '" + user.getUsername() + "' from email " + safe(oldEmail)
+                        + ", role " + safe(oldRole != null ? oldRole.name() : null)
+                        + ", status " + safe(oldStatus)
+                        + " to email " + safe(user.getEmail())
+                        + ", role " + safe(user.getRole() != null ? user.getRole().name() : null)
+                        + ", status " + safe(user.getStatus()) + ".");
         ra.addFlashAttribute("success", "Account updated successfully.");
         return "redirect:/users";
     }
 
     @PostMapping("/{id}/deactivate")
     public String deactivate(@PathVariable Long id, RedirectAttributes ra) {
-        userRepository.findById(id).ifPresent(u -> {
-            u.setStatus("INACTIVE");
-            userRepository.save(u);
-        });
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "User not found.");
+            return "redirect:/users";
+        }
+        User user = userOpt.get();
+        user.setStatus("INACTIVE");
+        userRepository.save(user);
+        auditLogService.log("USER_DEACTIVATED", "USER", user.getId(),
+                "Deactivated user '" + user.getUsername() + "'.");
         ra.addFlashAttribute("success", "Account deactivated successfully.");
         return "redirect:/users";
     }
 
     @PostMapping("/{id}/activate")
     public String activate(@PathVariable Long id, RedirectAttributes ra) {
-        userRepository.findById(id).ifPresent(u -> {
-            u.setStatus("ACTIVE");
-            userRepository.save(u);
-        });
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "User not found.");
+            return "redirect:/users";
+        }
+        User user = userOpt.get();
+        user.setStatus("ACTIVE");
+        userRepository.save(user);
+        auditLogService.log("USER_ACTIVATED", "USER", user.getId(),
+                "Activated user '" + user.getUsername() + "'.");
         ra.addFlashAttribute("success", "Account activated successfully.");
         return "redirect:/users";
     }
 
     @PostMapping("/{id}/delete")
     public String deleteUser(@PathVariable Long id, RedirectAttributes ra) {
-        userRepository.deleteById(id);
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "User not found.");
+            return "redirect:/users";
+        }
+        User user = userOpt.get();
+        userRepository.delete(user);
+        auditLogService.log("USER_DELETED", "USER", id,
+                "Deleted user '" + user.getUsername() + "' with role " + user.getRole() + ".");
         ra.addFlashAttribute("success", "Account deleted successfully.");
         return "redirect:/users";
+    }
+
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "-" : value;
     }
 }

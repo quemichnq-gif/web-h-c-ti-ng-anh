@@ -2,28 +2,50 @@ package com.example.demo.controller;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.service.AuditLogService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.Locale;
 
 @Controller
 @RequestMapping("/assessments")
 public class AssessmentController {
+    private static final long MAX_QUESTION_IMAGE_SIZE_BYTES = 5L * 1024 * 1024;
+    private static final long MAX_QUESTION_AUDIO_SIZE_BYTES = 10L * 1024 * 1024;
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/webp", "image/gif");
+    private static final List<String> ALLOWED_AUDIO_TYPES = List.of("audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/ogg", "audio/mp4", "audio/x-m4a");
 
     private final TestRepository testRepository;
     private final CourseRepository courseRepository;
     private final StudentResultRepository resultRepository;
     private final QuestionRepository questionRepository;
+    private final AuditLogService auditLogService;
+    private final Path questionImageRoot = Paths.get("uploads", "question-media", "images");
+    private final Path questionAudioRoot = Paths.get("uploads", "question-media", "audio");
 
     public AssessmentController(TestRepository testRepository, CourseRepository courseRepository,
-                                StudentResultRepository resultRepository, QuestionRepository questionRepository) {
+                                StudentResultRepository resultRepository, QuestionRepository questionRepository,
+                                AuditLogService auditLogService) {
         this.testRepository = testRepository;
         this.courseRepository = courseRepository;
         this.resultRepository = resultRepository;
         this.questionRepository = questionRepository;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -84,6 +106,7 @@ public class AssessmentController {
 
     @PostMapping("/create")
     public String create(@RequestParam String title,
+                         @RequestParam String code,
                          @RequestParam(required = false) String description,
                          @RequestParam Integer duration,
                          @RequestParam Long courseId,
@@ -95,6 +118,8 @@ public class AssessmentController {
                          @RequestParam(required = false) List<String> optionBs,
                          @RequestParam(required = false) List<String> optionCs,
                          @RequestParam(required = false) List<String> optionDs,
+                         @RequestParam(required = false) List<MultipartFile> questionImages,
+                         @RequestParam(required = false) List<MultipartFile> questionAudios,
                          RedirectAttributes ra) {
 
         Optional<Course> course = courseRepository.findById(courseId);
@@ -102,8 +127,18 @@ public class AssessmentController {
             ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/assessments/create";
         }
+        String normalizedCode = normalizeAssessmentCode(code);
+        if (normalizedCode == null) {
+            ra.addFlashAttribute("error", "Assessment code is required.");
+            return "redirect:/assessments/create";
+        }
+        if (testRepository.existsByCodeIgnoreCase(normalizedCode)) {
+            ra.addFlashAttribute("error", "Assessment code already exists.");
+            return "redirect:/assessments/create";
+        }
 
         Test test = new Test();
+        test.setCode(normalizedCode);
         test.setTitle(title);
         test.setDescription(description);
         test.setDuration(duration);
@@ -111,27 +146,19 @@ public class AssessmentController {
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
         testRepository.save(test);
 
-        if (questionContents != null) {
-            for (int i = 0; i < questionContents.size(); i++) {
-                if (!questionContents.get(i).isBlank()) {
-                    Question q = new Question();
-                    q.setTest(test);
-                    q.setContent(questionContents.get(i));
-
-                    String type = (questionTypes != null && i < questionTypes.size()) ? questionTypes.get(i) : "SHORT_ANSWER";
-                    q.setQuestionType(QuestionType.valueOf(type));
-                    q.setCorrectAnswer(correctAnswers != null && i < correctAnswers.size() ? correctAnswers.get(i) : "");
-
-                    if (QuestionType.MULTIPLE_CHOICE.name().equals(type)) {
-                        q.setOptionA(getVal(optionAs, i));
-                        q.setOptionB(getVal(optionBs, i));
-                        q.setOptionC(getVal(optionCs, i));
-                        q.setOptionD(getVal(optionDs, i));
-                    }
-                    questionRepository.save(q);
-                }
-            }
+        try {
+            saveQuestions(test, questionTypes, questionContents, correctAnswers, optionAs, optionBs, optionCs, optionDs,
+                    questionImages, questionAudios, List.of());
+        } catch (IllegalArgumentException ex) {
+            questionRepository.deleteAll(questionRepository.findByTestId(test.getId()));
+            testRepository.delete(test);
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/create";
         }
+        auditLogService.log("ASSESSMENT_CREATED", "ASSESSMENT", test.getId(),
+                "Created assessment '" + test.getTitle() + "' (" + test.getCode()
+                        + ") for course '" + safe(test.getCourse() != null ? test.getCourse().getCode() : null)
+                        + "' as " + test.getAssessmentType() + ".");
 
         ra.addFlashAttribute("success", "Assessment '" + title + "' created successfully.");
         return "redirect:/assessments";
@@ -160,6 +187,7 @@ public class AssessmentController {
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
                          @RequestParam String title,
+                         @RequestParam String code,
                          @RequestParam(required = false) String description,
                          @RequestParam Integer duration,
                          @RequestParam Long courseId,
@@ -171,43 +199,52 @@ public class AssessmentController {
                          @RequestParam(required = false) List<String> optionBs,
                          @RequestParam(required = false) List<String> optionCs,
                          @RequestParam(required = false) List<String> optionDs,
+                         @RequestParam(required = false) List<MultipartFile> questionImages,
+                         @RequestParam(required = false) List<MultipartFile> questionAudios,
                          RedirectAttributes ra) {
         Optional<Test> opt = testRepository.findById(id);
         if (opt.isEmpty()) {
             ra.addFlashAttribute("error", "Test not found.");
             return "redirect:/assessments";
         }
+        String normalizedCode = normalizeAssessmentCode(code);
+        if (normalizedCode == null) {
+            ra.addFlashAttribute("error", "Assessment code is required.");
+            return "redirect:/assessments/" + id + "/edit";
+        }
+        if (testRepository.existsByCodeIgnoreCaseAndIdNot(normalizedCode, id)) {
+            ra.addFlashAttribute("error", "Assessment code already exists.");
+            return "redirect:/assessments/" + id + "/edit";
+        }
 
         Test test = opt.get();
+        String previousTitle = test.getTitle();
+        String previousCode = test.getCode();
+        String previousCourseCode = test.getCourse() != null ? test.getCourse().getCode() : null;
+        AssessmentType previousType = test.getAssessmentType();
         courseRepository.findById(courseId).ifPresent(test::setCourse);
+        test.setCode(normalizedCode);
         test.setTitle(title);
         test.setDescription(description);
         test.setDuration(duration);
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
         testRepository.save(test);
 
-        questionRepository.deleteAll(questionRepository.findByTestId(id));
-        if (questionContents != null) {
-            for (int i = 0; i < questionContents.size(); i++) {
-                if (!questionContents.get(i).isBlank()) {
-                    Question q = new Question();
-                    q.setTest(test);
-                    q.setContent(questionContents.get(i));
-
-                    String type = (questionTypes != null && i < questionTypes.size()) ? questionTypes.get(i) : "SHORT_ANSWER";
-                    q.setQuestionType(QuestionType.valueOf(type));
-                    q.setCorrectAnswer(correctAnswers != null && i < correctAnswers.size() ? correctAnswers.get(i) : "");
-
-                    if (QuestionType.MULTIPLE_CHOICE.name().equals(type)) {
-                        q.setOptionA(getVal(optionAs, i));
-                        q.setOptionB(getVal(optionBs, i));
-                        q.setOptionC(getVal(optionCs, i));
-                        q.setOptionD(getVal(optionDs, i));
-                    }
-                    questionRepository.save(q);
-                }
-            }
+        List<Question> existingQuestions = questionRepository.findByTestId(id);
+        try {
+            saveQuestions(test, questionTypes, questionContents, correctAnswers, optionAs, optionBs, optionCs, optionDs,
+                    questionImages, questionAudios, existingQuestions);
+            deleteQuestionMedia(existingQuestions);
+            questionRepository.deleteAll(existingQuestions);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/" + id + "/edit";
         }
+        auditLogService.log("ASSESSMENT_UPDATED", "ASSESSMENT", test.getId(),
+                "Updated assessment from '" + safe(previousTitle) + "' (" + safe(previousCode) + ") in course '"
+                        + safe(previousCourseCode) + "' as " + (previousType != null ? previousType : "UNKNOWN")
+                        + " to '" + test.getTitle() + "' (" + test.getCode() + ") in course '"
+                        + safe(test.getCourse() != null ? test.getCourse().getCode() : null) + "' as " + test.getAssessmentType() + ".");
 
         ra.addFlashAttribute("success", "Test updated successfully.");
         return "redirect:/assessments";
@@ -215,15 +252,179 @@ public class AssessmentController {
 
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
-        questionRepository.deleteAll(questionRepository.findByTestId(id));
-        testRepository.deleteById(id);
+        Optional<Test> testOpt = testRepository.findById(id);
+        if (testOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Test not found.");
+            return "redirect:/assessments";
+        }
+        Test test = testOpt.get();
+        List<Question> questions = questionRepository.findByTestId(id);
+        deleteQuestionMedia(questions);
+        questionRepository.deleteAll(questions);
+        testRepository.delete(test);
+        auditLogService.log("ASSESSMENT_DELETED", "ASSESSMENT", id,
+                "Deleted assessment '" + test.getTitle() + "' (" + test.getCode()
+                        + ") from course '" + safe(test.getCourse() != null ? test.getCourse().getCode() : null) + "'.");
         ra.addFlashAttribute("success", "Test deleted successfully.");
         return "redirect:/assessments";
     }
 
+    private void saveQuestions(Test test,
+                               List<String> questionTypes,
+                               List<String> questionContents,
+                               List<String> correctAnswers,
+                               List<String> optionAs,
+                               List<String> optionBs,
+                               List<String> optionCs,
+                               List<String> optionDs,
+                               List<MultipartFile> questionImages,
+                               List<MultipartFile> questionAudios,
+                               List<Question> existingQuestions) {
+        if (questionContents == null) {
+            return;
+        }
+        for (int i = 0; i < questionContents.size(); i++) {
+            String content = questionContents.get(i);
+            if (content == null || content.isBlank()) {
+                continue;
+            }
+            Question q = new Question();
+            q.setTest(test);
+            q.setContent(content);
+
+            String type = (questionTypes != null && i < questionTypes.size()) ? questionTypes.get(i) : "SHORT_ANSWER";
+            q.setQuestionType(QuestionType.valueOf(type));
+            q.setCorrectAnswer(correctAnswers != null && i < correctAnswers.size() ? correctAnswers.get(i) : "");
+
+            if (QuestionType.MULTIPLE_CHOICE.name().equals(type)) {
+                q.setOptionA(getVal(optionAs, i));
+                q.setOptionB(getVal(optionBs, i));
+                q.setOptionC(getVal(optionCs, i));
+                q.setOptionD(getVal(optionDs, i));
+            }
+
+            Question existingQuestion = i < existingQuestions.size() ? existingQuestions.get(i) : null;
+            copyExistingMediaIfNeeded(q, existingQuestion, questionImages, questionAudios, i);
+            saveQuestionImage(q, getFile(questionImages, i));
+            saveQuestionAudio(q, getFile(questionAudios, i));
+            questionRepository.save(q);
+        }
+    }
+
+    private MultipartFile getFile(List<MultipartFile> files, int index) {
+        return files != null && index < files.size() ? files.get(index) : null;
+    }
+
+    private void copyExistingMediaIfNeeded(Question target,
+                                           Question existing,
+                                           List<MultipartFile> questionImages,
+                                           List<MultipartFile> questionAudios,
+                                           int index) {
+        if (existing == null) {
+            return;
+        }
+        MultipartFile image = getFile(questionImages, index);
+        MultipartFile audio = getFile(questionAudios, index);
+        if ((image == null || image.isEmpty()) && existing.hasImage()) {
+            target.setImageOriginalName(existing.getImageOriginalName());
+            target.setImageStoredName(existing.getImageStoredName());
+            target.setImageContentType(existing.getImageContentType());
+        }
+        if ((audio == null || audio.isEmpty()) && existing.hasAudio()) {
+            target.setAudioOriginalName(existing.getAudioOriginalName());
+            target.setAudioStoredName(existing.getAudioStoredName());
+            target.setAudioContentType(existing.getAudioContentType());
+        }
+    }
+
+    private void saveQuestionImage(Question question, MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            return;
+        }
+        validateQuestionImage(image);
+        try {
+            Files.createDirectories(questionImageRoot);
+            String originalName = sanitizeFilename(image.getOriginalFilename());
+            String storedName = LocalDateTime.now().toString().replace(":", "-") + "-" + UUID.randomUUID() + "-" + originalName;
+            Files.copy(image.getInputStream(), questionImageRoot.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
+            question.setImageOriginalName(originalName);
+            question.setImageStoredName(storedName);
+            question.setImageContentType(image.getContentType());
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Unable to store question image.");
+        }
+    }
+
+    private void saveQuestionAudio(Question question, MultipartFile audio) {
+        if (audio == null || audio.isEmpty()) {
+            return;
+        }
+        validateQuestionAudio(audio);
+        try {
+            Files.createDirectories(questionAudioRoot);
+            String originalName = sanitizeFilename(audio.getOriginalFilename());
+            String storedName = LocalDateTime.now().toString().replace(":", "-") + "-" + UUID.randomUUID() + "-" + originalName;
+            Files.copy(audio.getInputStream(), questionAudioRoot.resolve(storedName), StandardCopyOption.REPLACE_EXISTING);
+            question.setAudioOriginalName(originalName);
+            question.setAudioStoredName(storedName);
+            question.setAudioContentType(audio.getContentType());
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Unable to store question audio.");
+        }
+    }
+
+    private void deleteQuestionMedia(List<Question> questions) {
+        for (Question question : questions) {
+            if (question.hasImage()) {
+                try {
+                    Files.deleteIfExists(questionImageRoot.resolve(question.getImageStoredName()));
+                } catch (IOException ignored) {
+                }
+            }
+            if (question.hasAudio()) {
+                try {
+                    Files.deleteIfExists(questionAudioRoot.resolve(question.getAudioStoredName()));
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private void validateQuestionImage(MultipartFile image) {
+        if (image.getSize() > MAX_QUESTION_IMAGE_SIZE_BYTES) {
+            throw new IllegalArgumentException("Question image size must be 5 MB or smaller.");
+        }
+        String type = image.getContentType();
+        if (type == null || !ALLOWED_IMAGE_TYPES.contains(type)) {
+            throw new IllegalArgumentException("Question image must be JPG, PNG, WEBP, or GIF.");
+        }
+    }
+
+    private void validateQuestionAudio(MultipartFile audio) {
+        if (audio.getSize() > MAX_QUESTION_AUDIO_SIZE_BYTES) {
+            throw new IllegalArgumentException("Question audio size must be 10 MB or smaller.");
+        }
+        String type = audio.getContentType();
+        if (type == null || !ALLOWED_AUDIO_TYPES.contains(type)) {
+            throw new IllegalArgumentException("Question audio must be MP3, WAV, OGG, or M4A.");
+        }
+    }
+
+    private String sanitizeFilename(String filename) {
+        String raw = filename != null ? filename : "media-file";
+        String sanitized = Paths.get(raw).getFileName().toString().replaceAll("[^a-zA-Z0-9._-]", "_");
+        return sanitized.isBlank() ? "media-file" : sanitized;
+    }
+
+    private String normalizeAssessmentCode(String code) {
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+        return code.trim().toUpperCase(Locale.ROOT);
+    }
+
     @GetMapping("/{id}/results")
     public String results(@PathVariable Long id, Model model,
-                          @RequestParam(required = false) String bloomFilter,
                           @RequestParam(required = false) String passFilter,
                           @RequestParam(required = false) String studentSearch,
                           RedirectAttributes ra) {
@@ -236,7 +437,6 @@ public class AssessmentController {
         Test test = opt.get();
         List<StudentResult> allResults = resultRepository.findByTestId(id);
         List<StudentResult> results = allResults.stream()
-                .filter(r -> matchesBloomFilter(r, bloomFilter))
                 .filter(r -> matchesPassFilter(r, passFilter))
                 .filter(r -> matchesStudentSearch(r, studentSearch))
                 .sorted(Comparator
@@ -258,7 +458,6 @@ public class AssessmentController {
         model.addAttribute("passCount", passCount);
         model.addAttribute("failCount", failCount);
         model.addAttribute("allResultCount", allResults.size());
-        model.addAttribute("bloomFilter", bloomFilter);
         model.addAttribute("passFilter", passFilter);
         model.addAttribute("studentSearch", studentSearch);
         return "assessments/results";
@@ -299,10 +498,6 @@ public class AssessmentController {
         } catch (IllegalArgumentException ex) {
             return null;
         }
-    }
-
-    private boolean matchesBloomFilter(StudentResult result, String bloomFilter) {
-        return bloomFilter == null || bloomFilter.isBlank() || result.getBloomLevel().equalsIgnoreCase(bloomFilter);
     }
 
     private boolean matchesPassFilter(StudentResult result, String passFilter) {

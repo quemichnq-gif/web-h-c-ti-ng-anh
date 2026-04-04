@@ -15,7 +15,7 @@
     <div th:if="${resultCount > 0}" style="padding:14px 20px;border-radius:12px;background:#fffbeb;border:1px solid #fbbf24;color:#92400e;font-weight:600;margin-bottom:20px">
         <strong th:text="${resultCount}">0</strong> students have taken this test. Editing questions may affect their stored result detail snapshots.
     </div>
-    <form th:action="@{'/assessments/' + ${test.id} + '/edit'}" method="post" id="testForm">
+    <form th:action="@{'/assessments/' + ${test.id} + '/edit'}" method="post" enctype="multipart/form-data" id="testForm">
         <article class="chart-card" style="margin-bottom:20px">
             <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Assessment Information</h3>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -29,6 +29,14 @@
                 <div class="field" style="grid-column: span 2">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Test Title *</label>
                     <input name="title" th:value="${test.title}" required style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Assessment Code *</label>
+                    <input name="code" th:value="${test.code}" required maxlength="50" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;text-transform:uppercase">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
+                    <input th:value="${test.createdAt != null ? #temporals.format(test.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}" readonly style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
                 </div>
                 <div class="field" style="grid-column: span 2">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
@@ -64,6 +72,22 @@
                     </div>
                     <div style="display:grid;gap:12px">
                         <textarea name="questionContents" required rows="2" th:text="${q.content}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="media-grid">
+                            <div>
+                                <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8;display:block;margin-bottom:6px">Question Image</label>
+                                <input name="questionImages" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+                                <div th:if="${q.hasImage()}" style="margin-top:8px">
+                                    <img th:src="@{'/question-media/' + ${q.id} + '/image'}" alt="Question image" style="max-width:160px;border-radius:12px;border:1px solid #e2e8f0;display:block">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8;display:block;margin-bottom:6px">Question Audio</label>
+                                <input name="questionAudios" type="file" accept=".mp3,.wav,.ogg,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+                                <audio th:if="${q.hasAudio()}" controls style="width:100%;margin-top:8px">
+                                    <source th:src="@{'/question-media/' + ${q.id} + '/audio'}" th:type="${q.audioContentType}">
+                                </audio>
+                            </div>
+                        </div>
                         <div th:if="${q.questionType.name() == 'MULTIPLE_CHOICE'}" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                             <input name="optionAs" th:value="${q.optionA}" placeholder="Option A" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
                             <input name="optionBs" th:value="${q.optionB}" placeholder="Option B" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
@@ -112,6 +136,10 @@ function addQuestion(type) {
     <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:13px;color:#7c3aed">Question ${qIndex+1} · ${type}</span><button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button></div>
     <div style="display:grid;gap:12px">
         <textarea name="questionContents" required rows="2" placeholder="Question content..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="media-grid">
+            <input name="questionImages" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+            <input name="questionAudios" type="file" accept=".mp3,.wav,.ogg,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+        </div>
         ${options}
         <input name="correctAnswers" placeholder="Correct answer..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
     </div>`;

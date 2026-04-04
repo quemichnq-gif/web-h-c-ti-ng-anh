@@ -7,6 +7,7 @@ import com.example.demo.model.ErrorType;
 import com.example.demo.model.Lesson;
 import com.example.demo.model.LessonQuizQuestion;
 import com.example.demo.model.StudentError;
+import com.example.demo.model.Test;
 import com.example.demo.model.User;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.EnrollmentRepository;
@@ -14,7 +15,9 @@ import com.example.demo.repository.ErrorTypeRepository;
 import com.example.demo.repository.LessonQuizQuestionRepository;
 import com.example.demo.repository.LessonRepository;
 import com.example.demo.repository.StudentErrorRepository;
+import com.example.demo.repository.TestRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.AuditLogService;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -69,6 +72,8 @@ public class LessonController {
     private final UserRepository userRepository;
     private final ErrorTypeRepository errorTypeRepository;
     private final StudentErrorRepository studentErrorRepository;
+    private final TestRepository testRepository;
+    private final AuditLogService auditLogService;
     private final Path uploadRoot = Paths.get("uploads", "lesson-files");
     private final Path imageUploadRoot = Paths.get("uploads", "lesson-images");
 
@@ -78,7 +83,9 @@ public class LessonController {
                             EnrollmentRepository enrollmentRepository,
                             UserRepository userRepository,
                             ErrorTypeRepository errorTypeRepository,
-                            StudentErrorRepository studentErrorRepository) {
+                            StudentErrorRepository studentErrorRepository,
+                            TestRepository testRepository,
+                            AuditLogService auditLogService) {
         this.courseRepository = courseRepository;
         this.lessonRepository = lessonRepository;
         this.lessonQuizQuestionRepository = lessonQuizQuestionRepository;
@@ -86,6 +93,8 @@ public class LessonController {
         this.userRepository = userRepository;
         this.errorTypeRepository = errorTypeRepository;
         this.studentErrorRepository = studentErrorRepository;
+        this.testRepository = testRepository;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping("/lessons")
@@ -137,6 +146,9 @@ public class LessonController {
         model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
                 .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList());
+        model.addAttribute("remedialTests", testRepository.findByAssessmentType(com.example.demo.model.AssessmentType.REMEDIAL_TEST).stream()
+                .sorted(Comparator.comparing(Test::getTitle, String.CASE_INSENSITIVE_ORDER))
+                .toList());
         model.addAttribute("quizQuestions", List.<LessonQuizQuestion>of());
         return "lessons/form";
     }
@@ -144,6 +156,7 @@ public class LessonController {
     @PostMapping("/lessons/create")
     public String createLesson(@RequestParam Long courseId,
                                @RequestParam(required = false) Long errorTypeId,
+                               @RequestParam(required = false) Long remedialTestId,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -177,10 +190,20 @@ public class LessonController {
             ra.addFlashAttribute("error", "Lessons can only be managed for draft, open, or in-progress courses that have not ended.");
             return "redirect:/lessons/create?courseId=" + courseId;
         }
+        Test remedialTest = resolveRemedialTest(remedialTestId);
+        if (remedialTestId != null && remedialTest == null) {
+            ra.addFlashAttribute("error", "Selected remedial test is invalid.");
+            return "redirect:/lessons/create?courseId=" + courseId;
+        }
+        if (remedialTest != null && errorTypeId == null) {
+            ra.addFlashAttribute("error", "Select an error type before assigning a specific remedial test.");
+            return "redirect:/lessons/create?courseId=" + courseId;
+        }
 
         Lesson lesson = new Lesson();
         lesson.setCourse(courseOpt.get());
         lesson.setErrorType(resolveErrorType(errorTypeId));
+        lesson.setTest(remedialTest);
         lesson.setCode(normalizedCode);
         lesson.setTitle(title);
         lesson.setSummary(summary);
@@ -196,6 +219,9 @@ public class LessonController {
             ra.addFlashAttribute("error", ex.getMessage());
             return "redirect:/lessons/create?courseId=" + courseId;
         }
+        auditLogService.log("LESSON_CREATED", "LESSON", lesson.getId(),
+                "Created lesson '" + lesson.getTitle() + "' (" + lesson.getCode()
+                        + ") for course '" + safe(lesson.getCourse() != null ? lesson.getCourse().getCode() : null) + "'.");
 
         ra.addFlashAttribute("success", "Lesson '" + title + "' created successfully.");
         return "redirect:/lessons?courseId=" + courseId;
@@ -222,6 +248,9 @@ public class LessonController {
         model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
                 .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList());
+        model.addAttribute("remedialTests", testRepository.findByAssessmentType(com.example.demo.model.AssessmentType.REMEDIAL_TEST).stream()
+                .sorted(Comparator.comparing(Test::getTitle, String.CASE_INSENSITIVE_ORDER))
+                .toList());
         model.addAttribute("quizQuestions", lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId));
         return "lessons/form";
     }
@@ -230,6 +259,7 @@ public class LessonController {
     public String updateLesson(@PathVariable Long lessonId,
                                @RequestParam Long courseId,
                                @RequestParam(required = false) Long errorTypeId,
+                               @RequestParam(required = false) Long remedialTestId,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -264,8 +294,20 @@ public class LessonController {
             ra.addFlashAttribute("error", "Lessons can only be managed for draft, open, or in-progress courses that have not ended.");
             return "redirect:/lessons?courseId=" + courseId;
         }
+        Test remedialTest = resolveRemedialTest(remedialTestId);
+        if (remedialTestId != null && remedialTest == null) {
+            ra.addFlashAttribute("error", "Selected remedial test is invalid.");
+            return "redirect:/lessons/" + lessonId + "/edit";
+        }
+        if (remedialTest != null && errorTypeId == null) {
+            ra.addFlashAttribute("error", "Select an error type before assigning a specific remedial test.");
+            return "redirect:/lessons/" + lessonId + "/edit";
+        }
 
         Lesson lesson = lessonOpt.get();
+        String previousTitle = lesson.getTitle();
+        String previousCode = lesson.getCode();
+        String previousCourseCode = lesson.getCourse() != null ? lesson.getCourse().getCode() : null;
         Long previousCourseId = lesson.getCourse() != null ? lesson.getCourse().getId() : null;
         Integer previousSortOrder = lesson.getSortOrder();
         int targetSortOrder = normalizeSortOrder(courseId, sortOrder, !Objects.equals(previousCourseId, courseId));
@@ -273,6 +315,7 @@ public class LessonController {
             shiftLessonsForPlacement(courseId, targetSortOrder, previousCourseId, lesson);
             lesson.setCourse(courseOpt.get());
             lesson.setErrorType(resolveErrorType(errorTypeId));
+            lesson.setTest(remedialTest);
             lesson.setCode(normalizedCode);
             lesson.setTitle(title);
             lesson.setSummary(summary);
@@ -292,6 +335,10 @@ public class LessonController {
             ra.addFlashAttribute("error", ex.getMessage());
             return "redirect:/lessons/" + lessonId + "/edit";
         }
+        auditLogService.log("LESSON_UPDATED", "LESSON", lesson.getId(),
+                "Updated lesson from '" + safe(previousTitle) + "' (" + safe(previousCode) + ") in course '"
+                        + safe(previousCourseCode) + "' to '" + lesson.getTitle() + "' (" + lesson.getCode()
+                        + ") in course '" + safe(lesson.getCourse() != null ? lesson.getCourse().getCode() : null) + "'.");
 
         ra.addFlashAttribute("success", "Lesson '" + title + "' updated successfully.");
         return "redirect:/lessons?courseId=" + courseId;
@@ -314,6 +361,9 @@ public class LessonController {
         lessonQuizQuestionRepository.deleteByLessonId(lessonId);
         lessonRepository.delete(lesson);
         reorderLessonsAfterDeletion(courseId, deletedOrder);
+        auditLogService.log("LESSON_DELETED", "LESSON", lessonId,
+                "Deleted lesson '" + lesson.getTitle() + "' (" + lesson.getCode()
+                        + ") from course '" + safe(lesson.getCourse() != null ? lesson.getCourse().getCode() : null) + "'.");
 
         ra.addFlashAttribute("success", "Lesson deleted successfully.");
         return courseId != null ? "redirect:/lessons?courseId=" + courseId : "redirect:/lessons";
@@ -465,6 +515,12 @@ public class LessonController {
         boolean failedReview = wrongAnswers > (questions.size() / 2.0);
         if (failedReview) {
             registerLessonReviewError(student, lesson);
+            if (lesson.getTest() != null && lesson.getTest().getId() != null) {
+                ra.addFlashAttribute("error",
+                        "Review submitted: " + correctAnswers + "/" + questions.size()
+                                + ". You missed more than half of the questions, so you must take the assigned remedial test next.");
+                return "redirect:/portal/tests/" + lesson.getTest().getId() + "/take";
+            }
             ra.addFlashAttribute("error",
                     "Review submitted: " + correctAnswers + "/" + questions.size()
                             + ". You missed more than half of the questions, so a remedial path has been recommended.");
@@ -791,6 +847,15 @@ public class LessonController {
             return null;
         }
         return errorTypeRepository.findById(errorTypeId).orElse(null);
+    }
+
+    private Test resolveRemedialTest(Long remedialTestId) {
+        if (remedialTestId == null) {
+            return null;
+        }
+        return testRepository.findById(remedialTestId)
+                .filter(Test::isRemedialTest)
+                .orElse(null);
     }
 
     private void registerLessonReviewError(User student, Lesson lesson) {

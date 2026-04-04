@@ -62,23 +62,5 @@ public class StudentResult {
         return Math.max(0, getAnswerDetails().size() - (int) getCorrectCount());
     }
     
-    public String getBloomLevel() {
-        if (score == null) return "N/A";
-        if (score <= 3) return "Remember";
-        if (score <= 5) return "Understand";
-        if (score <= 7) return "Apply";
-        if (score <= 9) return "Analyze";
-        return "Create";
-    }
-    
-    public String getBloomColor() {
-        if (score == null) return "gray";
-        if (score <= 3) return "red";
-        if (score <= 5) return "orange";
-        if (score <= 7) return "yellow";
-        if (score <= 9) return "blue";
-        return "purple";
-    }
-    
     public boolean isPassed() { return score != null && score >= 6; }
 }
