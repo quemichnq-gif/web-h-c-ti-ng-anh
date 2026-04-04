@@ -1,7 +1,10 @@
 package com.example.demo.model;
 
 public enum CourseStatus {
-    DRAFT,
+    DRAFT,      // ✅ THÊM DRAFT
     OPEN,
-    ARCHIVED
+    CLOSED,
+    PENDING,
+    IN_PROGRESS,
+    COMPLETED
 }
