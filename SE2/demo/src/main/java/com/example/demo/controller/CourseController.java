@@ -156,4 +156,4 @@ public class CourseController {
     private String safe(String value) {
         return value == null ? "" : value.toLowerCase();
     }
-
+}
