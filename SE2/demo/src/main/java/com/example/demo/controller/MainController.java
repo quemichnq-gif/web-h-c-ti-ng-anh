@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -59,7 +60,7 @@ public class MainController {
 
         model.addAttribute("isAdmin", hasRole(auth, "ROLE_ADMIN"));
         model.addAttribute("isStaff", hasRole(auth, "ROLE_ACADEMIC_STAFF"));
-        model.addAttribute("pendingEnrollmentCount", enrollmentRepository.countByStatus("PENDING"));
+        model.addAttribute("pendingEnrollmentCount", enrollmentRepository.countByStatus(EnrollmentStatus.PENDING));
         model.addAttribute("activeTestCount", testRepository.count());
 
         LocalDateTime start = LocalDate.now().atStartOfDay();
@@ -72,7 +73,7 @@ public class MainController {
             model.addAttribute("recentErrors", studentErrorRepository.findAllOrderByCreatedAtDesc().stream().limit(10).toList());
         } else {
             model.addAttribute("unassignedErrorCount", studentErrorRepository.countStudentsWithUnassignedErrors());
-            model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus("PENDING").stream().limit(10).toList());
+            model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus(EnrollmentStatus.PENDING).stream().limit(10).toList());
         }
         return "dashboard";
     }
@@ -88,7 +89,7 @@ public class MainController {
             if (enrollments != null) {
                 for (Enrollment e : enrollments) {
                     if (e != null && e.getCourse() != null && e.getStatus() != null) {
-                        enrollmentStatusMap.put(e.getCourse().getId(), e.getStatus());
+                        enrollmentStatusMap.put(e.getCourse().getId(), e.getStatus().name());
                     }
                 }
             }
@@ -102,18 +103,38 @@ public class MainController {
     @PostMapping({"/portal/enroll", "/student/enroll"})
     public String enroll(@RequestParam Long courseId, Authentication auth, RedirectAttributes ra) {
         User student = getCurrentUser(auth);
-        courseRepository.findById(courseId).ifPresent(c -> {
-            if (enrollmentRepository.findByStudentAndCourse(student, c).isEmpty()) {
-                Enrollment e = new Enrollment();
-                e.setStudent(student);
-                e.setCourse(c);
-                e.setStatus("PENDING");
-                enrollmentRepository.save(e);
-                ra.addFlashAttribute("success", "Da gui yeu cau dang ky khoa hoc " + c.getName());
-            } else {
-                ra.addFlashAttribute("error", "Ban da dang ky khoa hoc nay roi.");
-            }
-        });
+        if (student == null || student.getRole() != Role.STUDENT) {
+            ra.addFlashAttribute("error", "Only students can register for courses.");
+            return "redirect:/portal/courses";
+        }
+
+        Optional<Course> course = courseRepository.findById(courseId);
+        if (course.isEmpty()) {
+            ra.addFlashAttribute("error", "Course not found.");
+            return "redirect:/portal/courses";
+        }
+
+        if (!isCourseOpenForEnrollment(course.get())) {
+            ra.addFlashAttribute("error", "This course is not open for registration.");
+            return "redirect:/portal/courses";
+        }
+
+        if (enrollmentRepository.existsByStudentAndCourse(student, course.get())) {
+            ra.addFlashAttribute("error", "You have already registered for this course.");
+            return "redirect:/portal/courses";
+        }
+
+        Enrollment enrollment = new Enrollment();
+        enrollment.setStudent(student);
+        enrollment.setCourse(course.get());
+        enrollment.setStatus(EnrollmentStatus.PENDING);
+
+        try {
+            enrollmentRepository.save(enrollment);
+            ra.addFlashAttribute("success", "Enrollment request submitted for " + course.get().getName());
+        } catch (DataIntegrityViolationException ex) {
+            ra.addFlashAttribute("error", "You have already registered for this course.");
+        }
         return "redirect:/portal/courses";
     }
 
@@ -128,7 +149,7 @@ public class MainController {
             List<Enrollment> enrollments = enrollmentRepository.findByStudent(student);
             if (enrollments != null) {
                 for (Enrollment e : enrollments) {
-                    if (e != null && "APPROVED".equals(e.getStatus()) && e.getCourse() != null) {
+                    if (e != null && e.getStatus() == EnrollmentStatus.APPROVED && e.getCourse() != null) {
                         courseAssessments.addAll(testRepository.findByCourseIdAndAssessmentType(e.getCourse().getId(), AssessmentType.COURSE_ASSESSMENT));
                     }
                 }
@@ -158,12 +179,12 @@ public class MainController {
                 enrolled = canAccessRemedialTest(student, test);
             } else {
                 enrolled = enrollmentRepository.findByStudentAndCourse(student, test.getCourse())
-                        .stream().anyMatch(e -> "APPROVED".equals(e.getStatus()));
+                        .stream().anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
             }
         }
 
         if (!enrolled) {
-            ra.addFlashAttribute("error", "Ban khong co quyen vao bai test nay.");
+            ra.addFlashAttribute("error", "You do not have access to this test.");
             return "redirect:/portal/tests";
         }
         model.addAttribute("test", testOpt.get());
@@ -194,7 +215,7 @@ public class MainController {
             res.setScore(score);
             res.setAnswerDetails(details);
             resultRepository.save(res);
-            ra.addFlashAttribute("success", "Da nop bai thanh cong! Diem: " + String.format("%.1f", score));
+            ra.addFlashAttribute("success", "Test submitted successfully. Score: " + String.format("%.1f", score));
         }
         return "redirect:/portal/tests";
     }
@@ -303,4 +324,17 @@ public class MainController {
         }
         return new ArrayList<>(merged.values());
     }
+
+    private boolean isCourseOpenForEnrollment(Course course) {
+        if (course.getStatus() != CourseStatus.OPEN) {
+            return false;
+        }
+
+        LocalDate today = LocalDate.now();
+        if (course.getStartDate() != null && course.getStartDate().isAfter(today)) {
+            return false;
+        }
+        return course.getEndDate() == null || !course.getEndDate().isBefore(today);
+    }
 }
+

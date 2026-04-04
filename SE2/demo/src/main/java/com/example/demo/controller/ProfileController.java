@@ -47,10 +47,9 @@ public class ProfileController {
         if (opt.isEmpty()) return "redirect:/profile";
 
         User user = opt.get();
-        // Check email duplicate
         Optional<User> emailUser = userRepository.findByEmail(email);
         if (emailUser.isPresent() && !emailUser.get().getId().equals(user.getId())) {
-            ra.addFlashAttribute("error", "Email đã được dùng bởi tài khoản khác.");
+            ra.addFlashAttribute("error", "This email is already used by another account.");
             return "redirect:/profile/edit";
         }
 
@@ -58,7 +57,7 @@ public class ProfileController {
         user.setEmail(email);
         user.setPhone(phone);
         userRepository.save(user);
-        ra.addFlashAttribute("profileSuccess", "Cập nhật profile thành công!");
+        ra.addFlashAttribute("profileSuccess", "Profile updated successfully!");
         return "redirect:/profile/edit";
     }
 
@@ -79,15 +78,15 @@ public class ProfileController {
         User user = opt.get();
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            ra.addFlashAttribute("error", "Mật khẩu hiện tại không đúng.");
+            ra.addFlashAttribute("error", "Current password is incorrect.");
             return "redirect:/profile/change-password";
         }
         if (!newPassword.equals(confirmPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu mới không khớp.");
+            ra.addFlashAttribute("error", "New password and confirmation do not match.");
             return "redirect:/profile/change-password";
         }
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
-            ra.addFlashAttribute("error", "Mật khẩu mới không được trùng mật khẩu cũ.");
+            ra.addFlashAttribute("error", "New password must be different from the current password.");
             return "redirect:/profile/change-password";
         }
 

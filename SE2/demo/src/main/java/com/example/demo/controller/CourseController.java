@@ -72,7 +72,7 @@ public class CourseController {
                          @RequestParam(required = false) String endDate,
                          RedirectAttributes ra) {
         if (courseRepository.findAll().stream().anyMatch(course -> course.getCode() != null && course.getCode().equalsIgnoreCase(code))) {
-            ra.addFlashAttribute("error", "Course code '" + code + "' da ton tai.");
+            ra.addFlashAttribute("error", "Course code '" + code + "' already exists.");
             return "redirect:/courses/create";
         }
 
@@ -84,7 +84,7 @@ public class CourseController {
         if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
         if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
-        ra.addFlashAttribute("success", "Da tao course '" + name + "' thanh cong!");
+        ra.addFlashAttribute("success", "Course '" + name + "' created successfully.");
         return "redirect:/courses";
     }
 
@@ -92,7 +92,7 @@ public class CourseController {
     public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         Optional<Course> opt = courseRepository.findById(id);
         if (opt.isEmpty()) {
-            ra.addFlashAttribute("error", "Course khong ton tai.");
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/courses";
         }
         model.addAttribute("course", opt.get());
@@ -111,14 +111,14 @@ public class CourseController {
                          RedirectAttributes ra) {
         Optional<Course> opt = courseRepository.findById(id);
         if (opt.isEmpty()) {
-            ra.addFlashAttribute("error", "Course khong ton tai.");
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/courses";
         }
 
         boolean codeUsedByAnother = courseRepository.findAll().stream()
                 .anyMatch(course -> !course.getId().equals(id) && course.getCode() != null && course.getCode().equalsIgnoreCase(code));
         if (codeUsedByAnother) {
-            ra.addFlashAttribute("error", "Course code '" + code + "' da duoc dung.");
+            ra.addFlashAttribute("error", "Course code '" + code + "' is already in use.");
             return "redirect:/courses/" + id + "/edit";
         }
 
@@ -130,7 +130,7 @@ public class CourseController {
         if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
         if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
-        ra.addFlashAttribute("success", "Da cap nhat course thanh cong!");
+        ra.addFlashAttribute("success", "Course updated successfully.");
         return "redirect:/courses";
     }
 
@@ -141,9 +141,9 @@ public class CourseController {
         long tests = courseRepository.findById(id)
                 .map(testRepository::countByCourse).orElse(0L);
         courseRepository.deleteById(id);
-        String msg = "Da xoa course.";
-        if (enrolled > 0) msg += " Da xoa " + enrolled + " enrollment lien quan.";
-        if (tests > 0) msg += " Co " + tests + " test lien quan.";
+        String msg = "Course deleted successfully.";
+        if (enrolled > 0) msg += " Removed " + enrolled + " related enrollment(s).";
+        if (tests > 0) msg += " There are " + tests + " related test(s).";
         ra.addFlashAttribute("success", msg);
         return "redirect:/courses";
     }
@@ -152,3 +152,4 @@ public class CourseController {
         return value == null ? "" : value.toLowerCase();
     }
 }
+
