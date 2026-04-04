@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "lessons")
+@Table(name = "lessons", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_lessons_code", columnNames = "code")
+})
 public class Lesson {
 
     @Id
@@ -17,8 +19,15 @@ public class Lesson {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "error_type_id")
+    private ErrorType errorType;
+
     @Column(nullable = false)
     private String title;
+
+    @Column(name = "code", nullable = false, unique = true, length = 50)
+    private String code;
 
     @Column(length = 500)
     private String summary;
@@ -37,6 +46,15 @@ public class Lesson {
 
     @Column(name = "attachment_content_type")
     private String attachmentContentType;
+
+    @Column(name = "image_original_name")
+    private String imageOriginalName;
+
+    @Column(name = "image_stored_name")
+    private String imageStoredName;
+
+    @Column(name = "image_content_type")
+    private String imageContentType;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -72,8 +90,12 @@ public class Lesson {
     public void setId(Long id) { this.id = id; }
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
+    public ErrorType getErrorType() { return errorType; }
+    public void setErrorType(ErrorType errorType) { this.errorType = errorType; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }
     public String getContent() { return content; }
@@ -86,6 +108,12 @@ public class Lesson {
     public void setAttachmentStoredName(String attachmentStoredName) { this.attachmentStoredName = attachmentStoredName; }
     public String getAttachmentContentType() { return attachmentContentType; }
     public void setAttachmentContentType(String attachmentContentType) { this.attachmentContentType = attachmentContentType; }
+    public String getImageOriginalName() { return imageOriginalName; }
+    public void setImageOriginalName(String imageOriginalName) { this.imageOriginalName = imageOriginalName; }
+    public String getImageStoredName() { return imageStoredName; }
+    public void setImageStoredName(String imageStoredName) { this.imageStoredName = imageStoredName; }
+    public String getImageContentType() { return imageContentType; }
+    public void setImageContentType(String imageContentType) { this.imageContentType = imageContentType; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
@@ -122,5 +150,9 @@ public class Lesson {
 
     public boolean hasAttachment() {
         return attachmentStoredName != null && !attachmentStoredName.isBlank();
+    }
+
+    public boolean hasImage() {
+        return imageStoredName != null && !imageStoredName.isBlank();
     }
 }

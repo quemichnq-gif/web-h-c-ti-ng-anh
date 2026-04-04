@@ -45,17 +45,18 @@
                 <div>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
                         <span style="padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.16);font-size:11px;font-weight:800" th:text="${view.lesson.course != null ? view.lesson.course.code : 'NO COURSE'}">CODE</span>
+                        <span style="padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.16);font-size:11px;font-weight:800" th:text="${view.lesson.code}">LESSON CODE</span>
                         <span style="padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.16);font-size:11px;font-weight:800" th:text="${'Lesson ' + view.lesson.sortOrder}">Lesson</span>
                     </div>
                     <h3 style="font-size:20px;font-weight:900;margin:0 0 6px" th:text="${view.lesson.title}">Lesson title</h3>
                     <p style="margin:0;font-size:13px;opacity:0.9" th:text="${view.lesson.course != null ? view.lesson.course.name : 'No course'}">Course name</p>
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <a th:href="@{'/lessons/' + ${view.lesson.id} + '/edit'}" style="padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.16);color:#fff;font-size:12px;font-weight:800;text-decoration:none">Edit</a>
-                    <a th:if="${view.lesson.hasAttachment()}" th:href="@{'/lessons/' + ${view.lesson.id} + '/file'}" style="padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.16);color:#fff;font-size:12px;font-weight:800;text-decoration:none">File</a>
-                    <form th:action="@{'/lessons/' + ${view.lesson.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this lesson and all quiz questions?')">
+                <div class="lesson-card-actions">
+                    <a th:href="@{'/lessons/' + ${view.lesson.id} + '/edit'}" class="lesson-card-action lesson-card-action-solid">Edit</a>
+                    <a th:if="${view.lesson.hasAttachment()}" th:href="@{'/lessons/' + ${view.lesson.id} + '/file'}" class="lesson-card-action lesson-card-action-solid">File</a>
+                    <form th:action="@{'/lessons/' + ${view.lesson.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this lesson and all quiz questions?')" class="lesson-card-action-form">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                        <button type="submit" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.35);background:transparent;color:#fff;font-size:12px;font-weight:800;cursor:pointer">Delete</button>
+                        <button type="submit" class="lesson-card-action lesson-card-action-outline">Delete</button>
                     </form>
                 </div>
             </div>
@@ -63,11 +64,22 @@
                 <div>
                     <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Summary</div>
                     <div style="color:#334155;font-size:14px;line-height:1.7;margin-bottom:16px" th:text="${view.lesson.summary != null && !view.lesson.summary.isBlank() ? view.lesson.summary : 'No summary provided.'}">Summary</div>
+                    <div th:if="${view.lesson.hasImage()}" style="margin-bottom:16px">
+                        <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Lesson Image</div>
+                        <img th:src="@{'/lessons/' + ${view.lesson.id} + '/image'}" alt="Lesson image" style="width:100%;max-height:220px;object-fit:cover;border-radius:18px;border:1px solid #dbeafe;display:block">
+                    </div>
                     <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Content Preview</div>
-                    <div style="white-space:pre-wrap;color:#475569;font-size:13px;line-height:1.7;max-height:180px;overflow:auto" th:text="${view.lesson.content}">Content</div>
+                    <div class="lesson-rich-content lesson-rich-content-preview" th:utext="${view.lesson.content}">Content</div>
                 </div>
                 <div style="display:grid;gap:14px;align-content:start">
                     <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0">
+                        <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Metadata</div>
+                        <div style="display:grid;gap:8px;font-size:13px;color:#334155;margin-bottom:14px">
+                            <div><strong>Lesson code:</strong> <span th:text="${view.lesson.code}">LES-001</span></div>
+                            <div><strong>Created:</strong> <span th:text="${view.lesson.createdAt != null ? #temporals.format(view.lesson.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}">time</span></div>
+                            <div><strong>Updated:</strong> <span th:text="${view.lesson.updatedAt != null ? #temporals.format(view.lesson.updatedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}">time</span></div>
+                            <div><strong>Remedial trigger:</strong> <span th:text="${view.lesson.errorType != null ? view.lesson.errorType.name : 'Not mapped'}">Not mapped</span></div>
+                        </div>
                         <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Attachment</div>
                         <div th:if="${view.lesson.hasAttachment()}">
                             <div style="font-weight:800;color:#0f172a;font-size:14px;word-break:break-word" th:text="${view.lesson.attachmentOriginalName}">file</div>
@@ -87,6 +99,79 @@
 </section>
 
 <style>
+.lesson-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.lesson-card-action-form {
+    margin: 0;
+}
+
+.lesson-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 74px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lesson-card-action-solid {
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+}
+
+.lesson-card-action-solid:hover {
+    background: rgba(255,255,255,0.24);
+    transform: translateY(-1px);
+}
+
+.lesson-card-action-outline {
+    border: 1px solid rgba(255,255,255,0.42);
+    background: transparent;
+    color: #fff;
+}
+
+.lesson-card-action-outline:hover {
+    background: rgba(255,255,255,0.10);
+    transform: translateY(-1px);
+}
+
+.lesson-rich-content {
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.lesson-rich-content-preview {
+    max-height: 220px;
+    overflow: auto;
+}
+
+.lesson-rich-content img {
+    max-width: 100%;
+    border-radius: 16px;
+    display: block;
+    margin: 12px 0;
+}
+
+.lesson-rich-content a {
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
 @media (max-width: 900px) {
     .lesson-filter-grid,
     .lesson-list-grid {

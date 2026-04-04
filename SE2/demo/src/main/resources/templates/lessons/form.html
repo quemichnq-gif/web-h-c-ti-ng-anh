@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{fragments/layout}">
@@ -8,7 +8,7 @@
 
 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:26px">
     <div>
-        <a th:href="@{/lessons}" style="display:inline-flex;align-items:center;gap:8px;color:#64748b;font-weight:700;font-size:13px;margin-bottom:12px;text-decoration:none">← Back to Lessons</a>
+        <a th:href="@{/lessons}" style="display:inline-flex;align-items:center;gap:8px;color:#64748b;font-weight:700;font-size:13px;margin-bottom:12px;text-decoration:none">â† Back to Lessons</a>
         <h1 style="font-size:26px;font-weight:900;margin:0 0 6px" th:text="${pageTitle}">Create Lesson</h1>
         <p style="margin:0;color:#64748b;font-size:14px;max-width:760px" th:text="${pageSubtitle}">Subtitle</p>
     </div>
@@ -19,7 +19,7 @@
     <section class="chart-card" style="padding:24px">
         <form th:attr="action=${formAction}" method="post" enctype="multipart/form-data" style="display:grid;gap:16px">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-            <div style="display:grid;grid-template-columns:1fr 160px;gap:14px" class="lesson-course-grid">
+            <div style="display:grid;grid-template-columns:1fr 180px 160px;gap:14px" class="lesson-course-grid">
                 <div>
                     <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Course</label>
                     <select name="courseId" required style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
@@ -28,9 +28,36 @@
                     </select>
                 </div>
                 <div>
+                    <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Code</label>
+                    <input name="code" required maxlength="50" th:value="${lesson.code}" placeholder="Ex: LES-001" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none;text-transform:uppercase">
+                </div>
+                <div>
                     <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Order</label>
                     <input type="number" min="1" name="sortOrder" th:value="${lesson.sortOrder != null ? lesson.sortOrder : 1}" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
                 </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="lesson-meta-grid">
+                <div>
+                    <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Created Time</label>
+                    <input type="text" th:value="${lesson.createdAt != null ? #temporals.format(lesson.createdAt, 'yyyy-MM-dd HH:mm') : 'Will be generated after saving'}" readonly style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none;background:#f8fafc;color:#475569">
+                </div>
+                <div>
+                    <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Last Updated</label>
+                    <input type="text" th:value="${lesson.updatedAt != null ? #temporals.format(lesson.updatedAt, 'yyyy-MM-dd HH:mm') : 'Not updated yet'}" readonly style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none;background:#f8fafc;color:#475569">
+                </div>
+            </div>
+
+            <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Mapped Error Type</label>
+                <select name="errorTypeId" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+                    <option value="">No remedial trigger</option>
+                    <option th:each="type : ${errorTypes}"
+                            th:value="${type.id}"
+                            th:selected="${lesson.errorType != null && lesson.errorType.id == type.id}"
+                            th:text="${type.name}">Error Type</option>
+                </select>
+                <div style="margin-top:8px;font-size:12px;color:#64748b">If a student gets more than half of this lesson review wrong, this error type will be assigned and used for remedial test recommendations.</div>
             </div>
 
             <div>
@@ -39,13 +66,35 @@
             </div>
 
             <div>
-                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Short Summary</label>
-                <input name="summary" th:value="${lesson.summary}" placeholder="One short overview sentence for the lesson card" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Content</label>
+                <div class="lesson-editor-shell">
+                    <div class="lesson-editor-toolbar">
+                        <button type="button" class="lesson-editor-tool" onclick="formatLessonContent('bold')" title="Bold">B</button>
+                        <button type="button" class="lesson-editor-tool" onclick="formatLessonContent('italic')" title="Italic">/I/</button>
+                        <button type="button" class="lesson-editor-tool" onclick="formatLessonContent('insertUnorderedList')" title="Bullet List">•</button>
+                        <button type="button" class="lesson-editor-tool" onclick="formatLessonContent('insertOrderedList')" title="Numbered List">1.</button>
+                        <button type="button" class="lesson-editor-tool" onclick="insertLessonLink()" title="Insert Link">&#128279;</button>
+                        <button type="button" class="lesson-editor-tool lesson-editor-tool-wide" onclick="document.getElementById('inline-image-input').click()" title="Insert Image">&#128247;</button>
+                    </div>
+                    <div id="lesson-content-editor"
+                         class="lesson-content-editor"
+                         contenteditable="true"
+                         data-placeholder="Main lesson content, examples, scripts, homework instructions..."
+                         th:utext="${lesson.content}"></div>
+                    <textarea id="lesson-content-input" name="content" required hidden th:text="${lesson.content}"></textarea>
+                    <input id="inline-image-input" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" hidden onchange="insertInlineLessonImage(event)">
+                </div>
+                <div style="margin-top:8px;font-size:12px;color:#64748b">You can type rich content here, then use the toolbar to add bold text, italic text, links, and inline images.</div>
             </div>
 
             <div>
-                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Content</label>
-                <textarea name="content" rows="14" required placeholder="Main lesson content, examples, scripts, homework instructions..." style="width:100%;padding:14px;border-radius:14px;border:1px solid #cbd5e1;outline:none;resize:vertical" th:text="${lesson.content}"></textarea>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Image</label>
+                <input type="file" name="lessonImage" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;padding:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff">
+                <div style="margin-top:8px;font-size:12px;color:#64748b">Accepted formats: JPG, PNG, WEBP, GIF. Maximum size: 5 MB.</div>
+                <div th:if="${lesson.hasImage()}" style="margin-top:12px">
+                    <div style="font-size:13px;color:#475569;margin-bottom:8px">Current image:</div>
+                    <img th:src="@{'/lessons/' + ${lesson.id} + '/image'}" alt="Lesson image preview" style="width:100%;max-width:340px;max-height:220px;object-fit:cover;border-radius:16px;border:1px solid #e2e8f0;display:block">
+                </div>
             </div>
 
             <div>
@@ -78,13 +127,15 @@
             <p style="margin:0;color:#64748b;font-size:14px;line-height:1.7">Lessons now live in their own admin module. Create them here, then come back any time to edit the content, swap files, or rebuild the quiz.</p>
         </div>
         <div style="padding:16px;border-radius:16px;background:#eff6ff;border:1px solid #bfdbfe">
-            <div style="font-size:12px;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Tips</div>
-            <div style="display:grid;gap:8px;color:#1e3a8a;font-size:13px;line-height:1.6">
-                <div>Keep one lesson focused on one learning outcome.</div>
-                <div>Upload worksheets or slides as the attached file.</div>
-                <div>Use 3-5 questions for a quick review, not a full assessment.</div>
+                <div style="font-size:12px;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Tips</div>
+                <div style="display:grid;gap:8px;color:#1e3a8a;font-size:13px;line-height:1.6">
+                    <div>Use a unique lesson code such as LES-001 or WRITING-02.</div>
+                    <div>Keep one lesson focused on one learning outcome.</div>
+                    <div>Add one lesson image to make the content more visual in the student portal.</div>
+                    <div>Upload worksheets or slides as the attached file.</div>
+                    <div>Use 3-5 questions for a quick review, not a full assessment.</div>
+                </div>
             </div>
-        </div>
         <div style="padding:16px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa">
             <div style="font-size:12px;font-weight:800;color:#9a3412;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Visibility</div>
             <div style="color:#9a3412;font-size:13px;line-height:1.7">Students only see lesson content from the portal after their enrollment is approved.</div>
@@ -95,6 +146,54 @@
 <script th:inline="javascript">
 const existingQuizQuestions = /*[[${quizQuestions}]]*/ [];
 let quizIndex = 0;
+const lessonContentEditor = document.getElementById('lesson-content-editor');
+const lessonContentInput = document.getElementById('lesson-content-input');
+
+function syncLessonContent() {
+    lessonContentInput.value = lessonContentEditor.innerHTML.trim();
+}
+
+function formatLessonContent(command) {
+    lessonContentEditor.focus();
+    document.execCommand(command, false, null);
+    syncLessonContent();
+}
+
+function insertLessonLink() {
+    const url = window.prompt('Enter the link URL');
+    if (!url) {
+        return;
+    }
+    lessonContentEditor.focus();
+    document.execCommand('createLink', false, url);
+    syncLessonContent();
+}
+
+function insertInlineLessonImage(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+        return;
+    }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+        window.alert('Only JPG, PNG, WEBP, and GIF images are allowed.');
+        event.target.value = '';
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        window.alert('Inline image size must be 5 MB or smaller.');
+        event.target.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(loadEvent) {
+        lessonContentEditor.focus();
+        document.execCommand('insertHTML', false, `<img src="${loadEvent.target.result}" alt="${file.name}" style="max-width:100%;border-radius:16px;display:block;margin:16px 0;">`);
+        syncLessonContent();
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
 
 function addQuizQuestion(seed) {
     quizIndex += 1;
@@ -132,9 +231,85 @@ if (existingQuizQuestions.length > 0) {
 } else {
     addQuizQuestion();
 }
+
+if (!lessonContentEditor.innerHTML.trim()) {
+    lessonContentEditor.innerHTML = '<p></p>';
+}
+
+lessonContentEditor.addEventListener('input', syncLessonContent);
+lessonContentEditor.addEventListener('blur', syncLessonContent);
+lessonContentEditor.closest('form').addEventListener('submit', syncLessonContent);
 </script>
 
 <style>
+.lesson-editor-shell {
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.lesson-editor-toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.lesson-editor-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 40px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #0f172a;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-family: "Segoe UI Symbol", "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lesson-editor-tool:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    transform: translateY(-1px);
+}
+
+.lesson-editor-tool:nth-child(2) {
+    font-style: italic;
+}
+
+.lesson-editor-tool-wide {
+    min-width: 58px;
+}
+
+.lesson-content-editor {
+    min-height: 320px;
+    padding: 16px;
+    outline: none;
+    color: #334155;
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+.lesson-content-editor:empty::before {
+    content: attr(data-placeholder);
+    color: #94a3b8;
+}
+
+.lesson-content-editor img {
+    max-width: 100%;
+    border-radius: 16px;
+}
+
 @media (max-width: 1100px) {
     .lesson-form-layout {
         grid-template-columns: 1fr !important;
@@ -143,6 +318,7 @@ if (existingQuizQuestions.length > 0) {
 
 @media (max-width: 760px) {
     .lesson-course-grid,
+    .lesson-meta-grid,
     .quiz-option-grid,
     .quiz-answer-grid {
         grid-template-columns: 1fr !important;
@@ -153,3 +329,9 @@ if (existingQuizQuestions.length > 0) {
 </div>
 </body>
 </html>
+
+
+
+
+
+
