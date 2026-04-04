@@ -5,6 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Portal | Notifications</title>
     <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+    <style>
+        .notifications-page {
+            width: min(420px, calc(100% - 32px));
+            margin: 28px auto 40px;
+        }
+
+        .notifications-card {
+            padding: 18px;
+        }
+
+        .notifications-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .notifications-head h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            letter-spacing: -0.03em;
+        }
+
+        .notifications-head p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: var(--text-sm);
+        }
+
+        .notifications-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .notification-mini {
+            display: block;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(109, 40, 217, 0.08);
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(249,246,255,0.98));
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .notification-mini:hover {
+            transform: translateY(-1px);
+            border-color: rgba(124, 58, 237, 0.18);
+            box-shadow: 0 14px 26px rgba(40, 22, 95, 0.08);
+        }
+
+        .notification-mini-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .notification-mini-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+            flex: 0 0 auto;
+        }
+
+        .tone-info { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+        .tone-success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .tone-warning { background: linear-gradient(135deg, #f59e0b, #fb923c); }
+        .tone-danger { background: linear-gradient(135deg, #ef4444, #fb7185); }
+
+        .notification-mini strong {
+            display: block;
+            font-size: 0.95rem;
+            letter-spacing: -0.02em;
+        }
+
+        .notification-mini p {
+            margin: 0;
+            color: var(--muted);
+            font-size: var(--text-sm);
+            line-height: 1.5;
+        }
+
+        .notification-mini-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.78rem;
+        }
+
+        .notification-time {
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .notification-link {
+            color: var(--primary);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .notifications-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .notifications-footer .ghost-button {
+            min-height: 40px;
+            padding: 0 14px;
+        }
+
+        .empty-notifications {
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.05);
+            color: var(--muted);
+            font-size: var(--text-sm);
+        }
+    </style>
 </head>
 <body>
 <div class="page-shell">
@@ -23,28 +147,55 @@
                     <span class="brand-subtitle">Notifications</span>
                 </span>
             </a>
+
+            <div class="header-actions">
+                <a th:href="@{/member/settings}" class="header-icon-button" aria-label="Settings">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3.5"></circle>
+                        <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1 1a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.2 1.2 0 0 1-1.2 1.2h-1.6A1.2 1.2 0 0 1 11.2 20v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1-1a1.2 1.2 0 0 1 0-1.7l.1-.1A1 1 0 0 0 7 15a1 1 0 0 0-.9-.6H6a1.2 1.2 0 0 1-1.2-1.2v-1.6A1.2 1.2 0 0 1 6 10.4h.2A1 1 0 0 0 7 9.8a1 1 0 0 0-.2-1.1l-.1-.1a1.2 1.2 0 0 1 0-1.7l1-1a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4A1.2 1.2 0 0 1 12.4 2.8H14A1.2 1.2 0 0 1 15.2 4v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1 1a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a1.2 1.2 0 0 1 1.2 1.2V13a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.8Z"></path>
+                    </svg>
+                </a>
+                <a th:href="@{/}" class="header-icon-button" aria-label="Dashboard">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 11.5 12 4l9 7.5"></path>
+                        <path d="M5 10.5V21h14V10.5"></path>
+                    </svg>
+                </a>
+            </div>
         </div>
     </header>
 
     <main class="app-content">
-        <section class="table-card">
-            <div class="table-header">
+        <section class="surface-card notifications-page notifications-card">
+            <div class="notifications-head">
                 <div>
                     <h2>Notifications</h2>
-                    <p class="table-subtitle">Workspace alerts from accounts, courses, and security flows.</p>
+                    <p>Short alerts with direct links to the related page.</p>
                 </div>
-                <div class="toolbar-actions">
-                    <a th:href="@{/member/home}" class="ghost-button">Back to dashboard</a>
-                </div>
+                <a th:href="@{/}" class="ghost-button">Back</a>
             </div>
-            <div class="quick-list">
-                <div class="notification-card" th:each="item : ${notifications}">
-                    <div class="notification-header">
+
+            <div class="notifications-list" th:if="${!#lists.isEmpty(notifications)}">
+                <a th:each="item : ${notifications}" th:href="${item.link}" class="notification-mini">
+                    <div class="notification-mini-top">
+                        <span class="notification-mini-dot" th:classappend="' tone-' + ${item.tone}"></span>
                         <strong th:text="${item.title}">Notification title</strong>
-                        <span th:text="${item.time}">2 minutes ago</span>
                     </div>
                     <p th:text="${item.detail}">Notification detail</p>
-                </div>
+                    <div class="notification-mini-footer">
+                        <span class="notification-time" th:text="${item.time}">2 minutes ago</span>
+                        <span class="notification-link">Open</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="empty-notifications" th:if="${#lists.isEmpty(notifications)}">
+                No notifications available right now.
+            </div>
+
+            <div class="notifications-footer">
+                <span class="notification-time">Tap an item to jump to the related page.</span>
+                <a th:href="@{/member/settings}" class="ghost-button">Settings</a>
             </div>
         </section>
     </main>

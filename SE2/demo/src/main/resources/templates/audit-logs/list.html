@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{fragments/layout}">
+<head>
+    <title>Audit Logs</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:28px;flex-wrap:wrap">
+    <div>
+        <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Audit Logs</h1>
+        <p style="color:#94a3b8;font-size:14px">Recent system activity recorded from user, lesson, enrollment, and assessment actions.</p>
+    </div>
+</div>
+
+<article class="stat-grid-premium" style="margin-bottom:24px">
+    <div class="stat-card-premium">
+        <div class="trend up">Recent</div>
+        <div class="stat-icon" style="background:#f5f3ff;color:#7c3aed">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"></path><path d="M8 8h8"></path><path d="M8 12h8"></path></svg>
+        </div>
+        <div class="stat-label-p">Log Entries</div>
+        <div class="stat-value-p" th:text="${totalLogs}">0</div>
+    </div>
+    <div class="stat-card-premium">
+        <div class="trend up">Latest</div>
+        <div class="stat-icon" style="background:#ecfdf5;color:#10b981">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v5l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+        </div>
+        <div class="stat-label-p">Most Recent Action</div>
+        <div class="stat-value-p" style="font-size:18px" th:text="${latestAction}">N/A</div>
+    </div>
+    <div class="stat-card-premium">
+        <div class="trend up">Types</div>
+        <div class="stat-icon" style="background:#eff6ff;color:#2563eb">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4z"></path><path d="M13 4h7v7h-7z"></path><path d="M4 13h7v7H4z"></path><path d="M13 13h7v7h-7z"></path></svg>
+        </div>
+        <div class="stat-label-p">Entity Types</div>
+        <div class="stat-value-p" th:text="${#lists.size(entityTypes)}">0</div>
+    </div>
+</article>
+
+<article class="chart-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+        <div>
+            <h2 style="font-size:18px;font-weight:800;margin-bottom:4px">Recent Audit Trail</h2>
+            <p style="margin:0;color:#94a3b8;font-size:13px">Newest actions are shown first.</p>
+        </div>
+        <span style="padding:8px 12px;border-radius:999px;background:#f5f3ff;color:#7c3aed;font-size:12px;font-weight:800" th:text="${#lists.size(logs)} + ' shown'">0 shown</span>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>ID</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="entry : ${logs}">
+                    <td style="font-size:13px;color:#64748b" th:text="${entry.timestamp != null ? #temporals.format(entry.timestamp, 'dd/MM/yyyy HH:mm:ss') : '-'}">time</td>
+                    <td>
+                        <span style="display:inline-flex;padding:4px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800" th:text="${entry.action}">ACTION</span>
+                    </td>
+                    <td style="font-weight:700" th:text="${entry.entityType}">ENTITY</td>
+                    <td style="font-family:monospace;color:#64748b" th:text="${entry.entityId != null ? entry.entityId : '-'}">1</td>
+                    <td style="color:#475569;font-size:13px;line-height:1.55" th:text="${entry.details}">details</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(logs)}">
+                    <td colspan="5" style="text-align:center;color:#94a3b8;padding:60px">
+                        No audit logs recorded yet.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</article>
+
+</div>
+</body>
+</html>

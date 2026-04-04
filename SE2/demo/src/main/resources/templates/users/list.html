@@ -50,67 +50,69 @@
 </div>
 
 <article class="chart-card">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>User</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Created</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="u,stat : ${users}">
-                <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
-                <td>
-                    <a th:href="@{'/users/' + ${u.id}}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit" class="user-link">
-                        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0"
-                             th:text="${u.fullName != null ? u.fullName.substring(0,1).toUpperCase() : u.username.substring(0,1).toUpperCase()}">A</div>
-                        <div>
-                            <div style="font-weight:700" th:text="${u.fullName != null ? u.fullName : u.username}">Name</div>
-                            <div style="font-size:11px;color:#94a3b8">Click to view detail</div>
+    <div class="table-wrapper user-table-wrapper">
+        <table class="data-table user-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Created</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="u,stat : ${users}">
+                    <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
+                    <td>
+                        <a th:href="@{'/users/' + ${u.id}}" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit" class="user-link">
+                            <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0"
+                                 th:text="${u.fullName != null ? u.fullName.substring(0,1).toUpperCase() : u.username.substring(0,1).toUpperCase()}">A</div>
+                            <div>
+                                <div style="font-weight:700" th:text="${u.fullName != null ? u.fullName : u.username}">Name</div>
+                                <div style="font-size:11px;color:#94a3b8">Click to view detail</div>
+                            </div>
+                        </a>
+                    </td>
+                    <td style="color:#64748b;font-size:13px;font-family:monospace" th:text="${u.username}">username</td>
+                    <td style="color:#64748b;font-size:13px" th:text="${u.email}">email</td>
+                    <td style="color:#64748b;font-size:13px" th:text="${u.phone != null ? u.phone : '-'}">phone</td>
+                    <td style="color:#64748b;font-size:13px" th:text="${u.createdAt != null ? #temporals.format(u.createdAt,'dd/MM/yyyy HH:mm') : '-'}">created</td>
+                    <td>
+                        <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800"
+                              th:classappend="${u.role.name() == 'ADMIN' ? 'badge-admin' : (u.role.name() == 'ACADEMIC_STAFF' ? 'badge-staff' : 'badge-student')}"
+                              th:text="${u.role}">ROLE</span>
+                    </td>
+                    <td>
+                        <span style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;letter-spacing:0.02em"
+                              th:classappend="${u.status == 'ACTIVE' ? 'badge-status-active' : 'badge-status-inactive'}"
+                              th:text="${u.status}">STATUS</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <a th:href="@{'/users/' + ${u.id}}" style="padding:5px 12px;border:1px solid #7c3aed;border-radius:8px;font-size:12px;font-weight:700;color:#7c3aed">View</a>
+                            <a th:href="@{'/users/' + ${u.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
+                            <form th:if="${u.status == 'ACTIVE'}" th:action="@{'/users/' + ${u.id} + '/deactivate'}" method="post" style="display:inline">
+                                <button type="submit" style="padding:5px 12px;border:1px solid #fbbf24;border-radius:8px;font-size:12px;font-weight:700;color:#d97706;background:none;cursor:pointer">Deactivate</button>
+                            </form>
+                            <form th:unless="${u.status == 'ACTIVE'}" th:action="@{'/users/' + ${u.id} + '/activate'}" method="post" style="display:inline">
+                                <button type="submit" style="padding:5px 12px;border:1px solid #10b981;border-radius:8px;font-size:12px;font-weight:700;color:#059669;background:none;cursor:pointer">Activate</button>
+                            </form>
+                            <button onclick="confirmDelete(this)" th:data-username="${u.username}" th:data-action="@{'/users/' + ${u.id} + '/delete'}"
+                                    style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
                         </div>
-                    </a>
-                </td>
-                <td style="color:#64748b;font-size:13px;font-family:monospace" th:text="${u.username}">username</td>
-                <td style="color:#64748b;font-size:13px" th:text="${u.email}">email</td>
-                <td style="color:#64748b;font-size:13px" th:text="${u.phone != null ? u.phone : '-'}">phone</td>
-                <td style="color:#64748b;font-size:13px" th:text="${u.createdAt != null ? #temporals.format(u.createdAt,'dd/MM/yyyy HH:mm') : '-'}">created</td>
-                <td>
-                    <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800"
-                          th:classappend="${u.role.name() == 'ADMIN' ? 'badge-admin' : (u.role.name() == 'ACADEMIC_STAFF' ? 'badge-staff' : 'badge-student')}"
-                          th:text="${u.role}">ROLE</span>
-                </td>
-                <td>
-                    <span style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;letter-spacing:0.02em"
-                          th:classappend="${u.status == 'ACTIVE' ? 'badge-status-active' : 'badge-status-inactive'}"
-                          th:text="${u.status}">STATUS</span>
-                </td>
-                <td>
-                    <div style="display:flex;gap:8px;align-items:center">
-                        <a th:href="@{'/users/' + ${u.id}}" style="padding:5px 12px;border:1px solid #7c3aed;border-radius:8px;font-size:12px;font-weight:700;color:#7c3aed">View</a>
-                        <a th:href="@{'/users/' + ${u.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
-                        <form th:if="${u.status == 'ACTIVE'}" th:action="@{'/users/' + ${u.id} + '/deactivate'}" method="post" style="display:inline">
-                            <button type="submit" style="padding:5px 12px;border:1px solid #fbbf24;border-radius:8px;font-size:12px;font-weight:700;color:#d97706;background:none;cursor:pointer">Deactivate</button>
-                        </form>
-                        <form th:unless="${u.status == 'ACTIVE'}" th:action="@{'/users/' + ${u.id} + '/activate'}" method="post" style="display:inline">
-                            <button type="submit" style="padding:5px 12px;border:1px solid #10b981;border-radius:8px;font-size:12px;font-weight:700;color:#059669;background:none;cursor:pointer">Activate</button>
-                        </form>
-                        <button onclick="confirmDelete(this)" th:data-username="${u.username}" th:data-action="@{'/users/' + ${u.id} + '/delete'}"
-                                style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
-                    </div>
-                </td>
-            </tr>
-            <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="9" style="text-align:center;color:#94a3b8;padding:60px">No users found matching your criteria.</td>
-            </tr>
-        </tbody>
-    </table>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(users)}">
+                    <td colspan="9" style="text-align:center;color:#94a3b8;padding:60px">No users found matching your criteria.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:20px;border-top:1px solid #f1f5f9" th:if="${totalPages > 1}">

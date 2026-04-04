@@ -13,30 +13,30 @@
         <div class="admin-hero-header">
             <div class="admin-hero-copy">
                 <span class="eyebrow-pill" th:text="${isAdmin} ? 'Administrator Console' : 'Academic Staff Console'">Administrator Console</span>
-                <h1 th:text="${isAdmin} ? 'Monitor operations, learning risk, and growth in one place.' : 'Review incoming enrollments and keep interventions moving.'">
-                    Monitor operations, learning risk, and growth in one place.
+                <h1 th:text="${isAdmin} ? 'Review incoming enrollments and keep interventions moving.' : 'Review incoming enrollments and keep interventions moving.'">
+                    Review incoming enrollments and keep interventions moving.
                 </h1>
-                <p th:text="${isAdmin} ? 'A cleaner overview of institutional health, active demand, and the signals that need intervention first.' : 'Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.'">
-                    A cleaner overview of institutional health, active demand, and the signals that need intervention first.
+                <p th:text="${isAdmin} ? 'Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.' : 'Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.'">
+                    Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.
                 </p>
             </div>
         </div>
 
         <div class="hero-meta-grid" th:if="${isAdmin}">
             <article class="hero-meta-card">
-                <span>Users</span>
-                <strong th:text="${userCount}">0</strong>
-                <p>All registered portal accounts across roles.</p>
+                <span>Pending</span>
+                <strong th:text="${pendingEnrollmentCount}">0</strong>
+                <p>Enrollment requests waiting for approval.</p>
             </article>
             <article class="hero-meta-card">
-                <span>Courses</span>
-                <strong th:text="${courseCount}">0</strong>
-                <p>Published learning tracks currently available.</p>
+                <span>Assessments</span>
+                <strong th:text="${activeTestCount}">0</strong>
+                <p>Tests available for current teaching operations.</p>
             </article>
             <article class="hero-meta-card">
-                <span>Today</span>
-                <strong th:text="${todayErrorCount}">0</strong>
-                <p>Student errors detected in the last operating day.</p>
+                <span>Unassigned</span>
+                <strong th:text="${unassignedErrorCount}">0</strong>
+                <p>Students with errors that still lack remedial mapping.</p>
             </article>
         </div>
 
@@ -60,53 +60,41 @@
     </section>
 
     <section class="page-section" th:if="${isAdmin}">
-        <div class="metric-grid">
-            <article class="metric-card is-violet">
-                <div class="metric-card-header">
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    </div>
-                    <span class="metric-kicker">Directory</span>
-                </div>
-                <div class="metric-label">Total Users</div>
-                <div class="metric-value" th:text="${userCount}">0</div>
-                <div class="metric-copy">Centralized account base across admin, staff, and student roles.</div>
-            </article>
-
-            <article class="metric-card is-blue">
-                <div class="metric-card-header">
-                    <div class="metric-icon">
-                        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    </div>
-                    <span class="metric-kicker">Catalog</span>
-                </div>
-                <div class="metric-label">Published Courses</div>
-                <div class="metric-value" th:text="${courseCount}">0</div>
-                <div class="metric-copy">Current English programs available for enrollment and delivery.</div>
-            </article>
-
+        <div class="metric-grid metric-grid-3">
             <article class="metric-card is-amber">
                 <div class="metric-card-header">
                     <div class="metric-icon">
                         <svg viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path></svg>
                     </div>
-                    <span class="metric-kicker" th:text="${pendingEnrollmentCount > 0} ? 'Action needed' : 'Stable'">Action needed</span>
+                    <span class="metric-kicker">Review</span>
                 </div>
                 <div class="metric-label">Pending Enrollments</div>
                 <div class="metric-value" th:text="${pendingEnrollmentCount}">0</div>
-                <div class="metric-copy">Requests that still need manual approval or rejection.</div>
+                <div class="metric-copy">Requests currently waiting for staff action.</div>
+            </article>
+
+            <article class="metric-card is-emerald">
+                <div class="metric-card-header">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                    </div>
+                    <span class="metric-kicker">Delivery</span>
+                </div>
+                <div class="metric-label">Active Tests</div>
+                <div class="metric-value" th:text="${activeTestCount}">0</div>
+                <div class="metric-copy">Assessments currently available in the teaching flow.</div>
             </article>
 
             <article class="metric-card is-red">
                 <div class="metric-card-header">
                     <div class="metric-icon">
-                        <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
                     </div>
-                    <span class="metric-kicker">Risk</span>
+                    <span class="metric-kicker">Intervention</span>
                 </div>
-                <div class="metric-label">Errors Logged Today</div>
-                <div class="metric-value" th:text="${todayErrorCount}">0</div>
-                <div class="metric-copy">Fresh issues flagged from student assessment activity.</div>
+                <div class="metric-label">Unassigned Error Students</div>
+                <div class="metric-value" th:text="${unassignedErrorCount}">0</div>
+                <div class="metric-copy">Learners still waiting for mapped remedial support.</div>
             </article>
         </div>
     </section>
@@ -149,6 +137,57 @@
                 <div class="metric-copy">Learners still waiting for mapped remedial support.</div>
             </article>
         </div>
+    </section>
+
+    <section class="page-section" th:if="${isAdmin}">
+        <article class="surface-panel">
+            <div class="surface-panel-body">
+                <div class="surface-panel-header">
+                    <div>
+                        <h2>Pending Enrollments</h2>
+                        <p th:text="${pendingEnrollmentCount + ' requests are currently waiting for a decision.'}">0 requests are currently waiting for a decision.</p>
+                    </div>
+                    <a th:href="@{/enrollments}" class="primary-button">Open Enrollment Queue</a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(pendingEnrollments)}" class="empty-panel">
+                    No pending enrollments at this time.
+                </div>
+
+                <div th:unless="${#lists.isEmpty(pendingEnrollments)}" class="table-wrapper">
+                    <table class="data-table dashboard-table">
+                        <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="e : ${pendingEnrollments}">
+                            <td>
+                                <div th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">Student</div>
+                                <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
+                            </td>
+                            <td th:text="${e.course.name}">Course</td>
+                            <td style="font-size:12px;color:#94a3b8" th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
+                            <td>
+                                <div class="dashboard-action-row">
+                                    <form th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post">
+                                        <button class="secondary-button" style="min-height:38px;padding:0 14px">Approve</button>
+                                    </form>
+                                    <form th:action="@{'/enrollments/' + ${e.id} + '/reject'}" method="post">
+                                        <button class="ghost-button" style="min-height:38px;padding:0 14px;color:#ef4444">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
     </section>
 
     <section class="page-section" th:if="${isAdmin}">

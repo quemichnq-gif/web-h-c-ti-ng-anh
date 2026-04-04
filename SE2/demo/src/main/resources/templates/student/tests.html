@@ -23,9 +23,9 @@
         </div>
         <span style="padding:6px 12px;border-radius:999px;background:#eef2ff;color:#4338ca;font-size:12px;font-weight:800" th:text="${#lists.size(courseAssessments) + ' tests'}">0 tests</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:24px" th:if="${!#lists.isEmpty(courseAssessments)}">
+    <div class="assessment-card-grid assessment-card-grid-course" th:if="${!#lists.isEmpty(courseAssessments)}">
         <article th:each="t : ${courseAssessments}" class="chart-card" style="padding:0;overflow:hidden;transition:transform 0.2s;position:relative">
-            <div style="height:120px;background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:24px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end">
+            <div style="min-height:132px;background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:28px 24px 20px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
                     <span style="font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,255,255,0.16);padding:6px 10px;border-radius:999px">Course Assessment</span>
                 </div>
@@ -62,9 +62,9 @@
         </div>
         <span style="padding:6px 12px;border-radius:999px;background:#fff7ed;color:#c2410c;font-size:12px;font-weight:800" th:text="${#lists.size(remedialTests) + ' tests'}">0 tests</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:24px" th:if="${!#lists.isEmpty(remedialTests)}">
+    <div class="assessment-card-grid assessment-card-grid-remedial" th:if="${!#lists.isEmpty(remedialTests)}">
         <article th:each="t : ${remedialTests}" class="chart-card" style="padding:0;overflow:hidden;transition:transform 0.2s;position:relative">
-            <div style="height:120px;background:linear-gradient(135deg,#ea580c,#ef4444);padding:24px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end">
+            <div style="min-height:132px;background:linear-gradient(135deg,#ea580c,#ef4444);padding:28px 24px 20px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
                     <span style="font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,255,255,0.16);padding:6px 10px;border-radius:999px">Remedial Test</span>
                 </div>
