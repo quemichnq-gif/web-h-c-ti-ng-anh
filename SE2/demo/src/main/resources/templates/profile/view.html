@@ -9,7 +9,8 @@
         .profile-page {
             display: grid;
             gap: 20px;
-            max-width: 1120px;
+            max-width: 1200px;
+            font-family: "Segoe UI Variable Display", "Segoe UI", "Aptos", sans-serif;
         }
 
         .profile-hero {
@@ -52,6 +53,7 @@
             line-height: 0.94;
             letter-spacing: -0.05em;
             font-weight: 900;
+            margin-top: 6px;
         }
 
         .profile-hero p {
@@ -434,11 +436,13 @@
                         <strong th:text="${user.username}">username</strong>
                     </div>
                     <div class="profile-meta-item status-card">
-                        <span>Status</span>
+                        <span>Account Status</span>
                         <strong class="status-value">
                             <span th:text="${user.status == 'ACTIVE' ? 'Active' : user.status}"
                                   th:class="${user.status == 'ACTIVE' ? 'profile-status active' : 'profile-status inactive'}">ACTIVE</span>
                         </strong>
+                        <span style="display:block;margin-top:10px;color:#8b9bb4;font-size:0.76rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase"
+                              th:text="${user.createdAt != null ? 'Joined ' + #temporals.format(user.createdAt, 'dd/MM/yyyy') : 'Joined date unavailable'}">Joined 01/01/2026</span>
                     </div>
                     <div class="profile-meta-item">
                         <span>Email</span>
