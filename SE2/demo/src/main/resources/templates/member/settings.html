@@ -3,194 +3,1003 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Portal | Profile & Settings</title>
+    <title>Academic Portal | Settings</title>
     <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+    <style>
+        .settings-hero {
+            margin-bottom: 18px;
+        }
+
+        .settings-hero-card {
+            padding: 22px 24px;
+            background:
+                radial-gradient(circle at top right, rgba(124, 58, 237, 0.16), transparent 32%),
+                linear-gradient(135deg, #ffffff 0%, #faf7ff 100%);
+        }
+
+        .settings-hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--primary);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+        }
+
+        .settings-hero h1 {
+            margin: 14px 0 6px;
+            font-size: 2.1rem;
+            line-height: 1;
+            letter-spacing: -0.05em;
+        }
+
+        .settings-hero p {
+            margin: 0;
+            color: var(--muted);
+            max-width: 52ch;
+        }
+
+        .settings-stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .settings-panel.compact {
+            display: grid;
+            gap: 16px;
+        }
+
+        .header-dropdown {
+            position: relative;
+        }
+
+        .header-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: min(360px, calc(100vw - 36px));
+            padding: 14px;
+            border-radius: 22px;
+            border: 1px solid rgba(226, 232, 240, 0.96);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.16);
+            z-index: 30;
+            display: none;
+        }
+
+        .header-dropdown.open .header-dropdown-panel {
+            display: block;
+        }
+
+        .header-dropdown-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .header-dropdown-head strong {
+            font-size: 0.98rem;
+            letter-spacing: -0.03em;
+        }
+
+        .header-dropdown-head a {
+            color: var(--layout-primary);
+            font-size: var(--text-xs);
+            font-weight: 800;
+        }
+
+        .header-dropdown-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .header-dropdown-item {
+            display: grid;
+            gap: 4px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: linear-gradient(180deg, #fff, #faf7ff);
+            border: 1px solid rgba(226, 232, 240, 0.96);
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .header-dropdown-item:hover {
+            transform: translateY(-1px);
+            border-color: rgba(124, 58, 237, 0.2);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .header-dropdown-item-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+        }
+
+        .header-dot.info { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+        .header-dot.success { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .header-dot.warning { background: linear-gradient(135deg, #f59e0b, #fb923c); }
+        .header-dot.danger { background: linear-gradient(135deg, #ef4444, #fb7185); }
+
+        .header-dropdown-item strong {
+            font-size: 0.92rem;
+            letter-spacing: -0.02em;
+        }
+
+        .header-dropdown-item p {
+            margin: 0;
+            color: var(--layout-muted);
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .header-dropdown-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            font-size: 0.72rem;
+            margin-top: 2px;
+        }
+
+        .header-dropdown-time {
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .header-dropdown-action {
+            color: var(--layout-primary);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .header-dropdown-empty {
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.05);
+            color: var(--layout-muted);
+            font-size: 0.84rem;
+        }
+
+        .settings-panel {
+            padding: 20px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbf9ff 100%);
+            border: 1px solid rgba(109, 40, 217, 0.08);
+            box-shadow: 0 12px 28px rgba(40, 22, 95, 0.05);
+        }
+
+        .settings-panel-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(109, 40, 217, 0.08);
+        }
+
+        .settings-panel-header h2 {
+            margin: 0;
+            font-size: 1.08rem;
+            letter-spacing: -0.03em;
+        }
+
+        .settings-panel-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: var(--text-sm);
+        }
+
+        .settings-panel-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--primary);
+            flex: 0 0 auto;
+        }
+
+        .settings-panel-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .settings-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .field-wide {
+            grid-column: 1 / -1;
+        }
+
+        .settings-field label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #4b5563;
+            letter-spacing: 0.02em;
+        }
+
+        .settings-field input {
+            width: 100%;
+            min-height: 46px;
+            border-radius: 14px;
+            border: 1px solid #dbe4f0;
+            background: #fff;
+            padding: 0 14px;
+            color: #374151;
+            font-size: 0.95rem;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.65);
+        }
+
+        .settings-field input:focus {
+            outline: none;
+            border-color: rgba(124, 58, 237, 0.28);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+        }
+
+        .settings-note {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.06);
+            color: #6b7280;
+            font-size: var(--text-sm);
+        }
+
+        .settings-note strong {
+            color: var(--text);
+        }
+
+        .settings-note-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.12);
+            color: var(--primary);
+            flex: 0 0 auto;
+            font-weight: 800;
+        }
+
+        .settings-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .settings-actions .ghost-button,
+        .settings-actions .primary-button {
+            min-height: 44px;
+            padding: 0 16px;
+        }
+
+        .mini-setting {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px solid rgba(124, 58, 237, 0.08);
+        }
+
+        .mini-setting span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .mini-setting strong {
+            font-size: 0.92rem;
+            letter-spacing: -0.02em;
+        }
+
+        .settings-subgrid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 960px) {
+            .settings-subgrid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .settings-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field-wide {
+                grid-column: auto;
+            }
+
+            .settings-actions {
+                justify-content: stretch;
+            }
+
+            .settings-actions .ghost-button,
+            .settings-actions .primary-button,
+            .settings-hero-card .primary-button,
+            .settings-panel .danger-button {
+                width: 100%;
+            }
+        }
+
+        .settings-workspace {
+            display: block;
+        }
+
+        .settings-content {
+            display: grid;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .settings-spotlight {
+            padding: 24px;
+            border-radius: 30px;
+            background:
+                radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 30%),
+                linear-gradient(135deg, #ffffff 0%, #faf7ff 100%);
+            border: 1px solid rgba(109, 40, 217, 0.08);
+            box-shadow: 0 18px 34px rgba(40, 22, 95, 0.05);
+        }
+
+        .settings-spotlight h1 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: -0.05em;
+        }
+
+        .settings-spotlight p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            max-width: 68ch;
+            line-height: 1.55;
+        }
+
+        .settings-spotlight-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .settings-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--primary);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .settings-card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .settings-work-card {
+            padding: 22px;
+            border-radius: 26px;
+            background: #ffffff;
+            border: 1px solid rgba(109, 40, 217, 0.08);
+            box-shadow: 0 14px 30px rgba(40, 22, 95, 0.05);
+        }
+
+        .settings-work-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .settings-work-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(109, 40, 217, 0.08);
+        }
+
+        .settings-work-head h2 {
+            margin: 0;
+            font-size: 1.08rem;
+            letter-spacing: -0.03em;
+        }
+
+        .settings-work-head p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: var(--text-sm);
+            line-height: 1.5;
+        }
+
+        .settings-work-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--primary);
+            flex: 0 0 auto;
+        }
+
+        .settings-work-icon svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .settings-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .settings-metric {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(124, 58, 237, 0.05);
+            border: 1px solid rgba(124, 58, 237, 0.08);
+        }
+
+        .settings-metric span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .settings-metric strong {
+            font-size: 0.95rem;
+            letter-spacing: -0.02em;
+        }
+
+        .settings-option-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.95);
+            background: linear-gradient(180deg, #fff, #faf7ff);
+        }
+
+        .settings-option.has-choice-group {
+            align-items: flex-start;
+        }
+
+        .settings-option strong {
+            display: block;
+            font-size: 0.92rem;
+            margin-bottom: 4px;
+        }
+
+        .settings-option p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .settings-option a {
+            color: var(--primary);
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .settings-choice-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .settings-choice-button {
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(124, 58, 237, 0.16);
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .settings-choice-button:hover {
+            transform: translateY(-1px);
+            background: rgba(124, 58, 237, 0.12);
+            border-color: rgba(124, 58, 237, 0.28);
+            box-shadow: 0 10px 18px rgba(124, 58, 237, 0.12);
+        }
+
+        .settings-choice-button.is-selected {
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 12px 22px rgba(124, 58, 237, 0.22);
+        }
+
+        .settings-choice-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.16);
+        }
+
+        .settings-note-box {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(124, 58, 237, 0.06);
+            color: #6b7280;
+            font-size: var(--text-sm);
+        }
+
+        .settings-note-box strong {
+            color: var(--text);
+        }
+
+        .settings-note-box .settings-note-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(124, 58, 237, 0.12);
+            color: var(--primary);
+            flex: 0 0 auto;
+            font-weight: 800;
+        }
+
+        .settings-footer-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .settings-footer-row .ghost-button,
+        .settings-footer-row .primary-button {
+            min-height: 44px;
+            padding: 0 16px;
+        }
+
+        @media (max-width: 1100px) {
+            .settings-workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-rail {
+                position: static;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .settings-card-grid,
+            .settings-metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-work-card {
+                padding: 18px;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="page-shell">
-    <main class="app-content settings-page-shell">
-        <div class="surface-card settings-shell">
-            <aside class="settings-sidebar">
-                <div class="sidebar-brand">
-                    <span class="sidebar-brand-mark" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path><path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path><path d="M20.5 8.4v6.1"></path></svg>
-                    </span>
-                    <div class="sidebar-brand-copy">
-                        <strong>Academic Portal</strong>
-                        <span>Administrator</span>
-                    </div>
-                </div>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a th:href="@{/member/home}" class="brand">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" role="img">
+                        <path d="M3.5 8.4 12 4l8.5 4.4L12 12.8 3.5 8.4Z"></path>
+                        <path d="M6.4 10.2v4.2L12 17.3l5.6-2.9v-4.2"></path>
+                        <path d="M20.5 8.4v6.1"></path>
+                    </svg>
+                </span>
+                <span>
+                    Academic Portal
+                    <span class="brand-subtitle">Settings</span>
+                </span>
+            </a>
 
-                <nav class="sidebar-nav">
-                    <a th:href="@{/member/home}" class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V21h14V9.5"></path></svg>Dashboard</a>
-                    <a th:href="@{/courses}" class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M4 19.5V6.5A2.5 2.5 0 0 1 6.5 4H20"></path><path d="M8 6h12v14H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"></path></svg>Courses</a>
-                    <a href="#" class="sidebar-link"><svg viewBox="0 0 24 24"><path d="M8 7h8"></path><path d="M8 12h8"></path><path d="M8 17h5"></path><path d="M5 4h14v16H5z"></path></svg>Grades</a>
-                    </nav>
-
-                <div class="sidebar-divider"></div>
-                <a th:href="@{/member/settings}" class="sidebar-link active"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1 1a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.2 1.2 0 0 1-1.2 1.2h-1.6A1.2 1.2 0 0 1 11.2 20v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1-1a1.2 1.2 0 0 1 0-1.7l.1-.1A1 1 0 0 0 7 15a1 1 0 0 0-.9-.6H6a1.2 1.2 0 0 1-1.2-1.2v-1.6A1.2 1.2 0 0 1 6 10.4h.2A1 1 0 0 0 7 9.8a1 1 0 0 0-.2-1.1l-.1-.1a1.2 1.2 0 0 1 0-1.7l1-1a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4A1.2 1.2 0 0 1 12.4 2.8H14A1.2 1.2 0 0 1 15.2 4v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1 1a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a1.2 1.2 0 0 1 1.2 1.2V13a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.8Z"></path></svg>Settings</a>
-
-                <div class="sidebar-account-label">Account</div>
-                <a th:href="@{/logout}" class="sidebar-link sidebar-link-danger">
-                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5"></path><path d="M21 12H9"></path></svg>
-                    Sign Out
-                </a>
-
-                <div class="sidebar-footer">
-                    <div class="settings-sidebar-spacer"></div>
-                </div>
-            </aside>
-
-            <section class="settings-main">
-                <div class="settings-topbar">
-                    <div class="settings-topbar-right">
-                        <a th:href="@{/member/notifications}" class="soft-icon-button" aria-label="Notifications">
-                            <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"></path><path d="M10 17a2 2 0 0 0 4 0"></path></svg>
-                        </a>
-                        <a th:href="@{/member/settings}" class="soft-icon-button" aria-label="Settings">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"></circle><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1 1a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a1.2 1.2 0 0 1-1.2 1.2h-1.6A1.2 1.2 0 0 1 11.2 20v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1-1a1.2 1.2 0 0 1 0-1.7l.1-.1A1 1 0 0 0 7 15a1 1 0 0 0-.9-.6H6a1.2 1.2 0 0 1-1.2-1.2v-1.6A1.2 1.2 0 0 1 6 10.4h.2A1 1 0 0 0 7 9.8a1 1 0 0 0-.2-1.1l-.1-.1a1.2 1.2 0 0 1 0-1.7l1-1a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4A1.2 1.2 0 0 1 12.4 2.8H14A1.2 1.2 0 0 1 15.2 4v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1 1a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2a1.2 1.2 0 0 1 1.2 1.2V13a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.8Z"></path></svg>
-                        </a>
-                        <button type="button" class="settings-user-button">
-                            <span class="settings-user-avatar"></span>
-                        </button>
-                    </div>
-                </div>
-
-                <section class="settings-content">
-                    <div class="settings-header">
-                        <div>
-                            <h1>Settings</h1>
-                            <p>Manage your personal information and account security.</p>
+            <div class="header-actions">
+                <div class="header-dropdown" data-dropdown="notifications">
+                    <button type="button" class="header-icon-button has-badge header-dropdown-toggle" data-badge="3" aria-label="Notifications" aria-expanded="false">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </button>
+                    <div class="header-dropdown-panel" role="menu" aria-label="Notifications preview">
+                        <div class="header-dropdown-head">
+                            <strong>Notifications</strong>
+                            <a th:href="@{/member/notifications}">See all</a>
+                        </div>
+                        <div class="header-dropdown-list">
+                            <a th:href="@{/enrollments}" class="header-dropdown-item">
+                                <div class="header-dropdown-item-top">
+                                    <span class="header-dot warning"></span>
+                                    <strong>Pending enrollments</strong>
+                                </div>
+                                <p>Review requests waiting for approval.</p>
+                                <div class="header-dropdown-meta">
+                                    <span class="header-dropdown-time">Today</span>
+                                    <span class="header-dropdown-action">Review</span>
+                                </div>
+                            </a>
+                            <a th:href="@{/assessments}" class="header-dropdown-item">
+                                <div class="header-dropdown-item-top">
+                                    <span class="header-dot info"></span>
+                                    <strong>Assessment updates</strong>
+                                </div>
+                                <p>Recent test and score changes are ready.</p>
+                                <div class="header-dropdown-meta">
+                                    <span class="header-dropdown-time">Today</span>
+                                    <span class="header-dropdown-action">Open</span>
+                                </div>
+                            </a>
+                            <a th:href="@{/member/settings}" class="header-dropdown-item">
+                                <div class="header-dropdown-item-top">
+                                    <span class="header-dot danger"></span>
+                                    <strong>Security reminder</strong>
+                                </div>
+                                <p>Review your password and contact details before signing out.</p>
+                                <div class="header-dropdown-meta">
+                                    <span class="header-dropdown-time">Now</span>
+                                    <span class="header-dropdown-action">Open</span>
+                                </div>
+                            </a>
                         </div>
                     </div>
-
-                    <div th:if="${message != null}" class="alert"
-                         th:classappend="${message == 'password_error'} ? ' alert-error' : ' alert-success'"
-                         style="margin: 0 4px 16px;">
-                        <span th:if="${message == 'profile_saved'}">Profile details have been updated successfully.</span>
-                        <span th:if="${message == 'password_saved'}">Password has been changed successfully.</span>
-                        <span th:if="${message == 'password_error'}">New password and confirmation must match.</span>
-                    </div>
-
-                    <div class="settings-stack">
-                        <section class="settings-card">
-                            <div class="settings-card-header">
-                                <h2>
-                                    <span class="settings-card-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                    </span>
-                                    Update Profile
-                                </h2>
-                                <p>Keep your contact details up to date.</p>
-                            </div>
-
-                            <form th:action="@{/member/settings/profile}" method="post" class="settings-form">
-                                <div class="settings-grid-form">
-                                    <div class="field field-wide">
-                                        <label for="displayName">Full Name</label>
-                                        <input id="displayName" name="displayName" type="text" th:value="${displayName}" placeholder="Alex Thompson">
-                                    </div>
-
-                                    <div class="field">
-                                        <label for="email">Email Address</label>
-                                        <input id="email" name="email" type="email" th:value="${email}" placeholder="alex.thompson@university.edu">
-                                    </div>
-
-                                    <div class="field">
-                                        <label for="phone">Phone Number</label>
-                                        <input id="phone" name="phone" type="text" placeholder="+1 (202) 555-0198">
-                                    </div>
-                                </div>
-
-                                <div class="settings-actions">
-                                    <button type="submit" class="primary-button settings-submit-button">Save Profile</button>
-                                </div>
-                            </form>
-                        </section>
-
-                        <section class="settings-card">
-                            <div class="settings-card-header">
-                                <h2>
-                                    <span class="settings-card-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 1 1 8 0v3"></path></svg>
-                                    </span>
-                                    Change Password
-                                </h2>
-                                <p>Ensure your account remains secure with a strong password.</p>
-                            </div>
-
-                            <form th:action="@{/member/settings/password}" method="post" class="settings-form">
-                                <div class="settings-grid-form">
-                                    <div class="field field-wide">
-                                        <label for="currentPassword">Current Password</label>
-                                        <input id="currentPassword" name="currentPassword" type="password" placeholder="Enter current password">
-                                    </div>
-
-                                    <div class="field">
-                                        <label for="newPassword">New Password</label>
-                                        <input id="newPassword" name="newPassword" type="password" placeholder="Enter new password">
-                                    </div>
-
-                                    <div class="field">
-                                        <label for="confirmPassword">Confirm Password</label>
-                                        <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm new password">
-                                    </div>
-                                </div>
-
-                                <div class="settings-password-note">
-                                    <span class="settings-note-icon" aria-hidden="true">i</span>
-                                    Password must be at least 8 characters long and include a mix of uppercase letters, numbers, and symbols.
-                                </div>
-
-                                <div class="settings-actions">
-                                    <button type="submit" class="primary-button settings-submit-button">Update Password</button>
-                                </div>
-                            </form>
-                        </section>
-
-                        <section class="settings-danger-card">
-                            <div class="settings-danger-header">
-                                <h2>
-                                    <span class="settings-danger-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24"><path d="m10.3 3.7-8 14A1 1 0 0 0 3.2 19h17.6a1 1 0 0 0 .9-1.3l-8-14a1 1 0 0 0-1.8 0Z"></path><path d="M12 9v4"></path><path d="M12 16h.01"></path></svg>
-                                    </span>
-                                    Danger Zone
-                                </h2>
-                            </div>
-                            <div class="settings-danger-body">
-                                <div>
-                                    <strong>Delete Account</strong>
-                                    <p>Permanently remove your account and all associated data.</p>
-                                </div>
-                                <button type="button" class="settings-danger-button">Deactivate Account</button>
-                            </div>
-                        </section>
-                    </div>
-
-                    <footer class="settings-footer">
-                        <p>&copy; 2024 Academic Portal Systems. All rights reserved.</p>
-                    </footer>
-                </section>
-            </section>
+                </div>
+                <a th:href="@{/}" class="header-icon-button" aria-label="Dashboard">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M3 11.5 12 4l9 7.5"></path>
+                        <path d="M5 10.5V21h14V10.5"></path>
+                    </svg>
+                </a>
+                <button type="button" class="settings-user-button" aria-label="Account">
+                    <span class="settings-user-avatar"></span>
+                </button>
+            </div>
         </div>
+    </header>
+
+    <main class="app-content">
+        <section class="settings-workspace">
+            <div class="settings-content">
+                <section class="settings-spotlight">
+                    <h1>Preferences workspace</h1>
+                    <p>Adjust the portal experience.</p>
+                    <div class="settings-spotlight-chips">
+                        <span class="settings-chip">Appearance</span>
+                        <span class="settings-chip">Notifications</span>
+                        <span class="settings-chip">Accessibility</span>
+                        <span class="settings-chip">Session</span>
+                    </div>
+                </section>
+
+                <section class="settings-card-grid">
+                    <article class="settings-work-card wide" id="appearance">
+                        <div class="settings-work-head">
+                            <div>
+                                <h2>Appearance</h2>
+                            </div>
+                            <span class="settings-work-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 3v4"></path><path d="M12 17v4"></path><path d="M4.9 4.9l2.8 2.8"></path><path d="M16.3 16.3l2.8 2.8"></path><path d="M3 12h4"></path><path d="M17 12h4"></path><path d="M4.9 19.1l2.8-2.8"></path><path d="M16.3 7.7l2.8-2.8"></path></svg>
+                            </span>
+                        </div>
+
+                        <div class="settings-metric-grid">
+                            <div class="settings-metric">
+                                <span>Theme</span>
+                                <strong>Portal light</strong>
+                            </div>
+                            <div class="settings-metric">
+                                <span>Density</span>
+                                <strong>Compact</strong>
+                            </div>
+                            <div class="settings-metric">
+                                <span>Accent</span>
+                                <strong>Violet</strong>
+                            </div>
+                        </div>
+
+                        <div class="settings-option-list" style="margin-top: 14px;">
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Dashboard language</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button is-selected" data-choice-group="language" aria-pressed="true">English</button>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Default start page</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button is-selected" data-choice-group="start-page" aria-pressed="true">Home</button>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Layout spacing</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button is-selected" data-choice-group="spacing" aria-pressed="true">Balanced</button>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="settings-work-card" id="notifications">
+                        <div class="settings-work-head">
+                            <div>
+                                <h2>Notifications</h2>
+                            </div>
+                            <span class="settings-work-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Z"></path><path d="M18 16H6c1-1.5 2-2.7 2-6a4 4 0 1 1 8 0c0 3.3 1 4.5 2 6Z"></path></svg>
+                            </span>
+                        </div>
+
+                        <div class="settings-option-list">
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Topbar alerts</strong>
+                                </div>
+                                <a th:href="@{/member/notifications}">Preview</a>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Email summaries</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button is-selected" data-choice-group="email-summary" aria-pressed="true">On</button>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Priority alerts</strong>
+                                </div>
+                                <a th:href="@{/enrollments}">Review</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="settings-work-card" id="accessibility">
+                        <div class="settings-work-head">
+                            <div>
+                                <h2>Accessibility</h2>
+                            </div>
+                            <span class="settings-work-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 4h0"></path><path d="M4 12h16"></path><path d="M12 20h0"></path><path d="M7 7l10 10"></path><path d="M17 7 7 17"></path></svg>
+                            </span>
+                        </div>
+
+                        <div class="settings-option-list">
+                            <div class="settings-option has-choice-group">
+                                <div>
+                                    <strong>Font size</strong>
+                                </div>
+                                <div class="settings-choice-group" role="group" aria-label="Font size">
+                                    <button type="button" class="settings-choice-button" data-choice-group="font-size" data-setting="font-size" data-value="small" aria-pressed="false">Small</button>
+                                    <button type="button" class="settings-choice-button is-selected" data-choice-group="font-size" data-setting="font-size" data-value="medium" aria-pressed="true">Medium</button>
+                                    <button type="button" class="settings-choice-button" data-choice-group="font-size" data-setting="font-size" data-value="large" aria-pressed="false">Large</button>
+                                </div>
+                            </div>
+                            <div class="settings-option has-choice-group">
+                                <div>
+                                    <strong>Motion</strong>
+                                </div>
+                                <div class="settings-choice-group" role="group" aria-label="Motion">
+                                    <button type="button" class="settings-choice-button is-selected" data-choice-group="motion" data-setting="motion" data-value="normal" aria-pressed="true">Normal</button>
+                                    <button type="button" class="settings-choice-button" data-choice-group="motion" data-setting="motion" data-value="reduced" aria-pressed="false">Reduced</button>
+                                </div>
+                            </div>
+                            <div class="settings-option has-choice-group">
+                                <div>
+                                    <strong>Contrast</strong>
+                                </div>
+                                <div class="settings-choice-group" role="group" aria-label="Contrast">
+                                    <button type="button" class="settings-choice-button is-selected" data-choice-group="contrast" data-setting="contrast" data-value="standard" aria-pressed="true">Standard</button>
+                                    <button type="button" class="settings-choice-button" data-choice-group="contrast" data-setting="contrast" data-value="high" aria-pressed="false">High</button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="settings-work-card wide" id="session">
+                        <div class="settings-work-head">
+                            <div>
+                                <h2>Session</h2>
+                            </div>
+                            <span class="settings-work-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg>
+                            </span>
+                        </div>
+
+                        <div class="settings-subgrid">
+                            <div class="mini-setting">
+                                <span>Auto logout</span>
+                                <strong>Enabled after inactivity</strong>
+                            </div>
+                            <div class="mini-setting">
+                                <span>Current device</span>
+                                <strong>This browser only</strong>
+                            </div>
+                            <div class="mini-setting">
+                                <span>Keyboard shortcuts</span>
+                                <strong>Available soon</strong>
+                            </div>
+                        </div>
+
+                        <div class="settings-option-list" style="margin-top: 14px;">
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Signed-in sessions</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button" data-choice-group="sessions" aria-pressed="false">Manage</button>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Password reminder</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button" data-choice-group="password-reminder" aria-pressed="false">Open</button>
+                            </div>
+                            <div class="settings-option">
+                                <div>
+                                    <strong>Recovery email</strong>
+                                </div>
+                                <button type="button" class="settings-choice-button" data-choice-group="recovery-email" aria-pressed="false">Review</button>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+            </div>
+        </section>
     </main>
 </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const preferenceConfig = {
+            "font-size": { storageKey: "portal-font-size", defaultValue: "medium", datasetKey: "fontSize" },
+            "contrast": { storageKey: "portal-contrast", defaultValue: "standard", datasetKey: "contrast" },
+            "motion": { storageKey: "portal-motion", defaultValue: "normal", datasetKey: "motion" }
+        };
 
-<script>
-    function toggleMenu() {
-        const menu = document.getElementById("menu");
-        if (menu) {
-            menu.classList.toggle("open");
-        }
-    }
+        function applyPreference(setting, value, persist) {
+            const config = preferenceConfig[setting];
+            if (!config) {
+                return;
+            }
 
-    document.addEventListener("click", function (event) {
-        const menu = document.getElementById("menu");
-        const trigger = document.querySelector(".account-trigger");
-        if (menu && trigger && !menu.contains(event.target) && !trigger.contains(event.target)) {
-            menu.classList.remove("open");
+            document.documentElement.dataset[config.datasetKey] = value;
+            if (persist) {
+                localStorage.setItem(config.storageKey, value);
+            }
         }
+
+        Object.keys(preferenceConfig).forEach(function (setting) {
+            const config = preferenceConfig[setting];
+            const storedValue = localStorage.getItem(config.storageKey) || config.defaultValue;
+            applyPreference(setting, storedValue, false);
+        });
+
+        const dropdown = document.querySelector('[data-dropdown="notifications"]');
+        const trigger = dropdown ? dropdown.querySelector(".header-dropdown-toggle") : null;
+        if (!dropdown || !trigger) {
+            return;
+        }
+
+        trigger.addEventListener("click", function (event) {
+            event.preventDefault();
+            dropdown.classList.toggle("open");
+            trigger.setAttribute("aria-expanded", dropdown.classList.contains("open") ? "true" : "false");
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove("open");
+                trigger.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                dropdown.classList.remove("open");
+                trigger.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        const choiceButtons = Array.from(document.querySelectorAll(".settings-choice-button"));
+        choiceButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const group = button.getAttribute("data-choice-group");
+                if (!group) {
+                    return;
+                }
+
+                const groupButtons = document.querySelectorAll('[data-choice-group="' + group + '"]');
+                groupButtons.forEach(function (groupButton) {
+                    groupButton.classList.remove("is-selected");
+                    groupButton.setAttribute("aria-pressed", "false");
+                });
+
+                button.classList.add("is-selected");
+                button.setAttribute("aria-pressed", "true");
+
+                const setting = button.getAttribute("data-setting");
+                const value = button.getAttribute("data-value");
+                if (setting && value) {
+                    applyPreference(setting, value, true);
+                }
+            });
+        });
     });
-</script>
+    </script>
 </body>
 </html>

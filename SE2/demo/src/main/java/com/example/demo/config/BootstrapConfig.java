@@ -122,6 +122,7 @@ public class BootstrapConfig {
 
                 Test t1 = new Test();
                 t1.setTitle("Midterm Writing Challenge");
+                t1.setCode("MIDTERM-WRITING-CHALLENGE");
                 t1.setDescription("Kiem tra ky nang viet luan hoc thuat.");
                 t1.setDuration(60);
                 t1.setCourse(c1);
@@ -130,6 +131,7 @@ public class BootstrapConfig {
 
                 Test remedial = new Test();
                 remedial.setTitle("Grammar Recovery Drill");
+                remedial.setCode("GRAMMAR-RECOVERY-DRILL");
                 remedial.setDescription("Bai test bo sung cho hoc sinh dang gap loi ngu phap lap lai.");
                 remedial.setDuration(25);
                 remedial.setCourse(c1);

@@ -65,6 +65,8 @@ public class MainController {
         model.addAttribute("isStaff", hasRole(auth, "ROLE_ACADEMIC_STAFF"));
         model.addAttribute("pendingEnrollmentCount", enrollmentRepository.countByStatus(EnrollmentStatus.PENDING));
         model.addAttribute("activeTestCount", testRepository.count());
+        model.addAttribute("unassignedErrorCount", studentErrorRepository.countStudentsWithUnassignedErrors());
+        model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus(EnrollmentStatus.PENDING).stream().limit(10).toList());
 
         LocalDateTime start = LocalDate.now().atStartOfDay();
         LocalDateTime end = LocalDate.now().atTime(23, 59, 59);
@@ -75,8 +77,6 @@ public class MainController {
             model.addAttribute("courseCount", courseRepository.count());
             model.addAttribute("recentErrors", studentErrorRepository.findAllOrderByCreatedAtDesc().stream().limit(10).toList());
         } else {
-            model.addAttribute("unassignedErrorCount", studentErrorRepository.countStudentsWithUnassignedErrors());
-            model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus(EnrollmentStatus.PENDING).stream().limit(10).toList());
         }
         return "dashboard";
     }
