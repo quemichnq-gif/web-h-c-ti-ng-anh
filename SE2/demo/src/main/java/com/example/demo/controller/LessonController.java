@@ -17,7 +17,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -59,29 +63,27 @@ public class LessonController {
     public String listLessons(@RequestParam(required = false) Long courseId,
                               @RequestParam(required = false) String search,
                               Model model) {
-
         List<Course> courses = courseRepository.findAll().stream()
-                .sorted(Comparator.comparing(c -> safe(c.getName())))
+                .sorted(Comparator.comparing(course -> safe(course.getName())))
                 .toList();
 
-        List<Lesson> lessons;
-        if (courseId != null) {
-            lessons = lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId);
-        } else {
-            lessons = lessonRepository.findAll();
-        }
+        List<Lesson> lessons = courseId != null
+                ? lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId)
+                : lessonRepository.findAll().stream()
+                .sorted(Comparator
+                        .comparing((Lesson lesson) -> lesson.getCourse() != null ? safe(lesson.getCourse().getName()) : "")
+                        .thenComparing(lesson -> lesson.getSortOrder() != null ? lesson.getSortOrder() : 0)
+                        .thenComparing(Lesson::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
 
         if (search != null && !search.isBlank()) {
             String query = search.toLowerCase();
             lessons = lessons.stream()
-                    .filter(lesson ->
-                            safe(lesson.getTitle()).contains(query) ||
-                                    safe(lesson.getSummary()).contains(query) ||
-                                    (lesson.getCourse() != null &&
-                                            (safe(lesson.getCourse().getName()).contains(query) ||
-                                                    (lesson.getCourse().getCode() != null &&
-                                                            safe(lesson.getCourse().getCode()).contains(query))))
-                    )
+                    .filter(lesson -> safe(lesson.getTitle()).contains(query)
+                            || safe(lesson.getSummary()).contains(query)
+                            || (lesson.getCourse() != null
+                            && (safe(lesson.getCourse().getName()).contains(query)
+                            || safe(lesson.getCourse().getCode()).contains(query))))
                     .toList();
         }
 
@@ -95,7 +97,7 @@ public class LessonController {
     @GetMapping("/lessons/create")
     public String createLessonForm(@RequestParam(required = false) Long courseId, Model model) {
         model.addAttribute("courses", courseRepository.findAll().stream()
-                .sorted(Comparator.comparing(c -> safe(c.getName())))
+                .sorted(Comparator.comparing(course -> safe(course.getName())))
                 .toList());
         model.addAttribute("selectedCourseId", courseId);
         model.addAttribute("formAction", "/lessons/create");
@@ -103,7 +105,7 @@ public class LessonController {
         model.addAttribute("pageSubtitle", "Create lesson content, upload a study file, and attach review questions.");
         model.addAttribute("submitLabel", "Create Lesson");
         model.addAttribute("lesson", new Lesson());
-        model.addAttribute("quizQuestions", List.of());
+        model.addAttribute("quizQuestions", List.<LessonQuizQuestion>of());
         return "lessons/form";
     }
 
@@ -122,17 +124,10 @@ public class LessonController {
                                @RequestParam(required = false) List<String> correctAnswers,
                                @RequestParam(required = false) List<String> explanations,
                                RedirectAttributes ra) {
-
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         if (courseOpt.isEmpty()) {
-
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/lessons/create";
-        }
-
-        int finalSortOrder = sortOrder;
-        if (lessonRepository.existsByCourseIdAndSortOrder(courseId, finalSortOrder)) {
-            long count = lessonRepository.countByCourseId(courseId);
-            finalSortOrder = (int) count + 1;
         }
 
         Lesson lesson = new Lesson();
@@ -140,10 +135,9 @@ public class LessonController {
         lesson.setTitle(title);
         lesson.setSummary(summary);
         lesson.setContent(content);
-        lesson.setSortOrder(finalSortOrder);
+        lesson.setSortOrder(resolveSortOrder(courseId, sortOrder, null));
         saveAttachment(lesson, attachment);
         lessonRepository.save(lesson);
-
         saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
 
         ra.addFlashAttribute("success", "Lesson '" + title + "' created successfully.");
@@ -154,13 +148,13 @@ public class LessonController {
     public String editLessonForm(@PathVariable Long lessonId, Model model, RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         if (lessonOpt.isEmpty()) {
-
+            ra.addFlashAttribute("error", "Lesson not found.");
             return "redirect:/lessons";
         }
 
         Lesson lesson = lessonOpt.get();
         model.addAttribute("courses", courseRepository.findAll().stream()
-                .sorted(Comparator.comparing(c -> safe(c.getName())))
+                .sorted(Comparator.comparing(course -> safe(course.getName())))
                 .toList());
         model.addAttribute("selectedCourseId", lesson.getCourse() != null ? lesson.getCourse().getId() : null);
         model.addAttribute("formAction", "/lessons/" + lessonId + "/edit");
@@ -188,37 +182,26 @@ public class LessonController {
                                @RequestParam(required = false) List<String> correctAnswers,
                                @RequestParam(required = false) List<String> explanations,
                                RedirectAttributes ra) {
-
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         Optional<Course> courseOpt = courseRepository.findById(courseId);
-
         if (lessonOpt.isEmpty() || courseOpt.isEmpty()) {
             ra.addFlashAttribute("error", "Lesson or course not found.");
             return "redirect:/lessons";
         }
 
         Lesson lesson = lessonOpt.get();
-        Long oldCourseId = lesson.getCourse() != null ? lesson.getCourse().getId() : null;
-
-        if (!Objects.equals(oldCourseId, courseId) || !lesson.getSortOrder().equals(sortOrder)) {
-            if (lessonRepository.existsByCourseIdAndSortOrder(courseId, sortOrder)) {
-                long count = lessonRepository.countByCourseId(courseId);
-                sortOrder = (int) count + 1;
-            }
-        }
-
         lesson.setCourse(courseOpt.get());
         lesson.setTitle(title);
         lesson.setSummary(summary);
         lesson.setContent(content);
-        lesson.setSortOrder(sortOrder);
+        lesson.setSortOrder(resolveSortOrder(courseId, sortOrder, lessonId));
         replaceAttachmentIfNeeded(lesson, attachment);
         lessonRepository.save(lesson);
 
         lessonQuizQuestionRepository.deleteByLessonId(lessonId);
         saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
 
-
+        ra.addFlashAttribute("success", "Lesson '" + title + "' updated successfully.");
         return "redirect:/lessons?courseId=" + courseId;
     }
 
@@ -226,19 +209,17 @@ public class LessonController {
     public String deleteLesson(@PathVariable Long lessonId, RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         Long courseId = null;
-
         if (lessonOpt.isPresent()) {
             Lesson lesson = lessonOpt.get();
             courseId = lesson.getCourse() != null ? lesson.getCourse().getId() : null;
             int deletedOrder = lesson.getSortOrder();
-
             deleteStoredAttachment(lesson);
             lessonQuizQuestionRepository.deleteByLessonId(lessonId);
             lessonRepository.delete(lesson);
-
             reorderLessonsAfterDeletion(courseId, deletedOrder);
         }
 
+        ra.addFlashAttribute("success", "Lesson deleted successfully.");
         return courseId != null ? "redirect:/lessons?courseId=" + courseId : "redirect:/lessons";
     }
 
@@ -254,14 +235,15 @@ public class LessonController {
                                  RedirectAttributes ra) {
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         User student = getCurrentUser(auth);
-
         if (courseOpt.isEmpty() || student == null) {
             ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/portal/courses";
         }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
-
+                .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
+        if (!approved) {
+            ra.addFlashAttribute("error", "Your enrollment must be approved before you can view this content.");
             return "redirect:/portal/courses";
         }
 
@@ -279,17 +261,19 @@ public class LessonController {
                              RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         User student = getCurrentUser(auth);
-
         if (lessonOpt.isEmpty() || student == null) {
             ra.addFlashAttribute("error", "Lesson not found.");
             return "redirect:/portal/courses";
         }
 
         Lesson lesson = lessonOpt.get();
+        if (lesson.getCourse() == null || !Objects.equals(lesson.getCourse().getId(), courseId)) {
+            ra.addFlashAttribute("error", "Lesson not found.");
+            return "redirect:/portal/courses";
+        }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, lesson.getCourse()).stream()
-                .anyMatch(e -> "APPROVED".equals(e.getStatus()));
-
+                .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
         if (!approved) {
             ra.addFlashAttribute("error", "You are not enrolled in this course.");
             return "redirect:/portal/courses";
@@ -306,9 +290,8 @@ public class LessonController {
 
         model.addAttribute("lesson", lesson);
         model.addAttribute("prevLesson", currentIndex > 0 ? allLessons.get(currentIndex - 1) : null);
-        model.addAttribute("nextLesson", currentIndex < allLessons.size() - 1 ? allLessons.get(currentIndex + 1) : null);
+        model.addAttribute("nextLesson", currentIndex >= 0 && currentIndex < allLessons.size() - 1 ? allLessons.get(currentIndex + 1) : null);
         model.addAttribute("quizQuestions", lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId));
-
         return "student/lesson-view";
     }
 
@@ -318,12 +301,12 @@ public class LessonController {
                                                                              Authentication auth) throws IOException {
         User student = getCurrentUser(auth);
         Optional<Course> courseOpt = courseRepository.findById(courseId);
-
         if (student == null || courseOpt.isEmpty()) {
             throw new IOException("Unauthorized");
         }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
+                .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
         if (!approved) {
             throw new IOException("Unauthorized");
         }
@@ -331,8 +314,27 @@ public class LessonController {
         return buildAttachmentResponse(lessonId);
     }
 
+    private int resolveSortOrder(Long courseId, Integer requestedSortOrder, Long lessonId) {
+        int sortOrder = requestedSortOrder != null ? requestedSortOrder : 1;
+        if (sortOrder < 1) {
+            sortOrder = 1;
+        }
+        if (!lessonRepository.existsByCourseIdAndSortOrder(courseId, sortOrder)) {
+            return sortOrder;
+        }
+        if (lessonId != null) {
+            Optional<Lesson> existing = lessonRepository.findByCourseIdAndSortOrder(courseId, sortOrder);
+            if (existing.isPresent() && existing.get().getId().equals(lessonId)) {
+                return sortOrder;
+            }
+        }
+        return (int) lessonRepository.countByCourseId(courseId) + 1;
+    }
+
     private void reorderLessonsAfterDeletion(Long courseId, int deletedOrder) {
-        if (courseId == null) return;
+        if (courseId == null) {
+            return;
+        }
 
         List<Lesson> lessons = lessonRepository.findByCourseIdAndSortOrderGreaterThanOrderBySortOrderAsc(courseId, deletedOrder);
         for (Lesson lesson : lessons) {
@@ -417,8 +419,7 @@ public class LessonController {
 
     private List<LessonView> buildLessonViews(List<Lesson> lessons) {
         return lessons.stream()
-                .map(lesson -> new LessonView(lesson,
-                        lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lesson.getId())))
+                .map(lesson -> new LessonView(lesson, lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lesson.getId())))
                 .toList();
     }
 
@@ -431,9 +432,9 @@ public class LessonController {
         byte[] bytes = Files.readAllBytes(uploadRoot.resolve(lesson.getAttachmentStoredName()));
         ByteArrayResource resource = new ByteArrayResource(bytes);
         return ResponseEntity.ok()
-                .contentType(lesson.getAttachmentContentType() != null ?
-                        MediaType.parseMediaType(lesson.getAttachmentContentType()) :
-                        MediaType.APPLICATION_OCTET_STREAM)
+                .contentType(lesson.getAttachmentContentType() != null
+                        ? MediaType.parseMediaType(lesson.getAttachmentContentType())
+                        : MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + lesson.getAttachmentOriginalName() + "\"")
                 .contentLength(bytes.length)
                 .body(resource);
@@ -452,4 +453,6 @@ public class LessonController {
         return value == null ? "" : value.toLowerCase();
     }
 
-
+    public record LessonView(Lesson lesson, List<LessonQuizQuestion> quizQuestions) {
+    }
+}
