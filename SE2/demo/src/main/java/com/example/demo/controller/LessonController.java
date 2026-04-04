@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Course;
+import com.example.demo.model.EnrollmentStatus;
 import com.example.demo.model.Lesson;
 import com.example.demo.model.LessonQuizQuestion;
 import com.example.demo.model.User;
@@ -122,7 +123,7 @@ public class LessonController {
                                RedirectAttributes ra) {
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         if (courseOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Course khong ton tai.");
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/lessons/create";
         }
 
@@ -136,7 +137,7 @@ public class LessonController {
         lessonRepository.save(lesson);
         saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
 
-        ra.addFlashAttribute("success", "Da tao lesson '" + title + "' thanh cong.");
+        ra.addFlashAttribute("success", "Lesson '" + title + "' created successfully.");
         return "redirect:/lessons?courseId=" + courseId;
     }
 
@@ -144,7 +145,7 @@ public class LessonController {
     public String editLessonForm(@PathVariable Long lessonId, Model model, RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         if (lessonOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Lesson khong ton tai.");
+            ra.addFlashAttribute("error", "Lesson not found.");
             return "redirect:/lessons";
         }
 
@@ -181,7 +182,7 @@ public class LessonController {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         if (lessonOpt.isEmpty() || courseOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "Khong tim thay lesson hoac course.");
+            ra.addFlashAttribute("error", "Lesson or course not found.");
             return "redirect:/lessons";
         }
 
@@ -197,7 +198,7 @@ public class LessonController {
         lessonQuizQuestionRepository.deleteByLessonId(lessonId);
         saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
 
-        ra.addFlashAttribute("success", "Da cap nhat lesson '" + title + "'.");
+        ra.addFlashAttribute("success", "Lesson '" + title + "' updated successfully.");
         return "redirect:/lessons?courseId=" + courseId;
     }
 
@@ -212,7 +213,7 @@ public class LessonController {
             lessonQuizQuestionRepository.deleteByLessonId(lessonId);
             lessonRepository.delete(lesson);
         }
-        ra.addFlashAttribute("success", "Da xoa lesson.");
+        ra.addFlashAttribute("success", "Lesson deleted successfully.");
         return courseId != null ? "redirect:/lessons?courseId=" + courseId : "redirect:/lessons";
     }
 
@@ -229,14 +230,14 @@ public class LessonController {
         Optional<Course> courseOpt = courseRepository.findById(courseId);
         User student = getCurrentUser(auth);
         if (courseOpt.isEmpty() || student == null) {
-            ra.addFlashAttribute("error", "Khong tim thay khoa hoc.");
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/portal/courses";
         }
 
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
-                .anyMatch(e -> "APPROVED".equals(e.getStatus()));
+                .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
         if (!approved) {
-            ra.addFlashAttribute("error", "Ban can duoc duyet dang ky khoa hoc de xem noi dung.");
+            ra.addFlashAttribute("error", "Your enrollment must be approved before you can view this content.");
             return "redirect:/portal/courses";
         }
 
@@ -256,7 +257,7 @@ public class LessonController {
             throw new IOException("Unauthorized");
         }
         boolean approved = enrollmentRepository.findByStudentAndCourse(student, courseOpt.get()).stream()
-                .anyMatch(e -> "APPROVED".equals(e.getStatus()));
+                .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED);
         if (!approved) {
             throw new IOException("Unauthorized");
         }
@@ -374,3 +375,4 @@ public class LessonController {
     public record LessonView(Lesson lesson, List<LessonQuizQuestion> quizQuestions) {
     }
 }
+

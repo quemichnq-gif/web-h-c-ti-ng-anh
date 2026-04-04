@@ -96,7 +96,7 @@ public class BootstrapConfig {
                     Enrollment e = new Enrollment();
                     e.setStudent(s);
                     e.setCourse(c1);
-                    e.setStatus("APPROVED");
+                    e.setStatus(EnrollmentStatus.APPROVED);
                     e.setEnrolledAt(LocalDateTime.now().minusDays(random.nextInt(10)));
                     enrollmentRepository.save(e);
 
@@ -104,7 +104,7 @@ public class BootstrapConfig {
                         Enrollment e2 = new Enrollment();
                         e2.setStudent(s);
                         e2.setCourse(c3);
-                        e2.setStatus(random.nextBoolean() ? "PENDING" : "APPROVED");
+                        e2.setStatus(random.nextBoolean() ? EnrollmentStatus.PENDING : EnrollmentStatus.APPROVED);
                         e2.setEnrolledAt(LocalDateTime.now().minusDays(random.nextInt(5)));
                         enrollmentRepository.save(e2);
                     }

@@ -99,7 +99,7 @@ public class AssessmentController {
 
         Optional<Course> course = courseRepository.findById(courseId);
         if (course.isEmpty()) {
-            ra.addFlashAttribute("error", "Course khong ton tai.");
+            ra.addFlashAttribute("error", "Course not found.");
             return "redirect:/assessments/create";
         }
 
@@ -133,7 +133,7 @@ public class AssessmentController {
             }
         }
 
-        ra.addFlashAttribute("success", "Tao assessment '" + title + "' thanh cong.");
+        ra.addFlashAttribute("success", "Assessment '" + title + "' created successfully.");
         return "redirect:/assessments";
     }
 
@@ -145,7 +145,7 @@ public class AssessmentController {
     public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
         Optional<Test> opt = testRepository.findById(id);
         if (opt.isEmpty()) {
-            ra.addFlashAttribute("error", "Test khong ton tai.");
+            ra.addFlashAttribute("error", "Test not found.");
             return "redirect:/assessments";
         }
         model.addAttribute("test", opt.get());
@@ -174,7 +174,7 @@ public class AssessmentController {
                          RedirectAttributes ra) {
         Optional<Test> opt = testRepository.findById(id);
         if (opt.isEmpty()) {
-            ra.addFlashAttribute("error", "Test khong ton tai.");
+            ra.addFlashAttribute("error", "Test not found.");
             return "redirect:/assessments";
         }
 
@@ -209,7 +209,7 @@ public class AssessmentController {
             }
         }
 
-        ra.addFlashAttribute("success", "Cap nhat test thanh cong.");
+        ra.addFlashAttribute("success", "Test updated successfully.");
         return "redirect:/assessments";
     }
 
@@ -217,7 +217,7 @@ public class AssessmentController {
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         questionRepository.deleteAll(questionRepository.findByTestId(id));
         testRepository.deleteById(id);
-        ra.addFlashAttribute("success", "Da xoa test.");
+        ra.addFlashAttribute("success", "Test deleted successfully.");
         return "redirect:/assessments";
     }
 
@@ -229,7 +229,7 @@ public class AssessmentController {
                           RedirectAttributes ra) {
         Optional<Test> opt = testRepository.findById(id);
         if (opt.isEmpty()) {
-            ra.addFlashAttribute("error", "Test khong ton tai.");
+            ra.addFlashAttribute("error", "Test not found.");
             return "redirect:/assessments";
         }
 
@@ -273,7 +273,7 @@ public class AssessmentController {
         Optional<StudentResult> resultOpt = resultRepository.findById(resultId);
         if (testOpt.isEmpty() || resultOpt.isEmpty() || resultOpt.get().getTest() == null
                 || !Objects.equals(resultOpt.get().getTest().getId(), testId)) {
-            ra.addFlashAttribute("error", "Khong tim thay ket qua can xem.");
+            ra.addFlashAttribute("error", "The requested result could not be found.");
             return "redirect:/assessments";
         }
 
@@ -345,3 +345,4 @@ public class AssessmentController {
         return value == null ? "" : value.toLowerCase();
     }
 }
+
