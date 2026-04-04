@@ -6,60 +6,386 @@
 <head>
     <title>Error Management</title>
     <style>
-        .error-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr); gap: 24px; }
-        .error-card { padding: 24px; border-radius: 24px; background: rgba(255,255,255,0.96); border: 1px solid rgba(148,163,184,0.14); box-shadow: 0 18px 42px rgba(15,23,42,0.06); }
-        .toolbar-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 14px; align-items: end; margin-bottom: 20px; }
-        .summary-list { display: grid; gap: 14px; }
-        .summary-row { padding: 18px; border-radius: 20px; background: linear-gradient(180deg, #fffbeb 0%, #fff 100%); border: 1px solid #fde68a; }
-        .summary-stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
-        .summary-pill { padding: 6px 12px; border-radius: 999px; background: #fff; border: 1px solid #fcd34d; color: #92400e; font-size: 12px; font-weight: 800; }
-        .student-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .student-chip { padding: 8px 11px; border-radius: 999px; background: rgba(255,255,255,0.92); border: 1px solid #fdba74; color: #9a3412; font-size: 12px; font-weight: 700; }
-        .table-shell { overflow-x: auto; }
-        .error-table { width: 100%; border-collapse: collapse; min-width: 720px; }
-        .error-table th, .error-table td { padding: 16px 14px; border-bottom: 1px solid #eef2f7; vertical-align: top; text-align: left; }
-        .error-table th { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-        .mapping-badge { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 800; }
-        .recent-list { display: grid; gap: 12px; }
-        .recent-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; align-items: start; padding: 14px; border-radius: 18px; background: #fff7f7; border: 1px solid #fee2e2; }
-        .recent-icon { width: 36px; height: 36px; border-radius: 14px; background: #ef4444; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; }
-        .empty-state { text-align: center; padding: 48px 20px; color: #94a3b8; }
-        @media (max-width: 1080px) {
-            .error-grid { grid-template-columns: 1fr; }
+        .error-page {
+            display: grid;
+            gap: 24px;
         }
+
+        .error-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 4px 4px 0;
+        }
+
+        .error-hero-copy {
+            max-width: 760px;
+        }
+
+        .error-hero-copy h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            line-height: 0.98;
+            letter-spacing: -0.05em;
+            font-weight: 900;
+            color: #1f2a44;
+        }
+
+        .error-hero-copy p {
+            margin: 12px 0 0;
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .error-hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .error-card {
+            padding: 24px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.98);
+            border: 1px solid rgba(148,163,184,0.14);
+            box-shadow: 0 18px 42px rgba(15,23,42,0.06);
+        }
+
+        .error-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .error-card-head h2 {
+            margin: 0;
+            font-size: 1.22rem;
+            font-weight: 900;
+            color: #1f2a44;
+            letter-spacing: -0.03em;
+        }
+
+        .error-card-head p {
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .toolbar-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: end;
+            margin-bottom: 22px;
+        }
+
+        .filter-field label,
+        .mapping-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        .filter-input,
+        .mapping-select {
+            width: 100%;
+            min-height: 48px;
+            border-radius: 14px;
+            border: 1px solid #dbe4f0;
+            padding: 0 14px;
+            outline: none;
+            background: #fff;
+        }
+
+        .table-shell {
+            overflow: visible;
+            border-radius: 20px;
+            border: 1px solid #edf2f7;
+            background: linear-gradient(180deg, #ffffff 0%, #fcfcff 100%);
+        }
+
+        .error-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        .error-table thead th {
+            padding: 18px 16px;
+            background: #f6f2ff;
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+        }
+
+        .error-table thead th:first-child {
+            border-top-left-radius: 20px;
+        }
+
+        .error-table thead th:last-child {
+            border-top-right-radius: 20px;
+            text-align: right;
+        }
+
+        .error-table td {
+            padding: 20px 16px;
+            border-bottom: 1px solid #eef2f7;
+            vertical-align: top;
+        }
+
+        .error-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .error-table th:nth-child(1),
+        .error-table td:nth-child(1) {
+            width: 64px;
+        }
+
+        .error-table th:nth-child(3),
+        .error-table td:nth-child(3) {
+            width: 250px;
+        }
+
+        .error-table th:nth-child(4),
+        .error-table td:nth-child(4) {
+            width: 120px;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .error-name {
+            font-weight: 900;
+            font-size: 1.08rem;
+            line-height: 1.35;
+            color: #1f2a44;
+            overflow-wrap: anywhere;
+        }
+
+        .error-description {
+            margin-top: 6px;
+            font-size: 0.95rem;
+            line-height: 1.65;
+            color: #64748b;
+            overflow-wrap: anywhere;
+        }
+
+        .mapping-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .delete-button {
+            min-width: 84px;
+            padding: 9px 14px;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #dc2626;
+            background: none;
+            cursor: pointer;
+        }
+
+        .error-lower-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .error-lower-grid > .error-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .summary-row {
+            padding: 20px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, #fffdf4 0%, #fff 100%);
+            border: 1px solid #fde68a;
+        }
+
+        .summary-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+
+        .summary-pill {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .student-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .student-chip {
+            padding: 8px 11px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.92);
+            border: 1px solid #fdba74;
+            color: #9a3412;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .recent-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .recent-item {
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fff7f7;
+            border: 1px solid #fee2e2;
+        }
+
+        .recent-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: #ef4444;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 1100px) {
+            .error-lower-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 720px) {
-            .error-card { padding: 18px; border-radius: 20px; }
-            .toolbar-grid { grid-template-columns: 1fr; }
+            .error-card {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .error-hero-copy h1 {
+                font-size: 1.9rem;
+            }
+
+            .toolbar-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .error-table,
+            .error-table tbody,
+            .error-table tr,
+            .error-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .error-table thead {
+                display: none;
+            }
+
+            .error-table tr {
+                padding: 14px 0;
+                border-bottom: 1px solid #eef2f7;
+            }
+
+            .error-table td {
+                padding: 8px 0;
+                border-bottom: 0;
+                text-align: left !important;
+            }
+
+            .error-table td::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: 4px;
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: #94a3b8;
+            }
         }
     </style>
 </head>
 <body>
 <div layout:fragment="content">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap">
-        <div>
-            <h1 style="font-size:28px;font-weight:900;margin:0 0 6px">Error Taxonomy & Tracking</h1>
-            <p style="margin:0;color:#64748b">Compact taxonomy table, backend-driven error summary, and student-aware filtering without stretching the page width.</p>
-        </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a th:href="@{/errors/students}" class="secondary-button">View Student Errors</a>
-            <a th:href="@{/errors/create}" class="primary-button">Create Error Type</a>
-        </div>
-    </div>
+    <section class="error-page">
+        <section class="error-hero">
+            <div class="error-hero-copy">
+                <h1>Error Taxonomy & Tracking</h1>
+                <p>Compact taxonomy table, backend-driven error summary, and student-aware filtering without stretching the page width.</p>
+            </div>
+            <div class="error-hero-actions">
+                <a th:href="@{/errors/students}" class="secondary-button">View Student Errors</a>
+                <a th:href="@{/errors/create}" class="primary-button">Create Error Type</a>
+            </div>
+        </section>
 
-    <div th:if="${success}" style="padding:14px 20px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:700;margin-bottom:20px" th:text="${success}"></div>
+        <div th:if="${success}" style="padding:14px 20px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:700" th:text="${success}"></div>
 
-    <div class="error-grid">
         <article class="error-card">
-            <form method="get" th:action="@{/errors}" class="toolbar-grid">
+            <div class="error-card-head">
                 <div>
-                    <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Filter Error Types</label>
-                    <input name="search" th:value="${search}" placeholder="Search by error name or description"
-                           style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
+                    <h2>Error Type Directory</h2>
+                    <p>Review taxonomy entries, current remedial mappings, and remove outdated categories.</p>
                 </div>
-                <div>
-                    <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Filter Affected Students</label>
-                    <input name="studentKeyword" th:value="${studentKeyword}" placeholder="ID, username, or full name"
-                           style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
+            </div>
+
+            <form method="get" th:action="@{/errors}" class="toolbar-grid">
+                <div class="filter-field">
+                    <label>Filter Error Types</label>
+                    <input name="search" th:value="${search}" placeholder="Search by error name or description" class="filter-input">
+                </div>
+                <div class="filter-field">
+                    <label>Filter Affected Students</label>
+                    <input name="studentKeyword" th:value="${studentKeyword}" placeholder="ID, username, or full name" class="filter-input">
                 </div>
                 <button type="submit" class="primary-button">Apply</button>
             </form>
@@ -76,21 +402,21 @@
                     </thead>
                     <tbody>
                     <tr th:each="et,stat : ${errorTypes}">
-                        <td th:text="${stat.index + 1}">1</td>
-                        <td>
-                            <div style="font-weight:800" th:text="${et.name}">Name</div>
-                            <div style="font-size:13px;color:#64748b" th:text="${et.description}">desc</div>
+                        <td data-label="#" th:text="${stat.index + 1}">1</td>
+                        <td data-label="Error Type">
+                            <div class="error-name" th:text="${et.name}">Name</div>
+                            <div class="error-description" th:text="${et.description}">desc</div>
                         </td>
-                        <td>
+                        <td data-label="Assigned Test">
                             <span class="mapping-badge"
                                   th:if="${mappingByErrorId.containsKey(et.id)}"
                                   th:text="${mappingByErrorId.get(et.id).test.title}">Assigned</span>
                             <span class="mapping-badge" style="background:#f1f5f9;color:#64748b"
                                   th:unless="${mappingByErrorId.containsKey(et.id)}">Not assigned</span>
                         </td>
-                        <td>
+                        <td data-label="Actions">
                             <form th:action="@{'/errors/types/' + ${et.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this error type?')" style="display:inline">
-                                <button style="padding:8px 12px;border:1px solid #fecaca;border-radius:10px;font-size:12px;font-weight:800;color:#dc2626;background:none;cursor:pointer">Delete</button>
+                                <button class="delete-button">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -102,19 +428,25 @@
             </div>
         </article>
 
-        <div style="display:grid;gap:20px;align-content:start">
+        <section class="error-lower-grid">
             <article class="error-card">
-                <h2 style="font-size:18px;font-weight:900;margin:0 0 16px">Assign Remedial Test</h2>
-                <form th:action="@{/errors/mappings/create}" method="post" style="display:grid;gap:14px">
+                <div class="error-card-head">
                     <div>
-                        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Error Type</label>
-                        <select name="errorTypeId" style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
+                        <h2>Assign Remedial Test</h2>
+                        <p>Link a known error category with the most relevant remedial assessment.</p>
+                    </div>
+                </div>
+
+                <form th:action="@{/errors/mappings/create}" method="post" style="display:grid;gap:14px">
+                    <div class="mapping-field">
+                        <label>Error Type</label>
+                        <select name="errorTypeId" class="mapping-select">
                             <option th:each="et : ${errorTypes}" th:value="${et.id}" th:text="${et.name}">Type</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Remedial Test</label>
-                        <select name="testId" style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
+                    <div class="mapping-field">
+                        <label>Remedial Test</label>
+                        <select name="testId" class="mapping-select">
                             <option value="">Choose a remedial test</option>
                             <option th:each="t : ${remedialTests}" th:value="${t.id}" th:text="${t.title + ' (' + (t.course != null ? t.course.name : 'General') + ')'}">Test</option>
                         </select>
@@ -125,13 +457,14 @@
             </article>
 
             <article class="error-card">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px">
+                <div class="error-card-head">
                     <div>
-                        <h2 style="font-size:18px;font-weight:900;margin:0">Error Summary</h2>
-                        <p style="margin:6px 0 0;color:#64748b;font-size:13px">Aggregated in the controller and sorted by impact.</p>
+                        <h2>Error Summary</h2>
+                        <p>Aggregated in the controller and sorted by impact.</p>
                     </div>
                     <div style="font-size:12px;color:#64748b;font-weight:800" th:text="${#lists.size(errorSummaries) + ' groups'}">0 groups</div>
                 </div>
+
                 <div class="summary-list" th:if="${!#lists.isEmpty(errorSummaries)}">
                     <article class="summary-row" th:each="summary : ${errorSummaries}">
                         <div style="font-size:16px;font-weight:900" th:text="${summary.name}">Error</div>
@@ -149,7 +482,13 @@
             </article>
 
             <article class="error-card">
-                <h2 style="font-size:18px;font-weight:900;margin:0 0 16px">Recent Student Errors</h2>
+                <div class="error-card-head">
+                    <div>
+                        <h2>Recent Student Errors</h2>
+                        <p>Latest records that were tagged against the active taxonomy.</p>
+                    </div>
+                </div>
+
                 <div class="recent-list" th:if="${!#lists.isEmpty(studentErrors)}">
                     <div class="recent-item" th:each="se : ${studentErrors}">
                         <div class="recent-icon">!</div>
@@ -162,8 +501,8 @@
                 </div>
                 <div class="empty-state" th:if="${#lists.isEmpty(studentErrors)}">No student errors recorded yet.</div>
             </article>
-        </div>
-    </div>
+        </section>
+    </section>
 </div>
 </body>
 </html>

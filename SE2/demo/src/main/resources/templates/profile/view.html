@@ -1,70 +1,494 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{fragments/layout}">
-<head><title>My Profile</title></head>
+<head>
+    <title>My Profile</title>
+    <style>
+        .profile-page {
+            display: grid;
+            gap: 20px;
+            max-width: 1120px;
+        }
+
+        .profile-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 22px 24px;
+            border-radius: 26px;
+            background:
+                radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 22%),
+                radial-gradient(circle at left center, rgba(255,255,255,0.08), transparent 28%),
+                linear-gradient(135deg, #6d28d9 0%, #7c3aed 48%, #8b5cf6 100%);
+            color: #fff;
+            box-shadow: 0 18px 34px rgba(124, 58, 237, 0.14);
+        }
+
+        .profile-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.18;
+            pointer-events: none;
+        }
+
+        .profile-hero-content {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .profile-hero h1 {
+            margin: 0;
+            font-size: 2rem;
+            line-height: 0.94;
+            letter-spacing: -0.05em;
+            font-weight: 900;
+        }
+
+        .profile-hero p {
+            margin: 12px 0 0;
+            max-width: 540px;
+            color: rgba(255,255,255,0.82);
+            line-height: 1.5;
+        }
+
+        .profile-role-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-hero-mini {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            min-width: 214px;
+            padding: 10px 12px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(12px);
+            justify-self: end;
+        }
+
+        .profile-hero-mini-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 900;
+        }
+
+        .profile-hero-mini strong {
+            display: block;
+            font-size: 0.96rem;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .profile-hero-mini span {
+            display: block;
+            margin-top: 4px;
+            color: rgba(255,255,255,0.76);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .profile-card {
+            padding: 22px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.98);
+            border: 1px solid rgba(148,163,184,0.14);
+            box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+        }
+
+        .profile-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .profile-card-head h2 {
+            margin: 0;
+            font-size: 1.18rem;
+            font-weight: 900;
+            color: #1f2a44;
+            letter-spacing: -0.03em;
+        }
+
+        .profile-card-head p {
+            margin: 8px 0 0;
+            color: #64748b;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .profile-identity {
+            display: grid;
+            grid-template-columns: 78px minmax(0, 1fr);
+            gap: 18px;
+            align-items: center;
+            padding: 16px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, #fbf9ff 0%, #ffffff 100%);
+            border: 1px solid rgba(139, 92, 246, 0.08);
+        }
+
+        .profile-avatar {
+            width: 78px;
+            height: 78px;
+            border-radius: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 900;
+            box-shadow: 0 14px 28px rgba(124, 58, 237, 0.18);
+        }
+
+        .profile-name {
+            font-size: 1.68rem;
+            line-height: 0.98;
+            letter-spacing: -0.04em;
+            font-weight: 900;
+            color: #1f2a44;
+        }
+
+        .profile-subtitle {
+            margin-top: 8px;
+            color: #7c8eac;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .profile-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .profile-meta-item {
+            padding: 15px 17px;
+            min-height: 104px;
+            border-radius: 18px;
+            background: #fbfcff;
+            border: 1px solid #edf2f7;
+        }
+
+        .profile-meta-item.status-card {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            align-items: stretch;
+        }
+
+        .profile-meta-item span {
+            display: block;
+            color: #8b9bb4;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .profile-meta-item strong {
+            display: block;
+            margin-top: 10px;
+            color: #1f2a44;
+            font-size: 1rem;
+            line-height: 1.45;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-meta-item strong.status-value {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            min-height: 48px;
+            line-height: 1;
+        }
+
+        .profile-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 38px;
+            padding: 0 16px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            width: fit-content;
+            line-height: 38px;
+            vertical-align: middle;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .profile-status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .profile-status.inactive {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .profile-actions {
+            display: grid;
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .profile-action-card {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 14px 15px;
+            min-height: 74px;
+            border-radius: 18px;
+            border: 1px solid #edf2f7;
+            background: linear-gradient(180deg, #ffffff 0%, #fcfcff 100%);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .profile-action-card:hover {
+            transform: translateY(-1px);
+            border-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 12px 22px rgba(15,23,42,0.05);
+        }
+
+        .profile-action-card.logout {
+            width: 100%;
+            cursor: pointer;
+            text-align: left;
+            border: 0;
+        }
+
+        .profile-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .profile-action-icon.edit {
+            background: #f6edff;
+            color: #7c3aed;
+        }
+
+        .profile-action-icon.security {
+            background: #eef6ff;
+            color: #2563eb;
+        }
+
+        .profile-action-icon.logout {
+            background: #fff1f2;
+            color: #dc2626;
+        }
+
+        .profile-action-title {
+            font-size: 0.96rem;
+            font-weight: 800;
+            color: #1f2a44;
+            line-height: 1.2;
+        }
+
+        .profile-action-copy {
+            margin-top: 3px;
+            color: #8b9bb4;
+            font-size: 0.85rem;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 960px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-hero-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .profile-hero {
+                padding: 22px 20px;
+                border-radius: 22px;
+            }
+
+            .profile-hero h1 {
+                font-size: 1.9rem;
+            }
+
+            .profile-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+
+            .profile-identity {
+                grid-template-columns: 1fr;
+                text-align: center;
+                justify-items: center;
+            }
+
+            .profile-meta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
 <body>
 <div layout:fragment="content">
-
-<div style="max-width:800px">
-    <h1 style="font-size:24px;font-weight:800;margin-bottom:24px">My Profile</h1>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Personal Information</h3>
-            <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
-                <div style="width:64px;height:64px;border-radius:14px;background:linear-gradient(135deg,#7c3aed,#2563eb);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800"
-                     th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U</div>
+    <section class="profile-page">
+        <section class="profile-hero">
+            <div class="profile-hero-content">
                 <div>
-                    <div style="font-weight:800;font-size:17px" th:text="${user.fullName}">Name</div>
-                    <div style="font-size:13px;color:#94a3b8" th:text="${user.role}">ROLE</div>
+                    <span class="profile-role-pill">Profile Center</span>
+                    <h1>My Profile</h1>
+                    <p>Review your account details, update personal information, and manage your security settings from one place.</p>
+                </div>
+                <div class="profile-hero-mini">
+                    <div class="profile-hero-mini-avatar"
+                         th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U</div>
+                    <div>
+                        <strong th:text="${user.fullName}">User Name</strong>
+                        <span th:text="${user.role}">ROLE</span>
+                    </div>
                 </div>
             </div>
-            <div style="display:grid;gap:12px">
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8fafc">
-                    <span style="font-size:13px;color:#64748b;font-weight:600">Username</span>
-                    <span style="font-size:13px;font-weight:700;font-family:monospace" th:text="${user.username}">username</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8fafc">
-                    <span style="font-size:13px;color:#64748b;font-weight:600">Email</span>
-                    <span style="font-size:13px;font-weight:700" th:text="${user.email}">email</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8fafc">
-                    <span style="font-size:13px;color:#64748b;font-weight:600">Phone</span>
-                    <span style="font-size:13px;font-weight:700" th:text="${user.phone != null ? user.phone : 'Not set'}">phone</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;padding:10px 0">
-                    <span style="font-size:13px;color:#64748b;font-weight:600">Status</span>
-                    <span th:text="${user.status}" th:style="${user.status == 'ACTIVE' ? 'background:#dcfce7;color:#166534;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800' : 'background:#f1f5f9;color:#64748b;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800'}">ACTIVE</span>
-                </div>
-            </div>
-            <div style="display:flex;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid #f1f5f9">
-                <a th:href="@{/profile/edit}" class="primary-button">Edit Profile</a>
-                <a th:href="@{/profile/change-password}" class="secondary-button">Change Password</a>
-            </div>
-        </article>
-        <article class="chart-card">
-            <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Quick Actions</h3>
-            <div style="display:grid;gap:12px">
-                <a th:href="@{/profile/edit}" style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid #f1f5f9;border-radius:12px;text-decoration:none">
-                    <div style="width:36px;height:36px;border-radius:10px;background:#fdf2ff;display:flex;align-items:center;justify-content:center">✏️</div>
-                    <div><div style="font-weight:700;font-size:14px">Edit Profile</div><div style="font-size:12px;color:#94a3b8">Update your information</div></div>
-                </a>
-                <a th:href="@{/profile/change-password}" style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid #f1f5f9;border-radius:12px;text-decoration:none">
-                    <div style="width:36px;height:36px;border-radius:10px;background:#f0f9ff;display:flex;align-items:center;justify-content:center">🔐</div>
-                    <div><div style="font-weight:700;font-size:14px">Change Password</div><div style="font-size:12px;color:#94a3b8">Update security credentials</div></div>
-                </a>
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid #fef2f2;border-radius:12px;background:none;cursor:pointer;width:100%">
-                        <div style="width:36px;height:36px;border-radius:10px;background:#fef2f2;display:flex;align-items:center;justify-content:center">🚪</div>
-                        <div style="text-align:left"><div style="font-weight:700;font-size:14px;color:#dc2626">Logout</div><div style="font-size:12px;color:#94a3b8">Sign out of Academic Portal</div></div>
-                    </button>
-                </form>
-            </div>
-        </article>
-    </div>
-</div>
+        </section>
 
+        <section class="profile-grid">
+            <article class="profile-card">
+                <div class="profile-card-head">
+                    <div>
+                        <h2>Personal Information</h2>
+                        <p>Core account details currently stored for your portal profile.</p>
+                    </div>
+                </div>
+
+                <div class="profile-identity">
+                    <div class="profile-avatar"
+                         th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U</div>
+                    <div>
+                        <div class="profile-name" th:text="${user.fullName}">Name</div>
+                        <div class="profile-subtitle" th:text="${user.role}">ROLE</div>
+                    </div>
+                </div>
+
+                <div class="profile-meta-grid">
+                    <div class="profile-meta-item">
+                        <span>Username</span>
+                        <strong th:text="${user.username}">username</strong>
+                    </div>
+                    <div class="profile-meta-item status-card">
+                        <span>Status</span>
+                        <strong class="status-value">
+                            <span th:text="${user.status == 'ACTIVE' ? 'Active' : user.status}"
+                                  th:class="${user.status == 'ACTIVE' ? 'profile-status active' : 'profile-status inactive'}">ACTIVE</span>
+                        </strong>
+                    </div>
+                    <div class="profile-meta-item">
+                        <span>Email</span>
+                        <strong th:text="${user.email}">email</strong>
+                    </div>
+                    <div class="profile-meta-item">
+                        <span>Phone</span>
+                        <strong th:text="${user.phone != null ? user.phone : 'Not set'}">phone</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="profile-card">
+                <div class="profile-card-head">
+                    <div>
+                        <h2>Quick Actions</h2>
+                        <p>Manage your profile and account access without leaving this page.</p>
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <a th:href="@{/profile/edit}" class="profile-action-card">
+                        <div class="profile-action-icon edit">E</div>
+                        <div>
+                            <div class="profile-action-title">Edit Profile</div>
+                            <div class="profile-action-copy">Update your personal information and contact details.</div>
+                        </div>
+                    </a>
+
+                    <a th:href="@{/profile/change-password}" class="profile-action-card">
+                        <div class="profile-action-icon security">P</div>
+                        <div>
+                            <div class="profile-action-title">Change Password</div>
+                            <div class="profile-action-copy">Refresh your password to keep your account secure.</div>
+                        </div>
+                    </a>
+
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="profile-action-card logout">
+                            <div class="profile-action-icon logout">L</div>
+                            <div>
+                                <div class="profile-action-title" style="color:#dc2626">Logout</div>
+                                <div class="profile-action-copy">Sign out of Academic Portal on this device.</div>
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            </article>
+        </section>
+    </section>
 </div>
 </body>
 </html>
