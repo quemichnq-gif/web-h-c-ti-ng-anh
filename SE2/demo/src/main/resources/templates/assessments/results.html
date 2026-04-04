@@ -12,7 +12,7 @@
         .result-stat-card span { display: block; color: #64748b; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
         .result-stat-card strong { display: block; margin-top: 12px; font-size: 34px; line-height: 1; }
         .filters-card, .table-card { padding: 24px; border-radius: 24px; background: rgba(255,255,255,0.96); border: 1px solid rgba(148,163,184,0.14); box-shadow: 0 18px 42px rgba(15,23,42,0.06); }
-        .filter-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto; gap: 14px; align-items: end; }
+        .filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto; gap: 14px; align-items: end; }
         .results-table { width: 100%; border-collapse: collapse; min-width: 900px; }
         .results-table th, .results-table td { padding: 16px 14px; border-bottom: 1px solid #eef2f7; text-align: left; vertical-align: top; }
         .results-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; }
@@ -20,11 +20,6 @@
         .badge { display: inline-flex; align-items: center; justify-content: center; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 900; letter-spacing: 0.02em; }
         .badge-correct, .badge-pass { background: #dcfce7; color: #166534; }
         .badge-wrong, .badge-fail { background: #fee2e2; color: #991b1b; }
-        .badge-remember { background: #fee2e2; color: #b91c1c; }
-        .badge-understand { background: #ffedd5; color: #c2410c; }
-        .badge-apply { background: #fef3c7; color: #b45309; }
-        .badge-analyze { background: #dbeafe; color: #1d4ed8; }
-        .badge-create { background: #ede9fe; color: #6d28d9; }
         .row-meta { color: #64748b; font-size: 13px; }
         .score-stack { display: grid; gap: 6px; }
         .score-stack strong { font-size: 24px; }
@@ -80,17 +75,6 @@
                            style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
                 </div>
                 <div>
-                    <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Bloom Level</label>
-                    <select name="bloomFilter" style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
-                        <option value="">All Levels</option>
-                        <option value="Remember" th:selected="${bloomFilter == 'Remember'}">Remember</option>
-                        <option value="Understand" th:selected="${bloomFilter == 'Understand'}">Understand</option>
-                        <option value="Apply" th:selected="${bloomFilter == 'Apply'}">Apply</option>
-                        <option value="Analyze" th:selected="${bloomFilter == 'Analyze'}">Analyze</option>
-                        <option value="Create" th:selected="${bloomFilter == 'Create'}">Create</option>
-                    </select>
-                </div>
-                <div>
                     <label style="display:block;margin-bottom:8px;font-size:12px;font-weight:800;color:#64748b">Status</label>
                     <select name="passFilter" style="width:100%;min-height:48px;border-radius:14px;border:1px solid #dbe4f0;padding:0 14px;outline:none">
                         <option value="">All</option>
@@ -118,7 +102,6 @@
                         <th>#</th>
                         <th>Student</th>
                         <th>Score</th>
-                        <th>Bloom</th>
                         <th>Status</th>
                         <th>Submitted</th>
                         <th>Detail</th>
@@ -138,11 +121,6 @@
                             </div>
                         </td>
                         <td>
-                            <span class="badge"
-                                  th:classappend="${r.bloomLevel == 'Remember' ? ' badge-remember' : (r.bloomLevel == 'Understand' ? ' badge-understand' : (r.bloomLevel == 'Apply' ? ' badge-apply' : (r.bloomLevel == 'Analyze' ? ' badge-analyze' : ' badge-create')))}"
-                                  th:text="${r.bloomLevel}">Level</span>
-                        </td>
-                        <td>
                             <span class="badge" th:classappend="${r.passed ? ' badge-pass' : ' badge-fail'}"
                                   th:text="${r.passed ? 'Pass' : 'Fail'}">Status</span>
                         </td>
@@ -153,7 +131,7 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(results)}">
-                        <td colspan="7" class="empty-state">No results match the selected filters.</td>
+                        <td colspan="6" class="empty-state">No results match the selected filters.</td>
                     </tr>
                     </tbody>
                 </table>

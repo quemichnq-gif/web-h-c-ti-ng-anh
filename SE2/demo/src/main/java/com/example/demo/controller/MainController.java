@@ -25,11 +25,13 @@ public class MainController {
     private final StudentResultRepository resultRepository;
     private final QuestionRepository questionRepository;
     private final ErrorTestMappingRepository errorTestMappingRepository;
+    private final LessonRepository lessonRepository;
 
     public MainController(UserRepository userRepository, CourseRepository courseRepository,
                           EnrollmentRepository enrollmentRepository, TestRepository testRepository,
                           StudentErrorRepository studentErrorRepository, StudentResultRepository resultRepository,
-                          QuestionRepository questionRepository, ErrorTestMappingRepository errorTestMappingRepository) {
+                          QuestionRepository questionRepository, ErrorTestMappingRepository errorTestMappingRepository,
+                          LessonRepository lessonRepository) {
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
@@ -38,6 +40,7 @@ public class MainController {
         this.resultRepository = resultRepository;
         this.questionRepository = questionRepository;
         this.errorTestMappingRepository = errorTestMappingRepository;
+        this.lessonRepository = lessonRepository;
     }
 
     @GetMapping("/")
@@ -284,7 +287,12 @@ public class MainController {
                 .map(ErrorTestMapping::getErrorType)
                 .filter(Objects::nonNull)
                 .map(ErrorType::getId)
-                .anyMatch(studentErrorTypeIds::contains);
+                .anyMatch(studentErrorTypeIds::contains)
+                || lessonRepository.findByTestId(test.getId()).stream()
+                .filter(lesson -> lesson.getErrorType() != null && lesson.getCourse() != null)
+                .filter(lesson -> studentErrorTypeIds.contains(lesson.getErrorType().getId()))
+                .anyMatch(lesson -> enrollmentRepository.findByStudentAndCourse(student, lesson.getCourse()).stream()
+                        .anyMatch(e -> e.getStatus() == EnrollmentStatus.APPROVED));
     }
 
     private List<Test> findRecommendedRemedialTests(User student) {
@@ -300,13 +308,21 @@ public class MainController {
         if (studentErrorTypeIds.isEmpty()) {
             return new ArrayList<>();
         }
-        return errorTestMappingRepository.findAll().stream()
+        List<Test> mappedByErrorType = errorTestMappingRepository.findAll().stream()
                 .filter(mapping -> mapping.getErrorType() != null && mapping.getTest() != null)
                 .filter(mapping -> studentErrorTypeIds.contains(mapping.getErrorType().getId()))
                 .map(ErrorTestMapping::getTest)
                 .filter(Test::isRemedialTest)
+                .toList();
+        List<Test> mappedByLesson = lessonRepository.findAll().stream()
+                .filter(lesson -> lesson.getTest() != null
+                        && lesson.getErrorType() != null
+                        && studentErrorTypeIds.contains(lesson.getErrorType().getId()))
+                .map(Lesson::getTest)
+                .filter(Test::isRemedialTest)
+                .toList();
+        return mergeDistinctTests(mappedByErrorType, mappedByLesson).stream()
                 .sorted(Comparator.comparing(Test::getTitle, String.CASE_INSENSITIVE_ORDER))
-                .distinct()
                 .toList();
     }
 

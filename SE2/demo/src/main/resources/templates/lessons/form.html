@@ -61,6 +61,18 @@
             </div>
 
             <div>
+                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Specific Remedial Test</label>
+                <select name="remedialTestId" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
+                    <option value="">Use general remedial recommendation</option>
+                    <option th:each="test : ${remedialTests}"
+                            th:value="${test.id}"
+                            th:selected="${lesson.test != null && lesson.test.id == test.id}"
+                            th:text="${test.title + (test.course != null ? ' - ' + test.course.name : '')}">Remedial Test</option>
+                </select>
+                <div style="margin-top:8px;font-size:12px;color:#64748b">If selected, students who fail more than half of this lesson review will be sent directly to this remedial test. This requires an error type mapping.</div>
+            </div>
+
+            <div>
                 <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Title</label>
                 <input name="title" required th:value="${lesson.title}" placeholder="Ex: Linking ideas in persuasive writing" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
             </div>

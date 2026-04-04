@@ -9,6 +9,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.EnrollmentRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.AuditLogService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -32,13 +33,16 @@ public class EnrollmentController {
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     public EnrollmentController(EnrollmentRepository enrollmentRepository,
                                 CourseRepository courseRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                AuditLogService auditLogService) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
     @GetMapping
@@ -118,6 +122,9 @@ public class EnrollmentController {
             ra.addFlashAttribute("error", "This enrollment already exists.");
             return "redirect:/enrollments?courseId=" + courseId;
         }
+        auditLogService.log("ENROLLMENT_CREATED", "ENROLLMENT", enrollment.getId(),
+                "Created quick enrollment for student '" + enrollment.getStudent().getUsername()
+                        + "' in course '" + enrollment.getCourse().getCode() + "' with status " + enrollment.getStatus() + ".");
 
         ra.addFlashAttribute("success", "Enrollment created successfully.");
         return "redirect:/enrollments?courseId=" + courseId;
@@ -192,6 +199,9 @@ public class EnrollmentController {
             ra.addFlashAttribute("error", "This enrollment already exists.");
             return "redirect:/enrollments?courseId=" + courseId;
         }
+        auditLogService.log("ENROLLMENT_CREATED", "ENROLLMENT", enrollment.getId(),
+                "Created detailed enrollment for student '" + enrollment.getStudent().getUsername()
+                        + "' in course '" + enrollment.getCourse().getCode() + "' with status " + enrollment.getStatus() + ".");
 
         ra.addFlashAttribute("success", "Detailed enrollment created successfully.");
         return "redirect:/enrollments?courseId=" + courseId;
@@ -223,6 +233,9 @@ public class EnrollmentController {
         current.setRejectReason(null);
         current.setProcessedAt(LocalDateTime.now());
         enrollmentRepository.save(current);
+        auditLogService.log("ENROLLMENT_APPROVED", "ENROLLMENT", current.getId(),
+                "Approved enrollment for student '" + current.getStudent().getUsername()
+                        + "' in course '" + current.getCourse().getCode() + "'.");
         ra.addFlashAttribute("success", "Enrollment approved successfully.");
         return "redirect:/enrollments?courseId=" + current.getCourse().getId();
     }
@@ -249,6 +262,9 @@ public class EnrollmentController {
         current.setRejectReason(cleanText(reason));
         current.setProcessedAt(LocalDateTime.now());
         enrollmentRepository.save(current);
+        auditLogService.log("ENROLLMENT_REJECTED", "ENROLLMENT", current.getId(),
+                "Rejected enrollment for student '" + current.getStudent().getUsername()
+                        + "' in course '" + current.getCourse().getCode() + "'. Reason: " + safe(current.getRejectReason()));
         ra.addFlashAttribute("success", "Enrollment rejected successfully.");
         return "redirect:/enrollments?courseId=" + current.getCourse().getId();
     }
@@ -269,9 +285,13 @@ public class EnrollmentController {
             return "redirect:/enrollments?courseId=" + enrollment.get().getCourse().getId();
         }
 
-        enrollmentRepository.delete(enrollment.get());
+        Enrollment current = enrollment.get();
+        enrollmentRepository.delete(current);
+        auditLogService.log("ENROLLMENT_DELETED", "ENROLLMENT", current.getId(),
+                "Deleted enrollment for student '" + current.getStudent().getUsername()
+                        + "' in course '" + current.getCourse().getCode() + "'.");
         ra.addFlashAttribute("success", "Enrollment deleted successfully.");
-        return "redirect:/enrollments?courseId=" + enrollment.get().getCourse().getId();
+        return "redirect:/enrollments?courseId=" + current.getCourse().getId();
     }
 
     private Optional<User> resolveAcademicStaff(Authentication authentication) {
@@ -293,6 +313,10 @@ public class EnrollmentController {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "-" : value;
     }
 
     private EnrollmentStatus parseStatus(String status) {

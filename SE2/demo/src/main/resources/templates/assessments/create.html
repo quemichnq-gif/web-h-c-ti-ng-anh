@@ -15,7 +15,8 @@
         .type-card input { display: none; }
         .type-card.selected { border-color: #7c3aed; box-shadow: 0 12px 26px rgba(124,58,237,0.12); background: linear-gradient(180deg, #f8f5ff 0%, #fff 100%); }
         @media (max-width: 768px) {
-            .type-grid, .mc-options { grid-template-columns: 1fr; }
+        .type-grid, .mc-options { grid-template-columns: 1fr; }
+        .media-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -32,7 +33,7 @@
         <span th:text="${error}">Error message</span>
     </div>
 
-    <form th:action="@{/assessments/create}" method="post" id="testForm">
+    <form th:action="@{/assessments/create}" method="post" enctype="multipart/form-data" id="testForm">
         <article class="chart-card" style="margin-bottom:20px">
             <h3 style="font-size:15px;font-weight:800;margin-bottom:20px">Assessment Configuration</h3>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -54,6 +55,14 @@
                 <div class="field" style="grid-column: span 2">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Test Title *</label>
                     <input name="title" required placeholder="e.g. Midterm Proficiency Exam" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;box-sizing:border-box">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Assessment Code *</label>
+                    <input name="code" required maxlength="50" placeholder="e.g. TEST-001" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;box-sizing:border-box;text-transform:uppercase">
+                </div>
+                <div class="field">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
+                    <input value="Generated automatically after saving" readonly style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
                 </div>
                 <div class="field" style="grid-column: span 2">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Description</label>
@@ -79,6 +88,7 @@
                 <div>
                     <h3 style="font-size:15px;font-weight:800;margin:0">Question Bank (<span id="qCount">0</span>)</h3>
                     <div style="margin-top:6px;color:#94a3b8;font-size:12px">Use the same builder for both course assessments and remedial tests.</div>
+                    <div style="margin-top:6px;color:#94a3b8;font-size:12px">Each question can optionally include one image and one audio clip.</div>
                 </div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap">
                     <button type="button" onclick="addQuestion('SHORT_ANSWER')" style="padding:10px 16px;background:#fff;border:1px solid #7c3aed;color:#7c3aed;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer">+ Short Answer</button>
@@ -153,6 +163,16 @@ function addQuestion(type) {
         </div>
         <div style="display:grid;gap:12px">
             <textarea name="questionContents" required placeholder="Question content..." rows="2" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="media-grid">
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8;display:block;margin-bottom:6px">Question Image</label>
+                    <input name="questionImages" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+                </div>
+                <div>
+                    <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#94a3b8;display:block;margin-bottom:6px">Question Audio</label>
+                    <input name="questionAudios" type="file" accept=".mp3,.wav,.ogg,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
+                </div>
+            </div>
             ${optionsHtml}
             <div>
                 <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">Correct Answer ${type === 'MULTIPLE_CHOICE' ? '(Enter A, B, C, or D)' : ''}</label>

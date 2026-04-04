@@ -39,10 +39,11 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/register", "/login").permitAll()
+                .requestMatchers("/register", "/login", "/forgot-password", "/verify-reset-code", "/reset-password").permitAll()
                 
                 // Admin-only routes
                 .requestMatchers("/users/**", "/users").hasRole("ADMIN")
+                    .requestMatchers("/audit-logs/**", "/audit-logs").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                     .requestMatchers("/admin/reports/**", "/admin/reports").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
                 
                 // Admin + Academic Staff routes

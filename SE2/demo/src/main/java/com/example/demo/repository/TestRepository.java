@@ -12,4 +12,6 @@ public interface TestRepository extends JpaRepository<Test, Long> {
     List<Test> findByAssessmentType(AssessmentType assessmentType);
     List<Test> findByCourseIdAndAssessmentType(Long courseId, AssessmentType assessmentType);
     long countByCourse(Course course);
+    boolean existsByCodeIgnoreCase(String code);
+    boolean existsByCodeIgnoreCaseAndIdNot(String code, Long id);
 }
