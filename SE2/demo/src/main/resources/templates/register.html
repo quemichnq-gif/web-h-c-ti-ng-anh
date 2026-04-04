@@ -5,8 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Portal | Create Account</title>
     <link rel="stylesheet" th:href="@{/css/se2-theme.css}">
+    <style>
+        .register-page {
+            background:
+                radial-gradient(circle at top left, rgba(124, 58, 237, 0.05), transparent 18%),
+                radial-gradient(circle at right center, rgba(168, 85, 247, 0.04), transparent 22%),
+                linear-gradient(180deg, #fdfcff 0%, #f8f7fc 100%);
+        }
+
+        .register-page .topbar {
+            background: rgba(255, 255, 255, 0.84);
+            border-bottom: 1px solid rgba(123, 92, 255, 0.08);
+            backdrop-filter: blur(14px);
+        }
+
+        .register-page .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 0;
+        }
+
+        .register-page .chip-button {
+            min-height: 44px;
+            padding: 0 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            box-sizing: border-box;
+        }
+
+        .register-page .app-content {
+            padding: 24px 0 18px;
+        }
+
+        .register-page .auth-layout {
+            margin-top: 0;
+        }
+
+        .register-page .auth-showcase-card {
+            width: min(1220px, 100%);
+            margin: 0 auto;
+            grid-template-columns: minmax(320px, 0.88fr) minmax(0, 1fr);
+            gap: 30px;
+            padding: 28px 30px;
+            border-radius: 34px;
+            box-shadow: 0 24px 48px rgba(55, 31, 120, 0.1);
+        }
+
+        .register-page .auth-visual {
+            gap: 18px;
+        }
+
+        .register-page .auth-photo {
+            min-height: 290px;
+            border-radius: 24px;
+        }
+
+        .register-page .auth-visual-copy h2 {
+            font-size: clamp(2.3rem, 2.8vw, 3.3rem);
+            line-height: 0.95;
+        }
+
+        .register-page .auth-visual-copy p {
+            margin-top: 14px;
+            font-size: 0.98rem;
+            line-height: 1.65;
+        }
+
+        .register-page .feature-checks {
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .register-page .feature-checks li {
+            font-size: 0.92rem;
+        }
+
+        .register-page .auth-form-panel {
+            padding: 6px 0;
+        }
+
+        .register-page .panel-title {
+            font-size: clamp(2.8rem, 3vw, 3.8rem);
+            line-height: 0.94;
+        }
+
+        .register-page .panel-copy {
+            margin-top: 12px;
+            max-width: none;
+        }
+
+        .register-page .alert {
+            margin-top: 14px;
+        }
+
+        .register-page .auth-stack {
+            margin-top: 14px;
+            gap: 12px;
+        }
+
+        .register-page .auth-form {
+            margin-top: 0;
+            gap: 16px;
+        }
+
+        .register-page .secondary-button,
+        .register-page .primary-button {
+            min-height: 54px;
+            border-radius: 16px;
+        }
+
+        .register-page .field input {
+            min-height: 52px;
+        }
+
+        .register-page .compact-note {
+            margin-top: 14px;
+        }
+
+        .register-page .footer {
+            display: none;
+        }
+
+        @media (max-width: 1080px) {
+            .register-page .auth-showcase-card {
+                grid-template-columns: 1fr;
+                gap: 22px;
+                padding: 24px;
+            }
+
+            .register-page .auth-photo {
+                min-height: 240px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .register-page .topbar-inner {
+                width: min(100%, calc(100% - 22px));
+                flex-wrap: wrap;
+            }
+
+            .register-page .auth-showcase-card {
+                padding: 20px 18px;
+                border-radius: 24px;
+            }
+
+            .register-page .auth-photo {
+                min-height: 200px;
+                border-radius: 20px;
+            }
+
+            .register-page .chip-button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-<body>
+<body class="register-page">
 <div class="page-shell">
     <header class="topbar">
         <div class="topbar-inner">
@@ -109,17 +267,6 @@
             </article>
         </section>
     </main>
-
-    <footer class="footer">
-        <div class="footer-inner">
-            <span>&copy; 2024 Academic Portal. All rights reserved.</span>
-            <div class="footer-links">
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
-                <a href="#">Accessibility</a>
-            </div>
-        </div>
-    </footer>
 </div>
 </body>
 </html>
