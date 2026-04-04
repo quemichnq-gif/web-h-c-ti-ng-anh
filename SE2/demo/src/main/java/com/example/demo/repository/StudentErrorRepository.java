@@ -11,6 +11,7 @@ public interface StudentErrorRepository extends JpaRepository<StudentError, Long
     List<StudentError> findByStudent(User student);
     List<StudentError> findByStudentId(Long studentId);
     List<StudentError> findByErrorTypeId(Long errorTypeId);
+    boolean existsByStudentIdAndErrorTypeId(Long studentId, Long errorTypeId);
     List<StudentError> findByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
     

@@ -33,6 +33,10 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     List<Lesson> findByCourseIdAndSortOrderGreaterThanOrderBySortOrderAsc(Long courseId, Integer sortOrder);
 
+    boolean existsByCodeIgnoreCase(String code);
+
+    boolean existsByCodeIgnoreCaseAndIdNot(String code, Long id);
+
     @Query("SELECT DISTINCT l FROM Lesson l LEFT JOIN FETCH l.quizQuestions WHERE l.course.id = :courseId ORDER BY l.sortOrder ASC")
     List<Lesson> findByCourseIdWithQuizQuestions(@Param("courseId") Long courseId);
 }
