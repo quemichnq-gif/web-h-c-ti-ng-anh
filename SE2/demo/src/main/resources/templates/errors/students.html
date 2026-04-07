@@ -138,7 +138,6 @@
                         <th>#</th>
                         <th>Student</th>
                         <th>Error Type</th>
-                        <th>Recorded At</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -152,10 +151,9 @@
                             <div style="font-weight:800" th:text="${se.errorType.name}">Error</div>
                             <div style="font-size:13px;color:#64748b" th:text="${se.errorType.description}">desc</div>
                         </td>
-                        <td style="font-size:13px;color:#64748b" th:text="${#temporals.format(se.createdAt,'dd/MM/yyyy HH:mm')}">Date</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(studentErrors)}">
-                        <td colspan="4" class="error-empty">No student error records match the current filter.</td>
+                        <td colspan="3" class="error-empty">No student error records match the current filter.</td>
                     </tr>
                     </tbody>
                 </table>

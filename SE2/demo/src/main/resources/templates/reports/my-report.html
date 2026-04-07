@@ -109,11 +109,9 @@
                     th:text="${e.errorType.name}">Error</td>
                 <td style="color:#64748b;font-size:13px"
                     th:text="${e.errorType.description}">desc</td>
-                <td style="color:#94a3b8;font-size:13px"
-                    th:text="${#temporals.format(e.createdAt,'dd/MM/yyyy HH:mm')}">Date</td>
             </tr>
             <tr th:if="${#lists.isEmpty(errors)}">
-                <td colspan="4" style="text-align:center;padding:40px;color:#94a3b8">
+                <td colspan="3" style="text-align:center;padding:40px;color:#94a3b8">
                     No errors recorded. Keep it up! 🎉
                 </td>
             </tr>

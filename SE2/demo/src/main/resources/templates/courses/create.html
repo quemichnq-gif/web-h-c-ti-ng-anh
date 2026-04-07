@@ -46,16 +46,6 @@
                         <span id="dateErr" style="color:#ef4444;font-size:12px;display:none">End date must be after start date</span>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                    <div class="field">
-                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
-                        <input type="text" id="createdAtPreview" readonly style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
-                    </div>
-                    <div class="field">
-                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Updated Time</label>
-                        <input type="text" id="updatedAtPreview" readonly style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
-                    </div>
-                </div>
             </div>
             <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
                 <button type="submit" class="primary-button">Publish Course</button>
@@ -69,8 +59,6 @@ document.getElementById('descField').addEventListener('input', function() {
     document.getElementById('descCount').textContent = '(' + this.value.length + '/500)';
 });
 const now = new Date().toLocaleString();
-document.getElementById('createdAtPreview').value = now;
-document.getElementById('updatedAtPreview').value = now;
 </script>
 
 </div>

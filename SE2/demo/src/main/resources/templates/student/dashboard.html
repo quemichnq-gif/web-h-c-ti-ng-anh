@@ -73,7 +73,6 @@
                 <div class="activity-icon" style="background:#fef2f2;color:#ef4444">!</div>
                 <div class="activity-content">
                     <h4 th:text="${err.errorType != null ? err.errorType.name : 'Unknown Error'}">Error Type</h4>
-                    <p th:text="${'Detected on ' + err.createdAt}">Date</p>
                     <span style="color:#ef4444;font-size:10px">NEEDS REVIEW</span>
                 </div>
             </div>

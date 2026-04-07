@@ -266,7 +266,6 @@
                             <div>
                                 <h4 th:text="${err.student.fullName != null ? err.student.fullName : err.student.username}">Student</h4>
                                 <p th:text="${err.errorType.name}">Error type</p>
-                                <span th:text="${#temporals.format(err.createdAt, 'dd/MM HH:mm')}">Time</span>
                             </div>
                         </article>
                     </div>
