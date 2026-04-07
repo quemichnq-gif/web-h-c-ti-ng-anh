@@ -23,6 +23,30 @@ public class Lesson {
     @JoinColumn(name = "error_type_id")
     private ErrorType errorType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "remember_error_type_id")
+    private ErrorType rememberErrorType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "understand_error_type_id")
+    private ErrorType understandErrorType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "apply_error_type_id")
+    private ErrorType applyErrorType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "analyze_error_type_id")
+    private ErrorType analyzeErrorType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "evaluate_error_type_id")
+    private ErrorType evaluateErrorType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "create_error_type_id")
+    private ErrorType createErrorType;
+
     @Column(nullable = false)
     private String title;
 
@@ -92,6 +116,18 @@ public class Lesson {
     public void setCourse(Course course) { this.course = course; }
     public ErrorType getErrorType() { return errorType; }
     public void setErrorType(ErrorType errorType) { this.errorType = errorType; }
+    public ErrorType getRememberErrorType() { return rememberErrorType; }
+    public void setRememberErrorType(ErrorType rememberErrorType) { this.rememberErrorType = rememberErrorType; }
+    public ErrorType getUnderstandErrorType() { return understandErrorType; }
+    public void setUnderstandErrorType(ErrorType understandErrorType) { this.understandErrorType = understandErrorType; }
+    public ErrorType getApplyErrorType() { return applyErrorType; }
+    public void setApplyErrorType(ErrorType applyErrorType) { this.applyErrorType = applyErrorType; }
+    public ErrorType getAnalyzeErrorType() { return analyzeErrorType; }
+    public void setAnalyzeErrorType(ErrorType analyzeErrorType) { this.analyzeErrorType = analyzeErrorType; }
+    public ErrorType getEvaluateErrorType() { return evaluateErrorType; }
+    public void setEvaluateErrorType(ErrorType evaluateErrorType) { this.evaluateErrorType = evaluateErrorType; }
+    public ErrorType getCreateErrorType() { return createErrorType; }
+    public void setCreateErrorType(ErrorType createErrorType) { this.createErrorType = createErrorType; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getCode() { return code; }
@@ -154,5 +190,19 @@ public class Lesson {
 
     public boolean hasImage() {
         return imageStoredName != null && !imageStoredName.isBlank();
+    }
+
+    public ErrorType getErrorTypeForBloomLevel(BloomLevel bloomLevel) {
+        if (bloomLevel == null) {
+            return null;
+        }
+        return switch (bloomLevel) {
+            case REMEMBER -> rememberErrorType;
+            case UNDERSTAND -> understandErrorType;
+            case APPLY -> applyErrorType;
+            case ANALYZE -> analyzeErrorType;
+            case EVALUATE -> evaluateErrorType;
+            case CREATE -> createErrorType;
+        };
     }
 }

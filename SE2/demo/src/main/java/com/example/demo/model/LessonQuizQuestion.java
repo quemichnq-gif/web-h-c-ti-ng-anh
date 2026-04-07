@@ -19,6 +19,10 @@ public class LessonQuizQuestion {
     @Column(name = "question_text", columnDefinition = "TEXT", nullable = false)
     private String questionText;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_type", nullable = false, length = 30)
+    private QuestionType questionType = QuestionType.MULTIPLE_CHOICE;
+
     @Column(name = "option_a")
     private String optionA;
 
@@ -37,6 +41,10 @@ public class LessonQuizQuestion {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bloom_level", nullable = false, length = 20)
+    private BloomLevel bloomLevel = BloomLevel.REMEMBER;
+
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 1;
 
@@ -46,6 +54,8 @@ public class LessonQuizQuestion {
     public void setLesson(Lesson lesson) { this.lesson = lesson; }
     public String getQuestionText() { return questionText; }
     public void setQuestionText(String questionText) { this.questionText = questionText; }
+    public QuestionType getQuestionType() { return questionType; }
+    public void setQuestionType(QuestionType questionType) { this.questionType = questionType != null ? questionType : QuestionType.MULTIPLE_CHOICE; }
     public String getOptionA() { return optionA; }
     public void setOptionA(String optionA) { this.optionA = optionA; }
     public String getOptionB() { return optionB; }
@@ -58,12 +68,17 @@ public class LessonQuizQuestion {
     public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
     public String getExplanation() { return explanation; }
     public void setExplanation(String explanation) { this.explanation = explanation; }
+    public BloomLevel getBloomLevel() { return bloomLevel; }
+    public void setBloomLevel(BloomLevel bloomLevel) { this.bloomLevel = bloomLevel != null ? bloomLevel : BloomLevel.REMEMBER; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 
     public boolean isCorrect(String studentAnswer) {
         if (studentAnswer == null || correctAnswer == null) {
             return false;
+        }
+        if (questionType == QuestionType.SHORT_ANSWER) {
+            return correctAnswer.trim().equalsIgnoreCase(studentAnswer.trim());
         }
         return correctAnswer.equalsIgnoreCase(studentAnswer.trim());
     }
@@ -75,5 +90,9 @@ public class LessonQuizQuestion {
         if (optionC != null && !optionC.isBlank()) options.put("C", optionC);
         if (optionD != null && !optionD.isBlank()) options.put("D", optionD);
         return options;
+    }
+
+    public boolean isShortAnswer() {
+        return questionType == QuestionType.SHORT_ANSWER;
     }
 }

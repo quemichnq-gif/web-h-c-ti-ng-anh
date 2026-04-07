@@ -3,9 +3,11 @@ package com.example.demo.controller;
 import com.example.demo.model.Course;
 import com.example.demo.model.CourseStatus;
 import com.example.demo.model.EnrollmentStatus;
+import com.example.demo.model.BloomLevel;
 import com.example.demo.model.ErrorType;
 import com.example.demo.model.Lesson;
 import com.example.demo.model.LessonQuizQuestion;
+import com.example.demo.model.QuestionType;
 import com.example.demo.model.StudentError;
 import com.example.demo.model.Test;
 import com.example.demo.model.User;
@@ -143,20 +145,15 @@ public class LessonController {
         model.addAttribute("pageSubtitle", "Create lesson content, upload a study file, and attach review questions.");
         model.addAttribute("submitLabel", "Create Lesson");
         model.addAttribute("lesson", new Lesson());
-        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
-                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList());
-        model.addAttribute("remedialTests", testRepository.findByAssessmentType(com.example.demo.model.AssessmentType.REMEDIAL_TEST).stream()
-                .sorted(Comparator.comparing(Test::getTitle, String.CASE_INSENSITIVE_ORDER))
-                .toList());
+        model.addAttribute("bloomLevels", BloomLevel.values());
         model.addAttribute("quizQuestions", List.<LessonQuizQuestion>of());
         return "lessons/form";
     }
 
     @PostMapping("/lessons/create")
     public String createLesson(@RequestParam Long courseId,
-                               @RequestParam(required = false) Long errorTypeId,
-                               @RequestParam(required = false) Long remedialTestId,
+                               @RequestParam(required = false) List<String> bloomErrorTypeNames,
+                               @RequestParam(required = false) List<String> bloomErrorTypeDescriptions,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -169,7 +166,9 @@ public class LessonController {
                                @RequestParam(required = false) List<String> optionBs,
                                @RequestParam(required = false) List<String> optionCs,
                                @RequestParam(required = false) List<String> optionDs,
+                               @RequestParam(required = false) List<String> questionTypes,
                                @RequestParam(required = false) List<String> correctAnswers,
+                               @RequestParam(required = false) List<String> bloomLevels,
                                @RequestParam(required = false) List<String> explanations,
                                RedirectAttributes ra) {
         Optional<Course> courseOpt = courseRepository.findById(courseId);
@@ -190,20 +189,11 @@ public class LessonController {
             ra.addFlashAttribute("error", "Lessons can only be managed for draft, open, or in-progress courses that have not ended.");
             return "redirect:/lessons/create?courseId=" + courseId;
         }
-        Test remedialTest = resolveRemedialTest(remedialTestId);
-        if (remedialTestId != null && remedialTest == null) {
-            ra.addFlashAttribute("error", "Selected remedial test is invalid.");
-            return "redirect:/lessons/create?courseId=" + courseId;
-        }
-        if (remedialTest != null && errorTypeId == null) {
-            ra.addFlashAttribute("error", "Select an error type before assigning a specific remedial test.");
-            return "redirect:/lessons/create?courseId=" + courseId;
-        }
-
         Lesson lesson = new Lesson();
         lesson.setCourse(courseOpt.get());
-        lesson.setErrorType(resolveErrorType(errorTypeId));
-        lesson.setTest(remedialTest);
+        lesson.setErrorType(null);
+        lesson.setTest(null);
+        applyBloomErrorTypes(lesson, bloomErrorTypeNames, bloomErrorTypeDescriptions);
         lesson.setCode(normalizedCode);
         lesson.setTitle(title);
         lesson.setSummary(summary);
@@ -214,7 +204,7 @@ public class LessonController {
             saveLessonImage(lesson, lessonImage);
             saveAttachment(lesson, attachment);
             lessonRepository.save(lesson);
-            saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
+            saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, questionTypes, correctAnswers, bloomLevels, explanations);
         } catch (IllegalArgumentException ex) {
             ra.addFlashAttribute("error", ex.getMessage());
             return "redirect:/lessons/create?courseId=" + courseId;
@@ -245,12 +235,7 @@ public class LessonController {
         model.addAttribute("pageSubtitle", "Update lesson content, replace files, or refresh the review quiz.");
         model.addAttribute("submitLabel", "Save Changes");
         model.addAttribute("lesson", lesson);
-        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
-                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList());
-        model.addAttribute("remedialTests", testRepository.findByAssessmentType(com.example.demo.model.AssessmentType.REMEDIAL_TEST).stream()
-                .sorted(Comparator.comparing(Test::getTitle, String.CASE_INSENSITIVE_ORDER))
-                .toList());
+        model.addAttribute("bloomLevels", BloomLevel.values());
         model.addAttribute("quizQuestions", lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId));
         return "lessons/form";
     }
@@ -258,8 +243,8 @@ public class LessonController {
     @PostMapping("/lessons/{lessonId}/edit")
     public String updateLesson(@PathVariable Long lessonId,
                                @RequestParam Long courseId,
-                               @RequestParam(required = false) Long errorTypeId,
-                               @RequestParam(required = false) Long remedialTestId,
+                               @RequestParam(required = false) List<String> bloomErrorTypeNames,
+                               @RequestParam(required = false) List<String> bloomErrorTypeDescriptions,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -272,7 +257,9 @@ public class LessonController {
                                @RequestParam(required = false) List<String> optionBs,
                                @RequestParam(required = false) List<String> optionCs,
                                @RequestParam(required = false) List<String> optionDs,
+                               @RequestParam(required = false) List<String> questionTypes,
                                @RequestParam(required = false) List<String> correctAnswers,
+                               @RequestParam(required = false) List<String> bloomLevels,
                                @RequestParam(required = false) List<String> explanations,
                                RedirectAttributes ra) {
         Optional<Lesson> lessonOpt = lessonRepository.findById(lessonId);
@@ -294,16 +281,6 @@ public class LessonController {
             ra.addFlashAttribute("error", "Lessons can only be managed for draft, open, or in-progress courses that have not ended.");
             return "redirect:/lessons?courseId=" + courseId;
         }
-        Test remedialTest = resolveRemedialTest(remedialTestId);
-        if (remedialTestId != null && remedialTest == null) {
-            ra.addFlashAttribute("error", "Selected remedial test is invalid.");
-            return "redirect:/lessons/" + lessonId + "/edit";
-        }
-        if (remedialTest != null && errorTypeId == null) {
-            ra.addFlashAttribute("error", "Select an error type before assigning a specific remedial test.");
-            return "redirect:/lessons/" + lessonId + "/edit";
-        }
-
         Lesson lesson = lessonOpt.get();
         String previousTitle = lesson.getTitle();
         String previousCode = lesson.getCode();
@@ -314,8 +291,9 @@ public class LessonController {
         try {
             shiftLessonsForPlacement(courseId, targetSortOrder, previousCourseId, lesson);
             lesson.setCourse(courseOpt.get());
-            lesson.setErrorType(resolveErrorType(errorTypeId));
-            lesson.setTest(remedialTest);
+            lesson.setErrorType(null);
+            lesson.setTest(null);
+            applyBloomErrorTypes(lesson, bloomErrorTypeNames, bloomErrorTypeDescriptions);
             lesson.setCode(normalizedCode);
             lesson.setTitle(title);
             lesson.setSummary(summary);
@@ -326,7 +304,7 @@ public class LessonController {
             lessonRepository.save(lesson);
 
             lessonQuizQuestionRepository.deleteByLessonId(lessonId);
-            saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, correctAnswers, explanations);
+            saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, questionTypes, correctAnswers, bloomLevels, explanations);
         } catch (IllegalArgumentException ex) {
             if (previousCourseId != null && previousSortOrder != null) {
                 lesson.setCourse(courseRepository.findById(previousCourseId).orElse(lesson.getCourse()));
@@ -504,26 +482,23 @@ public class LessonController {
         }
 
         int correctAnswers = 0;
+        Map<BloomLevel, Integer> wrongCountsByBloom = initializeBloomCounts();
         for (LessonQuizQuestion question : questions) {
             String answer = normalizeAnswer(answers.get("q_" + question.getId()));
             if (question.isCorrect(answer)) {
                 correctAnswers++;
+            } else {
+                BloomLevel bloomLevel = question.getBloomLevel() != null ? question.getBloomLevel() : BloomLevel.REMEMBER;
+                wrongCountsByBloom.merge(bloomLevel, 1, Integer::sum);
             }
         }
 
         int wrongAnswers = questions.size() - correctAnswers;
-        boolean failedReview = wrongAnswers > (questions.size() / 2.0);
-        if (failedReview) {
-            registerLessonReviewError(student, lesson);
-            if (lesson.getTest() != null && lesson.getTest().getId() != null) {
-                ra.addFlashAttribute("error",
-                        "Review submitted: " + correctAnswers + "/" + questions.size()
-                                + ". You missed more than half of the questions, so you must take the assigned remedial test next.");
-                return "redirect:/portal/tests/" + lesson.getTest().getId() + "/take";
-            }
+        if (wrongAnswers > 0) {
+            int errorTypeCount = registerLessonReviewErrorsByBloom(student, lesson, wrongCountsByBloom);
             ra.addFlashAttribute("error",
                     "Review submitted: " + correctAnswers + "/" + questions.size()
-                            + ". You missed more than half of the questions, so a remedial path has been recommended.");
+                            + ". Da ghi nhan " + errorTypeCount + " loai loi tu lesson review quiz cua ban.");
             return "redirect:/portal/tests";
         }
 
@@ -713,7 +688,9 @@ public class LessonController {
                                 List<String> optionBs,
                                 List<String> optionCs,
                                 List<String> optionDs,
+                                List<String> questionTypes,
                                 List<String> correctAnswers,
+                                List<String> bloomLevels,
                                 List<String> explanations) {
         if (quizQuestionTexts == null) {
             return;
@@ -727,11 +704,14 @@ public class LessonController {
             question.setLesson(lesson);
             question.setSortOrder(i + 1);
             question.setQuestionText(questionText);
-            question.setOptionA(getValue(optionAs, i));
-            question.setOptionB(getValue(optionBs, i));
-            question.setOptionC(getValue(optionCs, i));
-            question.setOptionD(getValue(optionDs, i));
+            QuestionType questionType = parseQuestionType(getValue(questionTypes, i));
+            question.setQuestionType(questionType);
+            question.setOptionA(questionType == QuestionType.MULTIPLE_CHOICE ? getValue(optionAs, i) : "");
+            question.setOptionB(questionType == QuestionType.MULTIPLE_CHOICE ? getValue(optionBs, i) : "");
+            question.setOptionC(questionType == QuestionType.MULTIPLE_CHOICE ? getValue(optionCs, i) : "");
+            question.setOptionD(questionType == QuestionType.MULTIPLE_CHOICE ? getValue(optionDs, i) : "");
             question.setCorrectAnswer(getValue(correctAnswers, i));
+            question.setBloomLevel(parseBloomLevel(getValue(bloomLevels, i)));
             question.setExplanation(getValue(explanations, i));
             lessonQuizQuestionRepository.save(question);
         }
@@ -849,6 +829,13 @@ public class LessonController {
         return errorTypeRepository.findById(errorTypeId).orElse(null);
     }
 
+    private String normalizeErrorTypeName(String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        return name.trim();
+    }
+
     private Test resolveRemedialTest(Long remedialTestId) {
         if (remedialTestId == null) {
             return null;
@@ -870,6 +857,109 @@ public class LessonController {
         studentError.setStudent(student);
         studentError.setErrorType(lesson.getErrorType());
         studentErrorRepository.save(studentError);
+    }
+
+    private BloomLevel parseBloomLevel(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return BloomLevel.REMEMBER;
+        }
+        try {
+            return BloomLevel.valueOf(rawValue.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return BloomLevel.REMEMBER;
+        }
+    }
+
+    private QuestionType parseQuestionType(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return QuestionType.MULTIPLE_CHOICE;
+        }
+        try {
+            return QuestionType.valueOf(rawValue.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return QuestionType.MULTIPLE_CHOICE;
+        }
+    }
+
+    private Map<BloomLevel, Integer> initializeBloomCounts() {
+        Map<BloomLevel, Integer> counts = new java.util.EnumMap<>(BloomLevel.class);
+        for (BloomLevel bloomLevel : BloomLevel.values()) {
+            counts.put(bloomLevel, 0);
+        }
+        return counts;
+    }
+
+    private int registerLessonReviewErrorsByBloom(User student, Lesson lesson, Map<BloomLevel, Integer> wrongCountsByBloom) {
+        if (student == null || lesson == null || student.getId() == null) {
+            return 0;
+        }
+        int createdCount = 0;
+        for (Map.Entry<BloomLevel, Integer> entry : wrongCountsByBloom.entrySet()) {
+            if (entry.getValue() == null || entry.getValue() <= 0) {
+                continue;
+            }
+            ErrorType errorType = resolveOrCreateBloomErrorType(lesson, entry.getKey());
+            if (errorType == null || errorType.getId() == null) {
+                continue;
+            }
+            if (studentErrorRepository.existsByStudentIdAndErrorTypeId(student.getId(), errorType.getId())) {
+                continue;
+            }
+            StudentError studentError = new StudentError();
+            studentError.setStudent(student);
+            studentError.setErrorType(errorType);
+            studentErrorRepository.save(studentError);
+            createdCount++;
+        }
+        return createdCount;
+    }
+
+    private ErrorType resolveOrCreateBloomErrorType(Lesson lesson, BloomLevel bloomLevel) {
+        if (lesson != null) {
+            ErrorType lessonErrorType = lesson.getErrorTypeForBloomLevel(bloomLevel);
+            if (lessonErrorType != null) {
+                return lessonErrorType;
+            }
+        }
+        String name = "Lesson Review - " + bloomLevel.getLabel();
+        return errorTypeRepository.findByNameIgnoreCase(name)
+                .orElseGet(() -> {
+                    ErrorType errorType = new ErrorType();
+                    errorType.setName(name);
+                    errorType.setDescription("Automatically created when a student answers lesson review quiz questions incorrectly at Bloom level " + bloomLevel.getLabel() + ".");
+                    return errorTypeRepository.save(errorType);
+                });
+    }
+
+    private void applyBloomErrorTypes(Lesson lesson,
+                                      List<String> bloomErrorTypeNames,
+                                      List<String> bloomErrorTypeDescriptions) {
+        lesson.setRememberErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.REMEMBER, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+        lesson.setUnderstandErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.UNDERSTAND, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+        lesson.setApplyErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.APPLY, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+        lesson.setAnalyzeErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.ANALYZE, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+        lesson.setEvaluateErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.EVALUATE, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+        lesson.setCreateErrorType(resolveOrCreateLessonBloomErrorType(BloomLevel.CREATE, bloomErrorTypeNames, bloomErrorTypeDescriptions));
+    }
+
+    private ErrorType resolveOrCreateLessonBloomErrorType(BloomLevel bloomLevel,
+                                                          List<String> bloomErrorTypeNames,
+                                                          List<String> bloomErrorTypeDescriptions) {
+        int index = bloomLevel.ordinal();
+        String normalizedName = normalizeErrorTypeName(getValue(bloomErrorTypeNames, index));
+        if (normalizedName == null) {
+            return null;
+        }
+        String description = getValue(bloomErrorTypeDescriptions, index);
+        return errorTypeRepository.findByNameIgnoreCase(normalizedName)
+                .orElseGet(() -> {
+                    ErrorType errorType = new ErrorType();
+                    errorType.setName(normalizedName);
+                    errorType.setDescription(description != null && !description.isBlank()
+                            ? description.trim()
+                            : "Created directly from lesson Bloom review mapping.");
+                    return errorTypeRepository.save(errorType);
+                });
     }
 
     private String sanitizeLessonContent(String content) {

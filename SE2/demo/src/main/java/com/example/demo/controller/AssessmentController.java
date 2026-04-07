@@ -34,17 +34,22 @@ public class AssessmentController {
     private final CourseRepository courseRepository;
     private final StudentResultRepository resultRepository;
     private final QuestionRepository questionRepository;
+    private final ErrorTypeRepository errorTypeRepository;
+    private final ErrorTestMappingRepository errorTestMappingRepository;
     private final AuditLogService auditLogService;
     private final Path questionImageRoot = Paths.get("uploads", "question-media", "images");
     private final Path questionAudioRoot = Paths.get("uploads", "question-media", "audio");
 
     public AssessmentController(TestRepository testRepository, CourseRepository courseRepository,
                                 StudentResultRepository resultRepository, QuestionRepository questionRepository,
+                                ErrorTypeRepository errorTypeRepository, ErrorTestMappingRepository errorTestMappingRepository,
                                 AuditLogService auditLogService) {
         this.testRepository = testRepository;
         this.courseRepository = courseRepository;
         this.resultRepository = resultRepository;
         this.questionRepository = questionRepository;
+        this.errorTypeRepository = errorTypeRepository;
+        this.errorTestMappingRepository = errorTestMappingRepository;
         this.auditLogService = auditLogService;
     }
 
@@ -101,6 +106,9 @@ public class AssessmentController {
     public String createForm(Model model) {
         model.addAttribute("courses", courseRepository.findAll());
         model.addAttribute("assessmentTypes", AssessmentType.values());
+        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
+                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList());
         return "assessments/create";
     }
 
@@ -111,6 +119,7 @@ public class AssessmentController {
                          @RequestParam Integer duration,
                          @RequestParam Long courseId,
                          @RequestParam String assessmentType,
+                         @RequestParam(required = false) Long errorTypeId,
                          @RequestParam(required = false) List<String> questionTypes,
                          @RequestParam(required = false) List<String> questionContents,
                          @RequestParam(required = false) List<String> correctAnswers,
@@ -145,12 +154,20 @@ public class AssessmentController {
         test.setCourse(course.get());
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
         testRepository.save(test);
+        try {
+            syncRemedialErrorMapping(test, errorTypeId);
+        } catch (IllegalArgumentException ex) {
+            testRepository.delete(test);
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/create";
+        }
 
         try {
             saveQuestions(test, questionTypes, questionContents, correctAnswers, optionAs, optionBs, optionCs, optionDs,
                     questionImages, questionAudios, List.of());
         } catch (IllegalArgumentException ex) {
             questionRepository.deleteAll(questionRepository.findByTestId(test.getId()));
+            errorTestMappingRepository.findByTestId(test.getId()).forEach(errorTestMappingRepository::delete);
             testRepository.delete(test);
             ra.addFlashAttribute("error", ex.getMessage());
             return "redirect:/assessments/create";
@@ -179,6 +196,15 @@ public class AssessmentController {
         model.addAttribute("courses", courseRepository.findAll());
         model.addAttribute("assessmentTypes", AssessmentType.values());
         model.addAttribute("questions", questionRepository.findByTestId(id));
+        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
+                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList());
+        model.addAttribute("mappedErrorTypeId", errorTestMappingRepository.findByTestId(id).stream()
+                .map(ErrorTestMapping::getErrorType)
+                .filter(Objects::nonNull)
+                .map(ErrorType::getId)
+                .findFirst()
+                .orElse(null));
         long resultCount = resultRepository.countByTest(opt.get());
         model.addAttribute("resultCount", resultCount);
         return "assessments/edit";
@@ -192,6 +218,7 @@ public class AssessmentController {
                          @RequestParam Integer duration,
                          @RequestParam Long courseId,
                          @RequestParam String assessmentType,
+                         @RequestParam(required = false) Long errorTypeId,
                          @RequestParam(required = false) List<String> questionTypes,
                          @RequestParam(required = false) List<String> questionContents,
                          @RequestParam(required = false) List<String> correctAnswers,
@@ -229,6 +256,12 @@ public class AssessmentController {
         test.setDuration(duration);
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
         testRepository.save(test);
+        try {
+            syncRemedialErrorMapping(test, errorTypeId);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/" + id + "/edit";
+        }
 
         List<Question> existingQuestions = questionRepository.findByTestId(id);
         try {
@@ -259,6 +292,7 @@ public class AssessmentController {
         }
         Test test = testOpt.get();
         List<Question> questions = questionRepository.findByTestId(id);
+        errorTestMappingRepository.findByTestId(id).forEach(errorTestMappingRepository::delete);
         deleteQuestionMedia(questions);
         questionRepository.deleteAll(questions);
         testRepository.delete(test);
@@ -421,6 +455,27 @@ public class AssessmentController {
             return null;
         }
         return code.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private void syncRemedialErrorMapping(Test test, Long errorTypeId) {
+        if (test == null || test.getId() == null) {
+            return;
+        }
+        List<ErrorTestMapping> existingMappings = errorTestMappingRepository.findByTestId(test.getId());
+        existingMappings.forEach(errorTestMappingRepository::delete);
+        if (!test.isRemedialTest()) {
+            return;
+        }
+        if (errorTypeId == null) {
+            throw new IllegalArgumentException("Please choose an error type for the remedial test.");
+        }
+        ErrorType errorType = errorTypeRepository.findById(errorTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("Selected error type is invalid."));
+        errorTestMappingRepository.findByErrorTypeId(errorTypeId).ifPresent(errorTestMappingRepository::delete);
+        ErrorTestMapping mapping = new ErrorTestMapping();
+        mapping.setErrorType(errorType);
+        mapping.setTest(test);
+        errorTestMappingRepository.save(mapping);
     }
 
     @GetMapping("/{id}/results")

@@ -76,8 +76,16 @@
                         <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Metadata</div>
                         <div style="display:grid;gap:8px;font-size:13px;color:#334155;margin-bottom:14px">
                             <div><strong>Lesson code:</strong> <span th:text="${view.lesson.code}">LES-001</span></div>
-                            <div><strong>Remedial trigger:</strong> <span th:text="${view.lesson.errorType != null ? view.lesson.errorType.name : 'Not mapped'}">Not mapped</span></div>
-                            <div><strong>Specific remedial test:</strong> <span th:text="${view.lesson.test != null ? view.lesson.test.title : 'Not assigned'}">Not assigned</span></div>
+                            <div><strong>Bloom error types:</strong> <span th:text="${view.lesson.rememberErrorType != null || view.lesson.understandErrorType != null || view.lesson.applyErrorType != null || view.lesson.analyzeErrorType != null || view.lesson.evaluateErrorType != null || view.lesson.createErrorType != null ? 'Configured' : 'Not configured'}">Configured</span></div>
+                            <div><strong>Quiz labels:</strong> <span th:text="${#lists.isEmpty(view.quizQuestions) ? 'No quiz yet' : 'Bloom-tagged questions enabled'}">Bloom-tagged questions enabled</span></div>
+                        </div>
+                        <div style="display:grid;gap:6px;font-size:12px;color:#475569;margin-bottom:14px">
+                            <div><strong>Remember:</strong> <span th:text="${view.lesson.rememberErrorType != null ? view.lesson.rememberErrorType.name : '-'}">-</span></div>
+                            <div><strong>Understand:</strong> <span th:text="${view.lesson.understandErrorType != null ? view.lesson.understandErrorType.name : '-'}">-</span></div>
+                            <div><strong>Apply:</strong> <span th:text="${view.lesson.applyErrorType != null ? view.lesson.applyErrorType.name : '-'}">-</span></div>
+                            <div><strong>Analyze:</strong> <span th:text="${view.lesson.analyzeErrorType != null ? view.lesson.analyzeErrorType.name : '-'}">-</span></div>
+                            <div><strong>Evaluate:</strong> <span th:text="${view.lesson.evaluateErrorType != null ? view.lesson.evaluateErrorType.name : '-'}">-</span></div>
+                            <div><strong>Create:</strong> <span th:text="${view.lesson.createErrorType != null ? view.lesson.createErrorType.name : '-'}">-</span></div>
                         </div>
                         <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Attachment</div>
                         <div th:if="${view.lesson.hasAttachment()}">

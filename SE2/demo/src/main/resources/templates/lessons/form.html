@@ -38,30 +38,6 @@
             </div>
 
             <div>
-                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Mapped Error Type</label>
-                <select name="errorTypeId" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
-                    <option value="">No remedial trigger</option>
-                    <option th:each="type : ${errorTypes}"
-                            th:value="${type.id}"
-                            th:selected="${lesson.errorType != null && lesson.errorType.id == type.id}"
-                            th:text="${type.name}">Error Type</option>
-                </select>
-                <div style="margin-top:8px;font-size:12px;color:#64748b">If a student gets more than half of this lesson review wrong, this error type will be assigned and used for remedial test recommendations.</div>
-            </div>
-
-            <div>
-                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Specific Remedial Test</label>
-                <select name="remedialTestId" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
-                    <option value="">Use general remedial recommendation</option>
-                    <option th:each="test : ${remedialTests}"
-                            th:value="${test.id}"
-                            th:selected="${lesson.test != null && lesson.test.id == test.id}"
-                            th:text="${test.title + (test.course != null ? ' - ' + test.course.name : '')}">Remedial Test</option>
-                </select>
-                <div style="margin-top:8px;font-size:12px;color:#64748b">If selected, students who fail more than half of this lesson review will be sent directly to this remedial test. This requires an error type mapping.</div>
-            </div>
-
-            <div>
                 <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Title</label>
                 <input name="title" required th:value="${lesson.title}" placeholder="Ex: Linking ideas in persuasive writing" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none">
             </div>
@@ -89,16 +65,6 @@
             </div>
 
             <div>
-                <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Lesson Image</label>
-                <input type="file" name="lessonImage" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;padding:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff">
-                <div style="margin-top:8px;font-size:12px;color:#64748b">Accepted formats: JPG, PNG, WEBP, GIF. Maximum size: 5 MB.</div>
-                <div th:if="${lesson.hasImage()}" style="margin-top:12px">
-                    <div style="font-size:13px;color:#475569;margin-bottom:8px">Current image:</div>
-                    <img th:src="@{'/lessons/' + ${lesson.id} + '/image'}" alt="Lesson image preview" style="width:100%;max-width:340px;max-height:220px;object-fit:cover;border-radius:16px;border:1px solid #e2e8f0;display:block">
-                </div>
-            </div>
-
-            <div>
                 <label style="display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#0f172a">Upload File</label>
                 <input type="file" name="attachment" style="width:100%;padding:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff">
                 <div th:if="${lesson.hasAttachment()}" style="margin-top:8px;font-size:13px;color:#475569">
@@ -111,11 +77,39 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
                     <div>
                         <div style="font-weight:900;color:#0f172a">Lesson Review Quiz</div>
-                        <div style="font-size:13px;color:#64748b">Add or replace the review questions for this lesson.</div>
+                        <div style="font-size:13px;color:#64748b">Add or replace the review questions for this lesson, and tag each question with a Bloom level.</div>
                     </div>
-                    <button type="button" onclick="addQuizQuestion()" class="primary-button" style="padding:10px 14px;border-radius:10px;font-size:12px">+ Add Question</button>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer">
+                            Import File
+                            <input id="quiz-import-file" type="file" accept=".txt,.csv,text/plain,text/csv" hidden onchange="importQuizFile(event)">
+                        </label>
+                        <button type="button" onclick="addQuizQuestion('SHORT_ANSWER')" style="padding:10px 14px;background:#fff;border:1px solid #1d4ed8;color:#1d4ed8;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer">+ Short Answer</button>
+                        <button type="button" onclick="addQuizQuestion('MULTIPLE_CHOICE')" class="primary-button" style="padding:10px 14px;border-radius:10px;font-size:12px">+ Multiple Choice</button>
+                    </div>
+                </div>
+                <div style="margin-bottom:12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px dashed #cbd5e1;color:#64748b;font-size:12px;line-height:1.6">
+                    Import supports `.txt` or `.csv`. TXT format: one block per question with keys `TYPE`, `BLOOM`, `QUESTION`, `A`, `B`, `C`, `D`, `ANSWER`, `EXPLANATION`. Separate blocks with `---`.
                 </div>
                 <div id="quiz-builder" style="display:grid;gap:14px"></div>
+            </div>
+
+            <div style="padding:18px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0">
+                <div style="font-weight:900;color:#0f172a;margin-bottom:6px">Create Error Types In Lesson</div>
+                <div style="font-size:13px;color:#64748b;margin-bottom:14px">Gan loai loi gon theo 6 muc Bloom ngay trong bai hoc. Chi can nhap cac muc ban muon theo doi; de trong muc nao thi muc do khong tao loai loi.</div>
+                <div style="display:grid;gap:10px">
+                    <div th:each="level : ${bloomLevels}" style="display:grid;grid-template-columns:120px 1fr 1.2fr;gap:10px;align-items:center" class="lesson-error-row">
+                        <div style="font-size:12px;font-weight:900;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em" th:text="${level.label}">Remember</div>
+                        <input name="bloomErrorTypeNames"
+                               th:value="${lesson.getErrorTypeForBloomLevel(level) != null ? lesson.getErrorTypeForBloomLevel(level).name : ''}"
+                               th:placeholder="${level.label + ' error type'}"
+                               style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+                        <input name="bloomErrorTypeDescriptions"
+                               th:value="${lesson.getErrorTypeForBloomLevel(level) != null ? lesson.getErrorTypeForBloomLevel(level).description : ''}"
+                               placeholder="Short note for this Bloom level"
+                               style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+                    </div>
+                </div>
             </div>
 
             <button type="submit" class="primary-button" style="height:48px;border-radius:14px" th:text="${submitLabel}">Save</button>
@@ -134,7 +128,7 @@
                     <div>Keep one lesson focused on one learning outcome.</div>
                     <div>Add one lesson image to make the content more visual in the student portal.</div>
                     <div>Upload worksheets or slides as the attached file.</div>
-                    <div>Use 3-5 questions for a quick review, not a full assessment.</div>
+                    <div>Use 3-5 questions for a quick review, and spread them across Bloom levels when possible.</div>
                 </div>
             </div>
         <div style="padding:16px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa">
@@ -146,6 +140,7 @@
 
 <script th:inline="javascript">
 const existingQuizQuestions = /*[[${quizQuestions}]]*/ [];
+const bloomLevels = ['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYZE', 'EVALUATE', 'CREATE'];
 let quizIndex = 0;
 const lessonContentEditor = document.getElementById('lesson-content-editor');
 const lessonContentInput = document.getElementById('lesson-content-input');
@@ -196,41 +191,228 @@ function insertInlineLessonImage(event) {
     event.target.value = '';
 }
 
-function addQuizQuestion(seed) {
+function addQuizQuestion(typeOrSeed, providedSeed) {
     quizIndex += 1;
     const wrap = document.getElementById('quiz-builder');
     const item = document.createElement('div');
     item.className = 'quiz-item';
     item.style.cssText = 'padding:16px;border-radius:16px;background:#fff;border:1px solid #dbeafe;display:grid;gap:10px';
+    const seed = typeof typeOrSeed === 'string' ? (providedSeed ?? {}) : (typeOrSeed ?? {});
+    const questionType = typeof typeOrSeed === 'string' ? typeOrSeed : (seed.questionType ?? 'MULTIPLE_CHOICE');
+    const typeLabel = questionType === 'SHORT_ANSWER' ? 'SHORT ANSWER' : 'MULTIPLE CHOICE';
     item.innerHTML = `
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-            <div style="font-weight:800;color:#1d4ed8">Question ${quizIndex}</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div style="font-weight:800;color:#1d4ed8">Question ${quizIndex}</div>
+                <span style="padding:5px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:900;letter-spacing:0.06em">${typeLabel}</span>
+            </div>
             <button type="button" onclick="this.closest('.quiz-item').remove()" style="padding:6px 10px;border-radius:10px;border:1px solid #fecaca;background:#fff;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer">Remove</button>
         </div>
-        <textarea name="quizQuestionTexts" rows="3" placeholder="Question text" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid #cbd5e1;outline:none;resize:vertical">${seed?.questionText ?? ''}</textarea>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="quiz-option-grid">
+        <input type="hidden" name="questionTypes" value="${questionType}">
+        <div style="display:grid;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'bold')" title="Bold">B</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'italic')" title="Italic">/I/</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'insertUnorderedList')" title="Bullet List">•</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'insertOrderedList')" title="Numbered List">1.</button>
+                <button type="button" class="lesson-editor-tool" onclick="insertQuizLink(this)" title="Insert Link">&#128279;</button>
+            </div>
+            <div class="quiz-rich-editor"
+                 contenteditable="true"
+                 data-placeholder="Question text"
+                 oninput="syncQuizEditor(this)"
+                 onblur="syncQuizEditor(this)">${seed?.questionText ?? ''}</div>
+            <textarea name="quizQuestionTexts" hidden>${seed?.questionText ?? ''}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:160px 1fr;gap:10px" class="quiz-bloom-grid">
+            <select name="bloomLevels" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+                ${bloomLevels.map(level => `<option value="${level}" ${(seed?.bloomLevel ?? 'REMEMBER') === level ? 'selected' : ''}>${formatBloomLabel(level)}</option>`).join('')}
+            </select>
+            <input value="${formatBloomHint(seed?.bloomLevel ?? 'REMEMBER')}" disabled style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="quiz-option-grid quiz-options-block" ${questionType === 'SHORT_ANSWER' ? 'hidden' : ''}>
             <input name="optionAs" placeholder="Option A" value="${seed?.optionA ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
             <input name="optionBs" placeholder="Option B" value="${seed?.optionB ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
             <input name="optionCs" placeholder="Option C" value="${seed?.optionC ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
             <input name="optionDs" placeholder="Option D" value="${seed?.optionD ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
         </div>
-        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px" class="quiz-answer-grid">
-            <select name="correctAnswers" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:10px" class="quiz-answer-grid quiz-answer-block" ${questionType === 'SHORT_ANSWER' ? 'hidden' : ''}>
+            <select name="correctAnswers" class="quiz-correct-select" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
                 <option value="A" ${seed?.correctAnswer === 'A' ? 'selected' : ''}>Correct: A</option>
                 <option value="B" ${seed?.correctAnswer === 'B' ? 'selected' : ''}>Correct: B</option>
                 <option value="C" ${seed?.correctAnswer === 'C' ? 'selected' : ''}>Correct: C</option>
                 <option value="D" ${seed?.correctAnswer === 'D' ? 'selected' : ''}>Correct: D</option>
             </select>
-            <input name="explanations" placeholder="Explanation or teaching note" value="${seed?.explanation ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input placeholder="Correct option note" value="${seed?.explanation ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none" disabled>
+        </div>
+        <div class="quiz-short-answer-block" ${questionType === 'MULTIPLE_CHOICE' ? 'hidden' : ''}>
+            <input name="correctAnswers" class="quiz-short-answer-input" placeholder="Accepted short answer" value="${questionType === 'SHORT_ANSWER' ? (seed?.correctAnswer ?? '') : ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+        </div>
+        <div style="display:grid;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'bold')" title="Bold">B</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'italic')" title="Italic">/I/</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'insertUnorderedList')" title="Bullet List">•</button>
+                <button type="button" class="lesson-editor-tool" onclick="formatQuizField(this, 'insertOrderedList')" title="Numbered List">1.</button>
+                <button type="button" class="lesson-editor-tool" onclick="insertQuizLink(this)" title="Insert Link">&#128279;</button>
+            </div>
+            <div class="quiz-rich-editor"
+                 contenteditable="true"
+                 data-placeholder="Explanation or teaching note"
+                 oninput="syncQuizEditor(this)"
+                 onblur="syncQuizEditor(this)">${seed?.explanation ?? ''}</div>
+            <textarea name="explanations" hidden>${seed?.explanation ?? ''}</textarea>
         </div>
     `;
     wrap.appendChild(item);
+    ensureQuizEditors(item);
+}
+
+function formatBloomLabel(level) {
+    return level.charAt(0) + level.slice(1).toLowerCase();
+}
+
+function formatBloomHint(level) {
+    const hints = {
+        REMEMBER: 'Recall facts, terms, and definitions.',
+        UNDERSTAND: 'Explain ideas or show comprehension.',
+        APPLY: 'Use knowledge in a concrete situation.',
+        ANALYZE: 'Break information into parts and compare.',
+        EVALUATE: 'Judge, defend, or critique with reasons.',
+        CREATE: 'Produce a new response or solution.'
+    };
+    return hints[level] ?? hints.REMEMBER;
+}
+
+function ensureQuizEditors(scope) {
+    scope.querySelectorAll('.quiz-rich-editor').forEach(editor => {
+        if (!editor.innerHTML.trim()) {
+            editor.innerHTML = '';
+        }
+    });
+}
+
+function syncQuizEditor(editor) {
+    const hiddenInput = editor.parentElement.querySelector('textarea');
+    if (hiddenInput) {
+        hiddenInput.value = editor.innerHTML.trim();
+    }
+}
+
+function formatQuizField(trigger, command) {
+    const container = trigger.closest('div').nextElementSibling;
+    if (!container) {
+        return;
+    }
+    container.focus();
+    document.execCommand(command, false, null);
+    syncQuizEditor(container);
+}
+
+function insertQuizLink(trigger) {
+    const url = window.prompt('Enter the link URL');
+    if (!url) {
+        return;
+    }
+    const container = trigger.closest('div').nextElementSibling;
+    if (!container) {
+        return;
+    }
+    container.focus();
+    document.execCommand('createLink', false, url);
+    syncQuizEditor(container);
+}
+
+function importQuizFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = loadEvent => {
+        try {
+            const importedQuestions = file.name.toLowerCase().endsWith('.csv')
+                ? parseQuizCsv(String(loadEvent.target.result || ''))
+                : parseQuizText(String(loadEvent.target.result || ''));
+            if (!importedQuestions.length) {
+                window.alert('No questions found in the uploaded file.');
+                return;
+            }
+            document.getElementById('quiz-builder').innerHTML = '';
+            quizIndex = 0;
+            importedQuestions.forEach(question => addQuizQuestion(question.questionType ?? 'MULTIPLE_CHOICE', question));
+        } catch (error) {
+            window.alert(error.message || 'Cannot import this file.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+}
+
+function parseQuizText(content) {
+    return content.split(/\n---+\n/).map(block => {
+        const question = {};
+        block.split(/\r?\n/).forEach(line => {
+            const idx = line.indexOf(':');
+            if (idx < 0) {
+                return;
+            }
+            const key = line.slice(0, idx).trim().toUpperCase();
+            const value = line.slice(idx + 1).trim();
+            if (key === 'TYPE') question.questionType = normalizeImportedQuestionType(value);
+            if (key === 'BLOOM') question.bloomLevel = normalizeImportedBloom(value);
+            if (key === 'QUESTION') question.questionText = value;
+            if (key === 'A') question.optionA = value;
+            if (key === 'B') question.optionB = value;
+            if (key === 'C') question.optionC = value;
+            if (key === 'D') question.optionD = value;
+            if (key === 'ANSWER') question.correctAnswer = value;
+            if (key === 'EXPLANATION') question.explanation = value;
+        });
+        return question;
+    }).filter(question => question.questionText);
+}
+
+function parseQuizCsv(content) {
+    const lines = content.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) {
+        return [];
+    }
+    const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+    return lines.slice(1).map(line => {
+        const values = line.split(',').map(value => value.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] ?? '';
+        });
+        return {
+            questionType: normalizeImportedQuestionType(row.type),
+            bloomLevel: normalizeImportedBloom(row.bloom),
+            questionText: row.question,
+            optionA: row.a,
+            optionB: row.b,
+            optionC: row.c,
+            optionD: row.d,
+            correctAnswer: row.answer,
+            explanation: row.explanation
+        };
+    }).filter(question => question.questionText);
+}
+
+function normalizeImportedQuestionType(value) {
+    return String(value || '').toUpperCase().includes('SHORT') ? 'SHORT_ANSWER' : 'MULTIPLE_CHOICE';
+}
+
+function normalizeImportedBloom(value) {
+    const normalized = String(value || '').trim().toUpperCase();
+    return bloomLevels.includes(normalized) ? normalized : 'REMEMBER';
 }
 
 if (existingQuizQuestions.length > 0) {
-    existingQuizQuestions.forEach(addQuizQuestion);
+    existingQuizQuestions.forEach(question => addQuizQuestion(question.questionType ?? 'MULTIPLE_CHOICE', question));
 } else {
-    addQuizQuestion();
+    addQuizQuestion('MULTIPLE_CHOICE');
 }
 
 if (!lessonContentEditor.innerHTML.trim()) {
@@ -239,7 +421,11 @@ if (!lessonContentEditor.innerHTML.trim()) {
 
 lessonContentEditor.addEventListener('input', syncLessonContent);
 lessonContentEditor.addEventListener('blur', syncLessonContent);
-lessonContentEditor.closest('form').addEventListener('submit', syncLessonContent);
+lessonContentEditor.closest('form').addEventListener('submit', () => {
+    syncLessonContent();
+    document.querySelectorAll('.quiz-rich-editor').forEach(syncQuizEditor);
+});
+ensureQuizEditors(document);
 </script>
 
 <style>
@@ -311,6 +497,22 @@ lessonContentEditor.closest('form').addEventListener('submit', syncLessonContent
     border-radius: 16px;
 }
 
+.quiz-rich-editor {
+    min-height: 110px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    outline: none;
+    background: #fff;
+    color: #334155;
+    line-height: 1.7;
+}
+
+.quiz-rich-editor:empty::before {
+    content: attr(data-placeholder);
+    color: #94a3b8;
+}
+
 @media (max-width: 1100px) {
     .lesson-form-layout {
         grid-template-columns: 1fr !important;
@@ -319,7 +521,8 @@ lessonContentEditor.closest('form').addEventListener('submit', syncLessonContent
 
 @media (max-width: 760px) {
     .lesson-course-grid,
-    .lesson-meta-grid,
+    .lesson-error-row,
+    .quiz-bloom-grid,
     .quiz-option-grid,
     .quiz-answer-grid {
         grid-template-columns: 1fr !important;
