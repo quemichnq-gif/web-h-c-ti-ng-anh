@@ -9,7 +9,6 @@ import com.example.demo.repository.StudentResultRepository;
 import com.example.demo.repository.TestRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,19 +32,18 @@ public class NotificationService {
             return List.of();
         }
 
-        LocalDateTime now = LocalDateTime.now();
         List<NotificationItem> items = new ArrayList<>();
         String name = current.getFullName() != null && !current.getFullName().isBlank()
                 ? current.getFullName()
                 : current.getUsername();
 
         items.add(new NotificationItem(
+                "welcome_back",
                 "Welcome back",
                 "Just now",
                 "Hello " + name + ", your workspace is ready.",
                 "/",
-                "info",
-                now.plusHours(1).toString()));
+                "info"));
 
         if (current.getRole() == Role.STUDENT) {
             long approvedEnrollments = enrollmentRepository.findByStudent(current).stream()
@@ -54,52 +52,52 @@ public class NotificationService {
             List<StudentResult> recentResults = studentResultRepository.findByStudent(current);
 
             items.add(new NotificationItem(
+                    "student_enrollments_" + approvedEnrollments,
                     "Course access updated",
                     "Today",
                     "You currently have " + approvedEnrollments + " approved course enrollment(s).",
                     "/portal/courses",
-                    "success",
-                    now.plusHours(12).toString()));
+                    "success"));
             items.add(new NotificationItem(
+                    "student_results_" + recentResults.size(),
                     "Assessment results available",
                     "Today",
                     "You have " + recentResults.size() + " test result record(s) available.",
                     "/portal/tests",
-                    "success",
-                    now.plusHours(12).toString()));
+                    "success"));
         } else {
             items.add(new NotificationItem(
+                    "pending_enrollments_" + enrollmentRepository.countByStatus(EnrollmentStatus.PENDING),
                     "Pending enrollments",
                     "Today",
                     "There are " + enrollmentRepository.countByStatus(EnrollmentStatus.PENDING) + " pending enrollment request(s).",
                     "/enrollments",
-                    "warning",
-                    now.plusHours(6).toString()));
+                    "warning"));
             items.add(new NotificationItem(
+                    "assessments_ready_" + testRepository.count(),
                     "Assessments ready",
                     "Today",
                     "The portal currently has " + testRepository.count() + " assessment(s) available.",
                     "/assessments",
-                    "info",
-                    now.plusHours(6).toString()));
+                    "info"));
         }
 
         items.add(new NotificationItem(
+                "security_reminder",
                 "Security reminder",
                 "Today",
                 "Use a strong password and keep your account details up to date.",
                 "/member/settings",
-                "danger",
-                now.plusDays(7).toString()));
+                "danger"));
 
         return items;
     }
 
-    public record NotificationItem(String title,
+    public record NotificationItem(String key,
+                                   String title,
                                    String time,
                                    String detail,
                                    String link,
-                                   String tone,
-                                   String expiresAtIso) {
+                                   String tone) {
     }
 }

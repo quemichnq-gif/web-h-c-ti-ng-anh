@@ -16,8 +16,8 @@
 </div>
 
 <!-- Toast/Alert -->
-<div th:if="${success}" class="alert alert-success" style="margin-bottom:20px;padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600" th:text="${success}"></div>
-<div th:if="${error}" class="alert alert-error" style="margin-bottom:20px;padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600" th:text="${error}"></div>
+<div th:if="${success}" class="alert alert-success" data-auto-dismiss="3500" style="margin-bottom:20px;padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600" th:text="${success}"></div>
+<div th:if="${error}" class="alert alert-error" data-auto-dismiss="5000" style="margin-bottom:20px;padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600" th:text="${error}"></div>
 
 <!-- Filters -->
 <article class="chart-card" style="margin-bottom:20px">
