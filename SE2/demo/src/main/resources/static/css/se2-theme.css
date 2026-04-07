@@ -3168,42 +3168,42 @@ tbody tr:hover {
 
 .user-table thead th:nth-child(2),
 .user-table tbody td:nth-child(2) {
-    width: 26%;
+    width: 16%;
 }
 
 .user-table thead th:nth-child(3),
 .user-table tbody td:nth-child(3) {
-    width: 11%;
+    width: 8%;
 }
 
 .user-table thead th:nth-child(4),
 .user-table tbody td:nth-child(4) {
-    width: 16%;
+    width: 14%;
 }
 
 .user-table thead th:nth-child(5),
 .user-table tbody td:nth-child(5) {
-    width: 12%;
+    width: 10%;
 }
 
 .user-table thead th:nth-child(6),
 .user-table tbody td:nth-child(6) {
-    width: 11%;
+    width: 9%;
 }
 
 .user-table thead th:nth-child(7),
 .user-table tbody td:nth-child(7) {
-    width: 7%;
+    width: 6%;
 }
 
 .user-table thead th:nth-child(8),
 .user-table tbody td:nth-child(8) {
-    width: 10%;
+    width: 8%;
 }
 
 .user-table thead th:nth-child(9),
 .user-table tbody td:nth-child(9) {
-    width: 18%;
+    width: 15%;
 }
 
 .user-table-wrapper {
@@ -3219,7 +3219,7 @@ tbody tr:hover {
 }
 
 .user-table tbody td:nth-child(2) {
-    min-width: 280px;
+    min-width: 190px;
 }
 
 .user-table tbody td:nth-child(8),

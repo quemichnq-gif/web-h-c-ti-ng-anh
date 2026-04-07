@@ -30,7 +30,7 @@
         <p style="color:#94a3b8;font-size:14px">Create either a course assessment or a remedial test mapped from student error patterns.</p>
     </div>
 
-    <div th:if="${error}" style="padding:16px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;margin-bottom:24px;font-weight:600">
+    <div th:if="${error}" data-auto-dismiss="1500" style="padding:16px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;margin-bottom:24px;font-weight:600">
         <span th:text="${error}">Error message</span>
     </div>
 
