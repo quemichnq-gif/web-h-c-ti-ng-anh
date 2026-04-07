@@ -15,11 +15,14 @@ public class PasswordResetMailService {
 
     private final JavaMailSender mailSender;
     private final String fromAddress;
+    private final String mailUsername;
 
     public PasswordResetMailService(JavaMailSender mailSender,
-                                    @Value("${app.mail.from:no-reply@academic-portal.local}") String fromAddress) {
+                                    @Value("${app.mail.from:}") String fromAddress,
+                                    @Value("${spring.mail.username:}") String mailUsername) {
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
+        this.mailUsername = mailUsername;
     }
 
     public boolean sendVerificationCode(String email, String verificationCode) {
@@ -34,9 +37,15 @@ public class PasswordResetMailService {
                 """.formatted(verificationCode);
 
         try {
+            String resolvedFrom = fromAddress != null && !fromAddress.isBlank()
+                    ? fromAddress
+                    : mailUsername;
+            if (resolvedFrom == null || resolvedFrom.isBlank()) {
+                throw new IllegalStateException("Mail sender is not configured. Set MAIL_USERNAME or MAIL_FROM.");
+            }
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-            helper.setFrom(fromAddress);
+            helper.setFrom(resolvedFrom);
             helper.setTo(email);
             helper.setSubject(subject);
             helper.setText(text, false);
