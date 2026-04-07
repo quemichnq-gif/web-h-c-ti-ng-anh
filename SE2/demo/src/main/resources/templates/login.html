@@ -192,6 +192,12 @@
             padding: 15px 16px;
         }
 
+        .login-panel .alert.is-fading {
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+
         .login-panel .auth-stack {
             margin-top: 24px;
             gap: 16px;
@@ -327,7 +333,7 @@
                     <span th:if="${param.error[0] != 'google_not_configured' and param.error[0] != 'google_auth_failed'}">Invalid email or password. Please try again.</span>
                 </div>
 
-                <div th:if="${param.logout}" class="alert alert-success">
+                <div th:if="${param.logout}" id="logoutAlert" class="alert alert-success">
                     You have been signed out successfully.
                 </div>
 
@@ -361,5 +367,21 @@
         </main>
     </div>
 </body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const logoutAlert = document.getElementById("logoutAlert");
+        if (!logoutAlert) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            logoutAlert.classList.add("is-fading");
+            window.setTimeout(function () {
+                logoutAlert.remove();
+            }, 280);
+        }, 2500);
+    });
+</script>
 
 </html>
