@@ -14,8 +14,8 @@
     </div>
     <a th:href="@{/courses/create}" class="primary-button">+ Create Course</a>
 </div>
-<div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
-<div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
+<div th:if="${success}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${error}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
 
 <article class="chart-card" style="margin-bottom:20px">
     <form method="get" th:action="@{/courses}" class="filter-form">

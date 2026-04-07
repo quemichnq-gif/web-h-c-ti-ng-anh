@@ -14,7 +14,7 @@
     </div>
     <a th:href="@{/assessments/create}" class="primary-button">+ Create Test</a>
 </div>
-<div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${success}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
 
 <article class="chart-card" style="margin-bottom:20px">
     <form method="get" th:action="@{/assessments}" class="filter-form">

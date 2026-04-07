@@ -20,8 +20,8 @@
     </div>
 </div>
 
-<div th:if="${success}" style="padding:14px 18px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:700;margin-bottom:20px" th:text="${success}"></div>
-<div th:if="${error}" style="padding:14px 18px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:700;margin-bottom:20px" th:text="${error}"></div>
+<div th:if="${success}" data-auto-dismiss="1500" style="padding:14px 18px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:700;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${error}" data-auto-dismiss="1500" style="padding:14px 18px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:700;margin-bottom:20px" th:text="${error}"></div>
 
 <section th:if="${#lists.isEmpty(lessonViews)}" class="chart-card" style="padding:32px;text-align:center;color:#64748b">
     This course does not have lesson content yet.

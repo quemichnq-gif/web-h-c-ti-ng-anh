@@ -12,7 +12,7 @@
         <h1 style="font-size:24px;font-weight:800;margin-bottom:4px">Edit Account</h1>
         <p style="color:#94a3b8;font-size:14px" th:text="'Editing: ' + ${user.username}">Editing user</p>
     </div>
-    <div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
+    <div th:if="${error}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
     <article class="chart-card">
         <form th:action="@{'/users/' + ${user.id} + '/edit'}" method="post">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
