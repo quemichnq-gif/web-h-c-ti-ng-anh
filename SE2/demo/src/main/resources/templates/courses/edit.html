@@ -45,16 +45,6 @@
                         <input name="endDate" type="date" th:value="${course.endDate}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-                    <div class="field">
-                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Created Time</label>
-                        <input type="text" readonly th:value="${course.createdAt != null ? #temporals.format(course.createdAt,'dd/MM/yyyy HH:mm') : 'Auto on create'}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
-                    </div>
-                    <div class="field">
-                        <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Last Updated</label>
-                        <input type="text" readonly th:value="${course.updatedAt != null ? #temporals.format(course.updatedAt,'dd/MM/yyyy HH:mm') : 'Auto on save'}" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box;background:#f8fafc;color:#64748b">
-                    </div>
-                </div>
             </div>
             <div style="display:flex;gap:12px;margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
                 <button type="submit" class="primary-button">Save Changes</button>

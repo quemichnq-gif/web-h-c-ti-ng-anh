@@ -441,8 +441,6 @@
                             <span th:text="${user.status == 'ACTIVE' ? 'Active' : user.status}"
                                   th:class="${user.status == 'ACTIVE' ? 'profile-status active' : 'profile-status inactive'}">ACTIVE</span>
                         </strong>
-                        <span style="display:block;margin-top:10px;color:#8b9bb4;font-size:0.76rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase"
-                              th:text="${user.createdAt != null ? 'Joined ' + #temporals.format(user.createdAt, 'dd/MM/yyyy') : 'Joined date unavailable'}">Joined 01/01/2026</span>
                     </div>
                     <div class="profile-meta-item">
                         <span>Email</span>

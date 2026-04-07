@@ -76,8 +76,6 @@
                         <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Metadata</div>
                         <div style="display:grid;gap:8px;font-size:13px;color:#334155;margin-bottom:14px">
                             <div><strong>Lesson code:</strong> <span th:text="${view.lesson.code}">LES-001</span></div>
-                            <div><strong>Created:</strong> <span th:text="${view.lesson.createdAt != null ? #temporals.format(view.lesson.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}">time</span></div>
-                            <div><strong>Updated:</strong> <span th:text="${view.lesson.updatedAt != null ? #temporals.format(view.lesson.updatedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}">time</span></div>
                             <div><strong>Remedial trigger:</strong> <span th:text="${view.lesson.errorType != null ? view.lesson.errorType.name : 'Not mapped'}">Not mapped</span></div>
                             <div><strong>Specific remedial test:</strong> <span th:text="${view.lesson.test != null ? view.lesson.test.title : 'Not assigned'}">Not assigned</span></div>
                         </div>

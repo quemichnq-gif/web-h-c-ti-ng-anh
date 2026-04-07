@@ -56,6 +56,7 @@ public class EnrollmentController {
         model.addAttribute("filterStatus", status);
         model.addAttribute("search", search);
         model.addAttribute("pendingCount", enrollmentRepository.countByStatus(EnrollmentStatus.PENDING));
+        model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus(EnrollmentStatus.PENDING));
         model.addAttribute("statusOptions", EnrollmentStatus.values());
 
         if (courseId != null) {

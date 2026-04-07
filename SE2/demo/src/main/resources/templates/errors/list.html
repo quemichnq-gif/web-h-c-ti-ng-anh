@@ -495,7 +495,6 @@
                         <div>
                             <div style="font-weight:800" th:text="${se.student != null ? (se.student.fullName != null ? se.student.fullName : se.student.username) : 'Unknown'}">Student</div>
                             <div style="font-size:13px;color:#64748b" th:text="${'ID ' + (se.student != null ? se.student.id : '?') + ' · ' + (se.errorType != null ? se.errorType.name : 'Unknown Error')}">meta</div>
-                            <div style="font-size:12px;color:#94a3b8;margin-top:6px" th:text="${#temporals.format(se.createdAt,'dd/MM/yyyy HH:mm')}">Date</div>
                         </div>
                     </div>
                 </div>

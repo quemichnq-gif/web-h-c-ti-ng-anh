@@ -69,8 +69,11 @@
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(18px);
             box-shadow: 0 28px 60px rgba(15, 23, 42, 0.16);
-            z-index: 30;
+            z-index: 3000;
             display: none;
+            max-height: min(70vh, 560px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
         }
 
         .header-dropdown.open .header-dropdown-panel {
@@ -101,6 +104,22 @@
         .header-dropdown-list {
             display: grid;
             gap: 10px;
+            padding-right: 4px;
+        }
+
+        .header-dropdown-panel::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .header-dropdown-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .header-dropdown-panel::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.36);
+            border-radius: 999px;
+            border: 3px solid transparent;
+            background-clip: content-box;
         }
 
         .header-dropdown-item {
@@ -675,51 +694,37 @@
 
             <div class="header-actions">
                 <div class="header-dropdown" data-dropdown="notifications">
-                    <button type="button" class="header-icon-button has-badge header-dropdown-toggle" data-badge="3" aria-label="Notifications" aria-expanded="false">
+                    <button type="button" class="header-icon-button has-badge header-dropdown-toggle" aria-label="Notifications" aria-expanded="false">
                         <svg viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
+                        <span class="badge" th:if="${notificationCount != null and notificationCount > 0}" th:text="${notificationCount}">3</span>
                     </button>
                     <div class="header-dropdown-panel" role="menu" aria-label="Notifications preview">
                         <div class="header-dropdown-head">
                             <strong>Notifications</strong>
                             <a th:href="@{/member/notifications}">See all</a>
                         </div>
-                        <div class="header-dropdown-list">
-                            <a th:href="@{/enrollments}" class="header-dropdown-item">
+                        <div class="header-dropdown-list" th:if="${!#lists.isEmpty(notificationsPreview)}">
+                            <a th:each="item : ${notificationsPreview}"
+                               th:href="${item.link}"
+                               class="header-dropdown-item"
+                               data-notification-item="true"
+                               th:attr="data-expires-at=${item.expiresAtIso}">
                                 <div class="header-dropdown-item-top">
-                                    <span class="header-dot warning"></span>
-                                    <strong>Pending enrollments</strong>
+                                    <span class="header-dot" th:classappend="' ' + ${item.tone}"></span>
+                                    <strong th:text="${item.title}">Notification</strong>
                                 </div>
-                                <p>Review requests waiting for approval.</p>
+                                <p th:text="${item.detail}">Notification detail</p>
                                 <div class="header-dropdown-meta">
-                                    <span class="header-dropdown-time">Today</span>
-                                    <span class="header-dropdown-action">Review</span>
-                                </div>
-                            </a>
-                            <a th:href="@{/assessments}" class="header-dropdown-item">
-                                <div class="header-dropdown-item-top">
-                                    <span class="header-dot info"></span>
-                                    <strong>Assessment updates</strong>
-                                </div>
-                                <p>Recent test and score changes are ready.</p>
-                                <div class="header-dropdown-meta">
-                                    <span class="header-dropdown-time">Today</span>
+                                    <span class="header-dropdown-time" th:text="${item.time}">Today</span>
                                     <span class="header-dropdown-action">Open</span>
                                 </div>
                             </a>
-                            <a th:href="@{/member/settings}" class="header-dropdown-item">
-                                <div class="header-dropdown-item-top">
-                                    <span class="header-dot danger"></span>
-                                    <strong>Security reminder</strong>
-                                </div>
-                                <p>Review your password and contact details before signing out.</p>
-                                <div class="header-dropdown-meta">
-                                    <span class="header-dropdown-time">Now</span>
-                                    <span class="header-dropdown-action">Open</span>
-                                </div>
-                            </a>
+                        </div>
+                        <div class="header-dropdown-empty" th:if="${#lists.isEmpty(notificationsPreview)}" data-notifications-empty>
+                            No notifications available right now.
                         </div>
                     </div>
                 </div>
@@ -955,8 +960,51 @@
             return;
         }
 
+        const pruneNotifications = () => {
+            const items = Array.from(dropdown.querySelectorAll("[data-notification-item]"));
+            let remaining = 0;
+            const now = Date.now();
+
+            items.forEach((item) => {
+                const expiresAt = item.getAttribute("data-expires-at");
+                const expiryTime = expiresAt ? Date.parse(expiresAt) : Number.POSITIVE_INFINITY;
+                if (Number.isFinite(expiryTime) && expiryTime <= now) {
+                    item.remove();
+                } else {
+                    remaining += 1;
+                }
+            });
+
+            const badge = trigger.querySelector(".badge");
+            if (badge) {
+                if (remaining > 0) {
+                    badge.textContent = String(remaining);
+                } else {
+                    badge.remove();
+                }
+            } else if (remaining > 0) {
+                const newBadge = document.createElement("span");
+                newBadge.className = "badge";
+                newBadge.textContent = String(remaining);
+                trigger.appendChild(newBadge);
+            }
+
+            const list = dropdown.querySelector(".header-dropdown-list");
+            const empty = dropdown.querySelector("[data-notifications-empty]");
+            if (empty) {
+                empty.style.display = remaining === 0 ? "block" : "none";
+            } else if (remaining === 0 && list) {
+                const fallback = document.createElement("div");
+                fallback.className = "header-dropdown-empty";
+                fallback.setAttribute("data-notifications-empty", "true");
+                fallback.textContent = "No notifications available right now.";
+                list.replaceWith(fallback);
+            }
+        };
+
         trigger.addEventListener("click", function (event) {
             event.preventDefault();
+            pruneNotifications();
             dropdown.classList.toggle("open");
             trigger.setAttribute("aria-expanded", dropdown.classList.contains("open") ? "true" : "false");
         });
@@ -974,6 +1022,9 @@
                 trigger.setAttribute("aria-expanded", "false");
             }
         });
+
+        pruneNotifications();
+        window.setInterval(pruneNotifications, 30000);
 
         const choiceButtons = Array.from(document.querySelectorAll(".settings-choice-button"));
         choiceButtons.forEach(function (button) {

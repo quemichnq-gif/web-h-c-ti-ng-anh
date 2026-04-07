@@ -16,10 +16,61 @@
 <div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
 <div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
 
-<div th:if="${pendingCount > 0}" style="padding:14px 20px;border-radius:12px;background:#fffbeb;border:1px solid #fbbf24;color:#92400e;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-    <span>Warning</span>
-    <span><strong th:text="${pendingCount}">0</strong> enrollment request(s) are waiting for your review</span>
-</div>
+<article class="chart-card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap">
+        <div>
+            <h2 style="font-size:18px;font-weight:800;margin-bottom:6px">Pending Enrollments</h2>
+            <p style="margin:0;color:#94a3b8;font-size:14px">
+                <span th:text="${pendingCount}">0</span> request(s) are waiting for approval or rejection.
+            </p>
+        </div>
+        <span style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:#fffbeb;color:#92400e;border:1px solid #fbbf24;font-size:12px;font-weight:800">
+            Review queue
+        </span>
+    </div>
+
+    <div class="table-wrapper" th:if="${!#lists.isEmpty(pendingEnrollments)}">
+        <table class="data-table enrollment-table pending-enrollment-table">
+            <thead>
+            <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Requested</th>
+                <th>Staff / Notes</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="e : ${pendingEnrollments}">
+                <td>
+                    <div style="font-weight:700" th:text="${e.student.fullName != null ? e.student.fullName : e.student.username}">Student</div>
+                    <div style="font-size:12px;color:#94a3b8" th:text="${e.student.email}">email</div>
+                </td>
+                <td>
+                    <div style="font-weight:700" th:text="${e.course.name}">Course</div>
+                    <div style="font-size:12px;color:#94a3b8" th:text="${e.course.code}">COURSE</div>
+                </td>
+                <td style="font-size:12px;color:#64748b;line-height:1.7" th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</td>
+                <td style="font-size:12px;color:#64748b;line-height:1.7;max-width:260px">
+                    <div><strong>Staff:</strong> <span th:text="${e.academicStaff != null ? (e.academicStaff.fullName != null ? e.academicStaff.fullName : e.academicStaff.username) : 'N/A'}">Staff</span></div>
+                    <div th:if="${e.note != null}"><strong>Note:</strong> <span th:text="${e.note}">Note</span></div>
+                </td>
+                <td>
+                    <div style="display:flex;gap:10px;flex-wrap:nowrap;align-items:center">
+                        <form th:action="@{'/enrollments/' + ${e.id} + '/approve'}" method="post" style="display:inline">
+                            <button style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534;background:none;cursor:pointer">Approve</button>
+                        </form>
+                        <button type="button" th:onclick="|openRejectModal('${e.id}')|" style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Reject</button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div th:if="${#lists.isEmpty(pendingEnrollments)}" style="padding:20px;border:1px dashed #e2e8f0;border-radius:14px;color:#94a3b8;text-align:center">
+        No pending enrollment requests right now.
+    </div>
+</article>
 
 <article class="chart-card" style="margin-bottom:20px">
     <form method="get" th:action="@{/enrollments}" class="filter-form">
@@ -74,7 +125,6 @@
                     </td>
                     <td style="font-size:12px;color:#64748b;line-height:1.7">
                         <div><strong>Requested:</strong> <span th:text="${e.enrolledAt != null ? #temporals.format(e.enrolledAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
-                        <div><strong>Created:</strong> <span th:text="${e.createdAt != null ? #temporals.format(e.createdAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
                         <div><strong>Processed:</strong> <span th:text="${e.processedAt != null ? #temporals.format(e.processedAt,'dd/MM/yyyy HH:mm') : 'N/A'}">Date</span></div>
                     </td>
                     <td>
@@ -204,9 +254,53 @@
 .enrollment-table td {
     vertical-align:top;
 }
+.pending-enrollment-table {
+    min-width: 1100px;
+}
+.pending-enrollment-table thead th:nth-child(1),
+.pending-enrollment-table tbody td:nth-child(1) {
+    width: 24%;
+}
+.pending-enrollment-table thead th:nth-child(2),
+.pending-enrollment-table tbody td:nth-child(2) {
+    width: 22%;
+}
+.pending-enrollment-table thead th:nth-child(3),
+.pending-enrollment-table tbody td:nth-child(3) {
+    width: 15%;
+}
+.pending-enrollment-table thead th:nth-child(4),
+.pending-enrollment-table tbody td:nth-child(4) {
+    width: 18%;
+}
+.pending-enrollment-table thead th:nth-child(5),
+.pending-enrollment-table tbody td:nth-child(5) {
+    width: 21%;
+}
+.pending-enrollment-table tbody td:nth-child(2) > div:first-child,
+.pending-enrollment-table tbody td:nth-child(4) > div:first-child {
+    margin-bottom: 4px;
+}
+.pending-enrollment-table tbody td:nth-child(3) {
+    white-space: normal;
+    line-height: 1.6;
+}
+.pending-enrollment-table tbody td:nth-child(5) {
+    min-width: 220px;
+    padding-right: 24px;
+}
+.pending-enrollment-table tbody td:nth-child(5) > div {
+    gap: 10px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    justify-content: flex-start;
+}
 @media (max-width: 768px) {
     .filter-form, .two-col-grid {
         grid-template-columns: 1fr;
+    }
+    .pending-enrollment-table {
+        min-width: 0;
     }
 }
 </style>

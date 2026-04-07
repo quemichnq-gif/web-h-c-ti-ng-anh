@@ -31,7 +31,7 @@
 <article class="chart-card">
     <div class="table-wrapper">
         <table class="data-table course-table">
-            <thead><tr><th>#</th><th>Course</th><th>Status</th><th>Start Date</th><th>End Date</th><th>Students</th><th>Created</th><th>Updated</th><th>Actions</th></tr></thead>
+            <thead><tr><th>#</th><th>Course</th><th>Status</th><th>Start Date</th><th>End Date</th><th>Students</th><th>Actions</th></tr></thead>
             <tbody>
                 <tr th:each="c,stat : ${courses}">
                     <td style="color:#94a3b8;font-size:13px" th:text="${stat.index + 1}">1</td>
@@ -47,8 +47,6 @@
                     <td style="font-size:13px" th:text="${c.startDate != null ? c.startDate : '-'}">Date</td>
                     <td style="font-size:13px" th:text="${c.endDate != null ? c.endDate : '-'}">Date</td>
                     <td style="font-weight:700" th:text="${enrollmentCounts[c.id] != null ? enrollmentCounts[c.id] : 0}">0</td>
-                    <td style="font-size:12px;color:#64748b" th:text="${c.createdAt != null ? #temporals.format(c.createdAt,'dd/MM/yyyy HH:mm') : '-'}">created</td>
-                    <td style="font-size:12px;color:#64748b" th:text="${c.updatedAt != null ? #temporals.format(c.updatedAt,'dd/MM/yyyy HH:mm') : '-'}">updated</td>
                     <td>
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
                             <a th:href="@{'/courses/' + ${c.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
@@ -59,7 +57,7 @@
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(courses)}">
-                    <td colspan="9" style="text-align:center;color:#94a3b8;padding:60px">No courses found.</td>
+                    <td colspan="7" style="text-align:center;color:#94a3b8;padding:60px">No courses found.</td>
                 </tr>
             </tbody>
         </table>
