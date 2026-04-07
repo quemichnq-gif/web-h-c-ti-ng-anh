@@ -812,7 +812,7 @@
                                th:href="${item.link}"
                                class="header-dropdown-item"
                                data-notification-item="true"
-                               th:attr="data-expires-at=${item.expiresAtIso}">
+                               th:attr="data-notification-key=${item.key}">
                                 <div class="header-dropdown-item-top">
                                     <span class="header-dot" th:classappend="' ' + ${item.tone}"></span>
                                     <strong th:text="${item.title}">Notification</strong>
@@ -842,6 +842,7 @@
         <div layout:fragment="content"></div>
     </main>
 
+    <script th:src="@{/js/alert-autodismiss.js}" defer></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Set active class based on current URL
@@ -858,18 +859,34 @@
 
             const dropdown = document.querySelector('[data-dropdown="notifications"]');
             const toggle = dropdown ? dropdown.querySelector(".header-dropdown-toggle") : null;
+            const storageKey = "dismissedNotifications";
+            const loadDismissedNotifications = () => {
+                try {
+                    const raw = window.localStorage.getItem(storageKey);
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    return new Set(Array.isArray(parsed) ? parsed : []);
+                } catch (error) {
+                    return new Set();
+                }
+            };
+            const saveDismissedNotifications = (dismissed) => {
+                try {
+                    window.localStorage.setItem(storageKey, JSON.stringify(Array.from(dismissed)));
+                } catch (error) {
+                    // Ignore storage failures.
+                }
+            };
+            let dismissedNotifications = loadDismissedNotifications();
             const pruneNotifications = () => {
                 if (!dropdown) {
                     return;
                 }
                 const items = Array.from(dropdown.querySelectorAll("[data-notification-item]"));
                 let remaining = 0;
-                const now = Date.now();
 
                 items.forEach((item) => {
-                    const expiresAt = item.getAttribute("data-expires-at");
-                    const expiryTime = expiresAt ? Date.parse(expiresAt) : Number.POSITIVE_INFINITY;
-                    if (Number.isFinite(expiryTime) && expiryTime <= now) {
+                    const key = item.getAttribute("data-notification-key");
+                    if (key && dismissedNotifications.has(key)) {
                         item.remove();
                     } else {
                         remaining += 1;
@@ -903,6 +920,19 @@
                 }
             };
             if (dropdown && toggle) {
+                dropdown.addEventListener("click", function (event) {
+                    const item = event.target.closest("[data-notification-item]");
+                    if (!item || !dropdown.contains(item)) {
+                        return;
+                    }
+
+                    const key = item.getAttribute("data-notification-key");
+                    if (key) {
+                        dismissedNotifications.add(key);
+                        saveDismissedNotifications(dismissedNotifications);
+                    }
+                });
+
                 toggle.addEventListener("click", function (event) {
                     event.preventDefault();
                     pruneNotifications();
@@ -924,8 +954,14 @@
                     }
                 });
 
+                window.addEventListener("storage", function (event) {
+                    if (event.key === storageKey) {
+                        dismissedNotifications = loadDismissedNotifications();
+                        pruneNotifications();
+                    }
+                });
+
                 pruneNotifications();
-                window.setInterval(pruneNotifications, 30000);
             }
         });
     </script>

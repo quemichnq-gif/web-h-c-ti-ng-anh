@@ -635,6 +635,8 @@ textarea {
     border-radius: 18px;
     padding: 14px 16px;
     font-weight: 600;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    will-change: opacity, transform;
 }
 
 .alert-error {
@@ -645,6 +647,12 @@ textarea {
 .alert-success {
     background: rgba(29, 157, 116, 0.1);
     color: #117354;
+}
+
+.alert.is-fading,
+[data-auto-dismiss].is-fading {
+    opacity: 0;
+    transform: translateY(-4px);
 }
 
 .auth-form,

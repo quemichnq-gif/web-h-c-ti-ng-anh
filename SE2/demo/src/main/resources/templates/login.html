@@ -327,21 +327,21 @@
                 <h2 class="panel-title">Welcome back.</h2>
                 <p class="panel-copy">Use your email and password to access the portal.</p>
 
-                <div th:if="${param.error}" class="alert alert-error">
+                <div th:if="${param.error}" class="alert alert-error" data-auto-dismiss="5000">
                     <span th:if="${param.error[0] == 'google_not_configured'}">Google sign-in is not configured yet. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to enable it.</span>
                     <span th:if="${param.error[0] == 'google_auth_failed'}">Google sign-in could not be completed. Please try again.</span>
                     <span th:if="${param.error[0] != 'google_not_configured' and param.error[0] != 'google_auth_failed'}">Invalid email or password. Please try again.</span>
                 </div>
 
-                <div th:if="${param.logout}" id="logoutAlert" class="alert alert-success">
+                <div th:if="${param.logout}" id="logoutAlert" class="alert alert-success" data-auto-dismiss="3500">
                     You have been signed out successfully.
                 </div>
 
-                <div th:if="${param.registered}" class="alert alert-success">
+                <div th:if="${param.registered}" class="alert alert-success" data-auto-dismiss="3500">
                     Your account was created successfully. You can sign in now.
                 </div>
 
-                <div th:if="${param.reset}" class="alert alert-success">
+                <div th:if="${param.reset}" class="alert alert-success" data-auto-dismiss="3500">
                     Your password has been reset successfully. Please sign in with the new password.
                 </div>
 
@@ -366,22 +366,6 @@
             </section>
         </main>
     </div>
+    <script th:src="@{/js/alert-autodismiss.js}" defer></script>
 </body>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const logoutAlert = document.getElementById("logoutAlert");
-        if (!logoutAlert) {
-            return;
-        }
-
-        window.setTimeout(function () {
-            logoutAlert.classList.add("is-fading");
-            window.setTimeout(function () {
-                logoutAlert.remove();
-            }, 280);
-        }, 2500);
-    });
-</script>
-
 </html>

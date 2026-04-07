@@ -75,13 +75,13 @@
         <h1>Enter the verification code</h1>
         <p th:text="'We sent a code to ' + ${email} + '. Enter it below to continue.'">We sent a code to your email address. Enter it below to continue.</p>
 
-        <div th:if="${param.error == 'invalid_code'}" class="alert alert-error">
+        <div th:if="${param.error == 'invalid_code'}" class="alert alert-error" data-auto-dismiss="5000">
             The code you entered is not valid. Please check it and try again.
         </div>
-        <div th:if="${param.error == 'expired'}" class="alert alert-error">
+        <div th:if="${param.error == 'expired'}" class="alert alert-error" data-auto-dismiss="5000">
             The code has expired. Please start the reset process again.
         </div>
-        <div th:if="${mailFallback}" class="alert alert-error">
+        <div th:if="${mailFallback}" class="alert alert-error" data-auto-dismiss="5000">
             Mail delivery is not configured in this environment. Use the code below to continue:
             <strong th:text="${verificationCode}">000000</strong>
         </div>
@@ -102,5 +102,6 @@
         </div>
     </section>
 </main>
+<script th:src="@{/js/alert-autodismiss.js}" defer></script>
 </body>
 </html>
