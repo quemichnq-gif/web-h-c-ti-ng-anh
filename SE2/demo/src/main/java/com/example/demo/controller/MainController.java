@@ -11,11 +11,26 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Locale;
 import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 @Controller
 public class MainController {
+
+    private static final int ENROLLMENT_TREND_MONTHS = 8;
+    private static final int CHART_WIDTH = 800;
+    private static final int CHART_HEIGHT = 280;
+    private static final int CHART_LEFT_PADDING = 40;
+    private static final int CHART_RIGHT_PADDING = 40;
+    private static final int CHART_TOP_PADDING = 40;
+    private static final int CHART_BASELINE_Y = 230;
+    private static final int CHART_INNER_HEIGHT = CHART_BASELINE_Y - CHART_TOP_PADDING;
+    private static final DateTimeFormatter TREND_LABEL_FORMATTER = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH);
+    private static final DateTimeFormatter TREND_PERIOD_FORMATTER = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH);
 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
@@ -76,6 +91,19 @@ public class MainController {
             model.addAttribute("userCount", userRepository.count());
             model.addAttribute("courseCount", courseRepository.count());
             model.addAttribute("recentErrors", studentErrorRepository.findAllOrderByCreatedAtDesc().stream().limit(10).toList());
+            List<EnrollmentTrendPoint> enrollmentTrend = buildEnrollmentTrend(enrollmentRepository.findAll());
+            model.addAttribute("enrollmentTrend", enrollmentTrend);
+            model.addAttribute("enrollmentTrendTotal", enrollmentTrend.stream().mapToLong(EnrollmentTrendPoint::getCount).sum());
+            model.addAttribute("enrollmentTrendPeak", enrollmentTrend.stream().mapToLong(EnrollmentTrendPoint::getCount).max().orElse(0L));
+            model.addAttribute("enrollmentTrendPeakMonth", enrollmentTrend.stream()
+                    .max(Comparator.comparingLong(EnrollmentTrendPoint::getCount))
+                    .map(EnrollmentTrendPoint::getMonthKey)
+                    .orElse("No data"));
+            model.addAttribute("enrollmentTrendLinePath", buildEnrollmentTrendLinePath(enrollmentTrend));
+            model.addAttribute("enrollmentTrendAreaPath", buildEnrollmentTrendAreaPath(enrollmentTrend));
+            model.addAttribute("enrollmentTrendPeriod", enrollmentTrend.isEmpty()
+                    ? "No enrollment data"
+                    : enrollmentTrend.get(0).getMonthKey() + " - " + enrollmentTrend.get(enrollmentTrend.size() - 1).getMonthKey());
         } else {
         }
         return "dashboard";
@@ -351,6 +379,121 @@ public class MainController {
             return false;
         }
         return course.getEndDate() == null || !course.getEndDate().isBefore(today);
+    }
+
+    private List<EnrollmentTrendPoint> buildEnrollmentTrend(List<Enrollment> enrollments) {
+        YearMonth currentMonth = YearMonth.now();
+        List<YearMonth> months = IntStream.range(0, ENROLLMENT_TREND_MONTHS)
+                .mapToObj(offset -> currentMonth.minusMonths(ENROLLMENT_TREND_MONTHS - 1L - offset))
+                .toList();
+
+        Map<YearMonth, Long> countsByMonth = new LinkedHashMap<>();
+        for (YearMonth month : months) {
+            countsByMonth.put(month, 0L);
+        }
+
+        for (Enrollment enrollment : enrollments) {
+            if (enrollment == null) {
+                continue;
+            }
+            LocalDateTime timestamp = enrollment.getEnrolledAt() != null ? enrollment.getEnrolledAt() : enrollment.getCreatedAt();
+            if (timestamp == null) {
+                continue;
+            }
+            YearMonth month = YearMonth.from(timestamp);
+            if (countsByMonth.containsKey(month)) {
+                countsByMonth.put(month, countsByMonth.get(month) + 1);
+            }
+        }
+
+        long peak = countsByMonth.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+        long scale = Math.max(peak, 1L);
+        int plotWidth = CHART_WIDTH - CHART_LEFT_PADDING - CHART_RIGHT_PADDING;
+
+        List<EnrollmentTrendPoint> points = new ArrayList<>();
+        int index = 0;
+        int lastIndex = Math.max(countsByMonth.size() - 1, 1);
+        for (Map.Entry<YearMonth, Long> entry : countsByMonth.entrySet()) {
+            long count = entry.getValue();
+            int x = countsByMonth.size() == 1
+                    ? CHART_WIDTH / 2
+                    : CHART_LEFT_PADDING + (int) Math.round(index * (plotWidth / (double) lastIndex));
+            int y = CHART_BASELINE_Y - (int) Math.round((count * (double) CHART_INNER_HEIGHT) / scale);
+            points.add(new EnrollmentTrendPoint(
+                    TREND_LABEL_FORMATTER.format(entry.getKey().atDay(1)),
+                    count,
+                    x,
+                    y,
+                    TREND_PERIOD_FORMATTER.format(entry.getKey().atDay(1))
+            ));
+            index++;
+        }
+        return points;
+    }
+
+    private String buildEnrollmentTrendLinePath(List<EnrollmentTrendPoint> points) {
+        if (points.isEmpty()) {
+            return "";
+        }
+        StringBuilder path = new StringBuilder();
+        for (int i = 0; i < points.size(); i++) {
+            EnrollmentTrendPoint point = points.get(i);
+            if (i == 0) {
+                path.append("M").append(point.getX()).append(",").append(point.getY());
+            } else {
+                path.append(" L").append(point.getX()).append(",").append(point.getY());
+            }
+        }
+        return path.toString();
+    }
+
+    private String buildEnrollmentTrendAreaPath(List<EnrollmentTrendPoint> points) {
+        if (points.isEmpty()) {
+            return "";
+        }
+        StringBuilder path = new StringBuilder(buildEnrollmentTrendLinePath(points));
+        EnrollmentTrendPoint last = points.get(points.size() - 1);
+        EnrollmentTrendPoint first = points.get(0);
+        path.append(" L").append(last.getX()).append(",").append(CHART_BASELINE_Y);
+        path.append(" L").append(first.getX()).append(",").append(CHART_BASELINE_Y);
+        path.append(" Z");
+        return path.toString();
+    }
+
+    public static class EnrollmentTrendPoint {
+        private final String label;
+        private final long count;
+        private final int x;
+        private final int y;
+        private final String monthKey;
+
+        public EnrollmentTrendPoint(String label, long count, int x, int y, String monthKey) {
+            this.label = label;
+            this.count = count;
+            this.x = x;
+            this.y = y;
+            this.monthKey = monthKey;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public long getCount() {
+            return count;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public String getMonthKey() {
+            return monthKey;
+        }
     }
 }
 
