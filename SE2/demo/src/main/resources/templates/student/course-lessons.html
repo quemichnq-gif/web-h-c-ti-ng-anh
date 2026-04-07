@@ -72,11 +72,21 @@
             <form th:action="@{'/portal/courses/' + ${course.id} + '/lessons/' + ${view.lesson.id} + '/review'}" method="post" style="padding:20px;border-radius:20px;background:#f8fafc;border:1px solid #e2e8f0">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <h3 style="font-size:18px;font-weight:900;margin-bottom:14px;color:#0f172a">Practice Quiz</h3>
-                <div style="margin-bottom:14px;font-size:13px;color:#64748b">Submit this review after answering all questions. If you get more than half wrong, the lesson's remedial path will be recommended.</div>
+                <div style="margin-bottom:14px;font-size:13px;color:#64748b">Each question is tagged by Bloom level. If you answer incorrectly, the system will record an error type from your lesson review quiz for follow-up and remedial recommendation.</div>
                 <div style="display:grid;gap:14px">
                     <div th:each="question : ${view.quizQuestions}" style="padding:18px;border-radius:18px;background:#fff;border:1px solid #dbeafe">
-                        <div style="font-weight:800;color:#0f172a;line-height:1.6;margin-bottom:12px" th:text="${'Q' + question.sortOrder + '. ' + question.questionText}">Question</div>
-                        <div style="display:grid;gap:10px">
+                        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+                            <div style="font-weight:800;color:#0f172a;line-height:1.6" th:utext="${'Q' + question.sortOrder + '. ' + question.questionText}">Question</div>
+                            <span style="padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em"
+                                  th:text="${question.bloomLevel != null ? question.bloomLevel.label : 'Remember'}">Remember</span>
+                        </div>
+                        <div th:if="${question.shortAnswer}" style="display:grid;gap:10px">
+                            <input type="text"
+                                   th:name="${'q_' + question.id}"
+                                   placeholder="Type your answer"
+                                   style="width:100%;padding:12px 14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;outline:none">
+                        </div>
+                        <div th:unless="${question.shortAnswer}" style="display:grid;gap:10px">
                             <label style="padding:12px 14px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;gap:10px;align-items:flex-start">
                                 <input type="radio" th:name="${'q_' + question.id}" value="A" th:disabled="${question.optionA == null || question.optionA.isBlank()}">
                                 <span th:text="${'A. ' + question.optionA}">A</span>

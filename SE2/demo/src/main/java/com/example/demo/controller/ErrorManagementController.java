@@ -18,17 +18,20 @@ public class ErrorManagementController {
     private final StudentErrorRepository studentErrorRepository;
     private final TestRepository testRepository;
     private final UserRepository userRepository;
+    private final LessonRepository lessonRepository;
 
     public ErrorManagementController(ErrorTypeRepository errorTypeRepository,
                                      ErrorTestMappingRepository mappingRepository,
                                      StudentErrorRepository studentErrorRepository,
                                      TestRepository testRepository,
-                                     UserRepository userRepository) {
+                                     UserRepository userRepository,
+                                     LessonRepository lessonRepository) {
         this.errorTypeRepository = errorTypeRepository;
         this.mappingRepository = mappingRepository;
         this.studentErrorRepository = studentErrorRepository;
         this.testRepository = testRepository;
         this.userRepository = userRepository;
+        this.lessonRepository = lessonRepository;
     }
 
     @GetMapping
@@ -64,6 +67,7 @@ public class ErrorManagementController {
         model.addAttribute("tests", testRepository.findAll());
         model.addAttribute("remedialTests", testRepository.findByAssessmentType(AssessmentType.REMEDIAL_TEST));
         model.addAttribute("mappingByErrorId", mappingByErrorId);
+        model.addAttribute("errorContextById", buildErrorContextById(types));
         model.addAttribute("studentErrors", recentStudentErrors);
         model.addAttribute("errorSummaries", summaries);
         model.addAttribute("search", search);
@@ -99,8 +103,13 @@ public class ErrorManagementController {
     }
 
     @PostMapping("/mappings/create")
-    public String createMapping(@RequestParam Long errorTypeId, @RequestParam Long testId,
+    public String createMapping(@RequestParam(required = false) Long errorTypeId,
+                                @RequestParam(required = false) Long testId,
                                 RedirectAttributes ra) {
+        if (errorTypeId == null || testId == null) {
+            ra.addFlashAttribute("error", "Please choose both an error type and a remedial test.");
+            return "redirect:/errors";
+        }
         Optional<ErrorType> etOpt = errorTypeRepository.findById(errorTypeId);
         Optional<Test> testOpt = testRepository.findById(testId);
         if (etOpt.isEmpty() || testOpt.isEmpty()) {
@@ -232,6 +241,45 @@ public class ErrorManagementController {
 
     private String safe(String value) {
         return value == null ? "" : value.toLowerCase();
+    }
+
+    private Map<Long, String> buildErrorContextById(List<ErrorType> types) {
+        Map<Long, String> contextById = new LinkedHashMap<>();
+        Set<Long> visibleIds = types.stream()
+                .map(ErrorType::getId)
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+
+        for (Lesson lesson : lessonRepository.findAll()) {
+            if (lesson == null) {
+                continue;
+            }
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.REMEMBER, lesson.getRememberErrorType());
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.UNDERSTAND, lesson.getUnderstandErrorType());
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.APPLY, lesson.getApplyErrorType());
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.ANALYZE, lesson.getAnalyzeErrorType());
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.EVALUATE, lesson.getEvaluateErrorType());
+            addLessonErrorContext(contextById, visibleIds, lesson, BloomLevel.CREATE, lesson.getCreateErrorType());
+        }
+
+        for (ErrorType type : types) {
+            if (type != null && type.getId() != null) {
+                contextById.putIfAbsent(type.getId(), type.getName());
+            }
+        }
+        return contextById;
+    }
+
+    private void addLessonErrorContext(Map<Long, String> contextById,
+                                       Set<Long> visibleIds,
+                                       Lesson lesson,
+                                       BloomLevel bloomLevel,
+                                       ErrorType errorType) {
+        if (lesson == null || bloomLevel == null || errorType == null || errorType.getId() == null || !visibleIds.contains(errorType.getId())) {
+            return;
+        }
+        String lessonTitle = lesson.getTitle() != null && !lesson.getTitle().isBlank() ? lesson.getTitle() : "Untitled Lesson";
+        contextById.putIfAbsent(errorType.getId(), lessonTitle + " - " + bloomLevel.getLabel() + " - " + errorType.getName());
     }
 
     public record ErrorSummaryItem(Long id,

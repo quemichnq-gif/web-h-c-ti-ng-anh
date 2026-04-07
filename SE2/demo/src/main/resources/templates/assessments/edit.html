@@ -48,6 +48,14 @@
                         <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == test.course.id}" th:text="${c.name}">Course</option>
                     </select>
                 </div>
+                <div class="field" style="grid-column: span 2" id="remedialErrorField">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Mapped Error Type *</label>
+                    <select name="errorTypeId" id="errorTypeId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
+                        <option value="">-- Choose an error type --</option>
+                        <option th:each="et : ${errorTypes}" th:value="${et.id}" th:selected="${mappedErrorTypeId == et.id}" th:text="${et.name}">Error Type</option>
+                    </select>
+                    <div style="margin-top:6px;font-size:12px;color:#94a3b8">When this assessment is a remedial test, map it to the error type it is designed to fix.</div>
+                </div>
             </div>
         </article>
 
@@ -55,9 +63,16 @@
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px;flex-wrap:wrap">
                 <h3 style="font-size:15px;font-weight:800;margin:0">Questions <span id="qCount" style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:99px;font-size:12px">0</span></h3>
                 <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid #cbd5e1;color:#334155;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">
+                        Import File
+                        <input id="assessment-import-file" type="file" accept=".txt,.csv,text/plain,text/csv" hidden onchange="importAssessmentQuestions(event)">
+                    </label>
                     <button type="button" onclick="addQuestion('SHORT_ANSWER')" style="padding:8px 16px;background:#fff;border:1px solid #7c3aed;color:#7c3aed;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">+ Short Answer</button>
                     <button type="button" onclick="addQuestion('MULTIPLE_CHOICE')" style="padding:8px 16px;background:#7c3aed;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">+ Multiple Choice</button>
                 </div>
+            </div>
+            <div style="margin-bottom:18px;padding:14px 16px;border-radius:14px;background:#fff;border:1px dashed #dbe4f0;color:#64748b;font-size:12px;line-height:1.6">
+                Import supports <strong>.txt</strong> and <strong>.csv</strong>. TXT format per block: <code>TYPE</code>, <code>QUESTION</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>ANSWER</code>. Separate questions with <code>---</code>.
             </div>
             <div id="questionsContainer" style="display:grid;gap:16px">
                 <div th:each="q,stat : ${questions}" style="border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;background:#fafafa">
@@ -102,9 +117,9 @@
             </div>
         </article>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px">
             <button type="submit" class="primary-button">Save Assessment</button>
-            <a th:href="@{/assessments}" class="secondary-button">Cancel</a>
+            <a th:href="@{/assessments}" class="secondary-button" style="text-align:center">Cancel</a>
         </div>
     </form>
 </div>
@@ -114,15 +129,18 @@ function updateCount() {
     document.getElementById('qCount').textContent = document.getElementById('questionsContainer').children.length;
 }
 function addQuestion(type) {
+    return addQuestionWithSeed(type, {});
+}
+function addQuestionWithSeed(type, seed) {
     const container = document.getElementById('questionsContainer');
     const div = document.createElement('div');
     div.style.cssText = 'border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;background:#fafafa';
     const options = type === 'MULTIPLE_CHOICE'
         ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                <input name="optionAs" placeholder="Option A" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
-                <input name="optionBs" placeholder="Option B" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
-                <input name="optionCs" placeholder="Option C" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
-                <input name="optionDs" placeholder="Option D" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+                <input name="optionAs" placeholder="Option A" value="${seed.optionA ?? ''}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+                <input name="optionBs" placeholder="Option B" value="${seed.optionB ?? ''}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+                <input name="optionCs" placeholder="Option C" value="${seed.optionC ?? ''}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+                <input name="optionDs" placeholder="Option D" value="${seed.optionD ?? ''}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
            </div>`
         : `<input name="optionAs" type="hidden" value="">
            <input name="optionBs" type="hidden" value="">
@@ -131,19 +149,113 @@ function addQuestion(type) {
     div.innerHTML = `<input type="hidden" name="questionTypes" value="${type}">
     <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:13px;color:#7c3aed">Question ${qIndex+1} · ${type}</span><button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button></div>
     <div style="display:grid;gap:12px">
-        <textarea name="questionContents" required rows="2" placeholder="Question content..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+        <textarea name="questionContents" required rows="2" placeholder="Question content..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box">${seed.questionContent ?? ''}</textarea>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="media-grid">
             <input name="questionImages" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
             <input name="questionAudios" type="file" accept=".mp3,.wav,.ogg,.m4a,audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px;font-size:12px;outline:none;box-sizing:border-box;background:#fff">
         </div>
         ${options}
-        <input name="correctAnswers" placeholder="Correct answer..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
+        <input name="correctAnswers" placeholder="Correct answer..." value="${seed.correctAnswer ?? ''}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;box-sizing:border-box">
     </div>`;
     container.appendChild(div);
     qIndex++;
     updateCount();
+    return div;
 }
 updateCount();
+
+function importAssessmentQuestions(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = loadEvent => {
+        try {
+            const importedQuestions = file.name.toLowerCase().endsWith('.csv')
+                ? parseAssessmentCsv(String(loadEvent.target.result || ''))
+                : parseAssessmentText(String(loadEvent.target.result || ''));
+            if (!importedQuestions.length) {
+                alert('No questions found in the uploaded file.');
+                return;
+            }
+            document.getElementById('questionsContainer').innerHTML = '';
+            qIndex = 0;
+            importedQuestions.forEach(question => addQuestionWithSeed(question.questionType, question));
+        } catch (error) {
+            alert(error.message || 'Cannot import this file.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+}
+
+function parseAssessmentText(content) {
+    return content.split(/\n---+\n/).map(block => {
+        const question = {};
+        block.split(/\r?\n/).forEach(line => {
+            const idx = line.indexOf(':');
+            if (idx < 0) {
+                return;
+            }
+            const key = line.slice(0, idx).trim().toUpperCase();
+            const value = line.slice(idx + 1).trim();
+            if (key === 'TYPE') question.questionType = normalizeAssessmentQuestionType(value);
+            if (key === 'QUESTION') question.questionContent = value;
+            if (key === 'A') question.optionA = value;
+            if (key === 'B') question.optionB = value;
+            if (key === 'C') question.optionC = value;
+            if (key === 'D') question.optionD = value;
+            if (key === 'ANSWER') question.correctAnswer = value;
+        });
+        question.questionType = question.questionType || 'MULTIPLE_CHOICE';
+        return question;
+    }).filter(question => question.questionContent);
+}
+
+function parseAssessmentCsv(content) {
+    const lines = content.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length < 2) {
+        return [];
+    }
+    const headers = lines[0].split(',').map(header => header.trim().toLowerCase());
+    return lines.slice(1).map(line => {
+        const values = line.split(',').map(value => value.trim());
+        const row = {};
+        headers.forEach((header, index) => {
+            row[header] = values[index] ?? '';
+        });
+        return {
+            questionType: normalizeAssessmentQuestionType(row.type),
+            questionContent: row.question,
+            optionA: row.a,
+            optionB: row.b,
+            optionC: row.c,
+            optionD: row.d,
+            correctAnswer: row.answer
+        };
+    }).filter(question => question.questionContent);
+}
+
+function normalizeAssessmentQuestionType(value) {
+    return String(value || '').toUpperCase().includes('SHORT') ? 'SHORT_ANSWER' : 'MULTIPLE_CHOICE';
+}
+
+function syncRemedialErrorField() {
+    const selectedType = document.querySelector('select[name="assessmentType"]').value;
+    const remedialField = document.getElementById('remedialErrorField');
+    const errorTypeSelect = document.getElementById('errorTypeId');
+    const isRemedial = selectedType === 'REMEDIAL_TEST';
+    remedialField.hidden = !isRemedial;
+    errorTypeSelect.required = isRemedial;
+    if (!isRemedial) {
+        errorTypeSelect.value = '';
+    }
+}
+
+document.querySelector('select[name="assessmentType"]').addEventListener('change', syncRemedialErrorField);
+syncRemedialErrorField();
 </script>
 
 </div>
