@@ -7,6 +7,7 @@ import com.example.demo.service.PasswordResetMailService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,8 +43,8 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public String startPasswordReset(@RequestParam String email) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+    public String startPasswordReset(@RequestParam String email, RedirectAttributes ra) {
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email.trim());
 
         if (userOpt.isEmpty()) {
             return "redirect:/forgot-password?error=not_found";
@@ -55,11 +56,13 @@ public class AuthController {
         user.setResetCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
         user.setResetToken(null);
         user.setResetTokenExpiresAt(null);
-        try {
-            passwordResetMailService.sendVerificationCode(user.getEmail(), verificationCode);
-            userRepository.save(user);
-        } catch (IllegalStateException ex) {
-            return "redirect:/forgot-password?error=mail_failed";
+
+        userRepository.save(user);
+
+        boolean delivered = passwordResetMailService.sendVerificationCode(user.getEmail(), verificationCode);
+        if (!delivered) {
+            ra.addFlashAttribute("verificationCode", verificationCode);
+            ra.addFlashAttribute("mailFallback", true);
         }
 
         return "redirect:/verify-reset-code?email=" + user.getEmail();
@@ -77,7 +80,7 @@ public class AuthController {
     @PostMapping("/verify-reset-code")
     public String verifyResetCode(@RequestParam String email,
                                   @RequestParam String code) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email.trim());
         if (userOpt.isEmpty()) {
             return "redirect:/forgot-password?error=not_found";
         }

@@ -202,34 +202,43 @@
                     </div>
 
                     <div class="trend-chart-shell">
-                        <div class="chart-legend">Registration growth across the current operating period</div>
-                        <svg viewBox="0 0 800 280" style="width:100%;height:240px">
+                        <div class="chart-legend">
+                            <span>Actual enrollment records from the database</span>
+                            <span th:text="${enrollmentTrendPeriod}">Jan 2026 - Aug 2026</span>
+                        </div>
+
+                        <svg class="trend-line-svg" viewBox="0 0 800 280" th:if="${!#lists.isEmpty(enrollmentTrend)}">
                             <defs>
-                                <linearGradient id="adminChartFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.28"></stop>
-                                    <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.02"></stop>
+                                <linearGradient id="enrollmentLineFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.26"></stop>
+                                    <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02"></stop>
                                 </linearGradient>
-                                <linearGradient id="adminChartStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <linearGradient id="enrollmentLineStroke" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" stop-color="#38bdf8"></stop>
                                     <stop offset="100%" stop-color="#8b5cf6"></stop>
                                 </linearGradient>
                             </defs>
-                            <line x1="0" y1="48" x2="800" y2="48" stroke="#dbeafe" stroke-width="1"></line>
-                            <line x1="0" y1="128" x2="800" y2="128" stroke="#dbeafe" stroke-width="1"></line>
-                            <line x1="0" y1="208" x2="800" y2="208" stroke="#dbeafe" stroke-width="1"></line>
-                            <path d="M0,230 C120,200 160,140 220,150 S320,100 400,170 S570,140 680,70 S780,40 800,40 L800,280 L0,280 Z" fill="url(#adminChartFill)"></path>
-                            <path d="M0,230 C120,200 160,140 220,150 S320,100 400,170 S570,140 680,70 S780,40 800,40" fill="none" stroke="url(#adminChartStroke)" stroke-width="4" stroke-linecap="round"></path>
-                            <circle cx="0" cy="230" r="5" fill="#38bdf8"></circle>
-                            <circle cx="114" cy="190" r="5" fill="#4f8df7"></circle>
-                            <circle cx="228" cy="150" r="5" fill="#6366f1"></circle>
-                            <circle cx="342" cy="120" r="5" fill="#8b5cf6"></circle>
-                            <circle cx="456" cy="160" r="5" fill="#6366f1"></circle>
-                            <circle cx="571" cy="110" r="5" fill="#4f8df7"></circle>
-                            <circle cx="685" cy="65" r="5" fill="#38bdf8"></circle>
-                            <circle cx="800" cy="40" r="5" fill="#22c55e"></circle>
+                            <line x1="40" y1="40" x2="760" y2="40" stroke="#dbeafe" stroke-width="1"></line>
+                            <line x1="40" y1="100" x2="760" y2="100" stroke="#dbeafe" stroke-width="1"></line>
+                            <line x1="40" y1="160" x2="760" y2="160" stroke="#dbeafe" stroke-width="1"></line>
+                            <line x1="40" y1="220" x2="760" y2="220" stroke="#dbeafe" stroke-width="1"></line>
+                            <path th:attr="d=${enrollmentTrendAreaPath}" fill="url(#enrollmentLineFill)"></path>
+                            <path th:attr="d=${enrollmentTrendLinePath}" fill="none" stroke="url(#enrollmentLineStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <g th:each="point : ${enrollmentTrend}">
+                                <circle th:attr="cx=${point.x}, cy=${point.y}, r=6" fill="#ffffff" stroke="#38bdf8" stroke-width="3"></circle>
+                                <circle th:attr="cx=${point.x}, cy=${point.y}, r=3.5" fill="#38bdf8"></circle>
+                                <text th:attr="x=${point.x}, y=${point.y - 14}" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="800" th:text="${point.count}">0</text>
+                                <text th:attr="x=${point.x}, y=254" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="800" letter-spacing="0.05em" text-transform="uppercase" th:text="${point.label}">Jan</text>
+                            </g>
                         </svg>
-                        <div class="chart-axis-labels">
-                            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+
+                        <div class="empty-panel" th:if="${#lists.isEmpty(enrollmentTrend)}">
+                            No enrollment records were found for the selected period.
+                        </div>
+
+                        <div class="chart-summary-row">
+                            <span th:text="${enrollmentTrendTotal + ' total enrollments in this window'}">0 total enrollments in this window</span>
+                            <span th:text="${'Peak month: ' + enrollmentTrendPeakMonth + ' with ' + enrollmentTrendPeak + ' enrollments'}">Peak month: Jan 2026 with 0 enrollments</span>
                         </div>
                     </div>
                 </div>
