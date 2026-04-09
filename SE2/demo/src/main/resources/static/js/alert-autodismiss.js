@@ -1,8 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const alerts = Array.from(document.querySelectorAll("[data-auto-dismiss]"));
+    const alerts = Array.from(document.querySelectorAll("[data-auto-dismiss], .alert-success"));
 
     alerts.forEach(function (alertEl) {
-        const delay = Number.parseInt(alertEl.getAttribute("data-auto-dismiss"), 10);
+        const delayAttr = alertEl.getAttribute("data-auto-dismiss");
+        const delay = Number.parseInt(delayAttr || "1500", 10);
 
         if (!Number.isFinite(delay) || delay < 0) {
             return;

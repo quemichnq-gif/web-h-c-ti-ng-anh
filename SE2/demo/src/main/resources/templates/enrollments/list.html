@@ -13,7 +13,7 @@
         <p style="color:#94a3b8;font-size:14px">Coordinate and approve student access to specific courses</p>
     </div>
 </div>
-<div th:if="${success}" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
+<div th:if="${success}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
 <div th:if="${error}" style="padding:14px 20px;border-radius:12px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-weight:600;margin-bottom:20px" th:text="${error}"></div>
 
 <article class="chart-card" style="margin-bottom:20px">
@@ -259,23 +259,29 @@
 }
 .pending-enrollment-table thead th:nth-child(1),
 .pending-enrollment-table tbody td:nth-child(1) {
-    width: 24%;
+    width: 20%;
 }
 .pending-enrollment-table thead th:nth-child(2),
 .pending-enrollment-table tbody td:nth-child(2) {
-    width: 22%;
+    width: 27%;
 }
 .pending-enrollment-table thead th:nth-child(3),
 .pending-enrollment-table tbody td:nth-child(3) {
-    width: 15%;
+    width: 16%;
 }
 .pending-enrollment-table thead th:nth-child(4),
 .pending-enrollment-table tbody td:nth-child(4) {
-    width: 18%;
+    width: 21%;
 }
 .pending-enrollment-table thead th:nth-child(5),
 .pending-enrollment-table tbody td:nth-child(5) {
-    width: 21%;
+    width: 16%;
+}
+.pending-enrollment-table tbody td:nth-child(1) {
+    padding-left: 22px;
+}
+.pending-enrollment-table thead th:nth-child(1) {
+    padding-left: 22px;
 }
 .pending-enrollment-table tbody td:nth-child(2) > div:first-child,
 .pending-enrollment-table tbody td:nth-child(4) > div:first-child {
@@ -286,11 +292,11 @@
     line-height: 1.6;
 }
 .pending-enrollment-table tbody td:nth-child(5) {
-    min-width: 220px;
-    padding-right: 24px;
+    min-width: 170px;
+    padding-right: 16px;
 }
 .pending-enrollment-table tbody td:nth-child(5) > div {
-    gap: 10px;
+    gap: 8px;
     flex-wrap: nowrap;
     white-space: nowrap;
     justify-content: flex-start;
