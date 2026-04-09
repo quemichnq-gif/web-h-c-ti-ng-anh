@@ -1166,7 +1166,7 @@ textarea {
 
 .table-wrapper {
     overflow-x: auto;
-    border-radius: 22px;
+    border-radius: 18px;
     border: 1px solid rgba(109, 40, 217, 0.08);
 }
 
@@ -1183,11 +1183,11 @@ thead {
 
 th,
 td {
-    padding: 16px 18px;
+    padding: 12px 14px;
     text-align: left;
     border-bottom: 1px solid rgba(109, 40, 217, 0.08);
     vertical-align: middle;
-    line-height: 1.45;
+    line-height: 1.35;
 }
 
 th {
@@ -2963,7 +2963,7 @@ tbody tr:hover {
 
 .chart-card,
 .activity-card {
-    padding: 24px;
+    padding: 20px;
     border-radius: 24px;
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     border: 1px solid rgba(226, 232, 240, 0.9);
@@ -2977,7 +2977,7 @@ tbody tr:hover {
 
 .data-table-shell {
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: 16px;
     border: 1px solid rgba(226, 232, 240, 0.9);
     background: #fff;
 }
@@ -2990,7 +2990,7 @@ tbody tr:hover {
 }
 
 .data-table thead th {
-    padding: 14px 16px;
+    padding: 11px 14px;
     background: linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
     color: #475569;
     font-size: 0.72rem;
@@ -3001,7 +3001,7 @@ tbody tr:hover {
 }
 
 .data-table tbody td {
-    padding: 16px;
+    padding: 12px 14px;
     border-bottom: 1px solid rgba(226, 232, 240, 0.85);
     color: #334155;
     font-size: 0.92rem;

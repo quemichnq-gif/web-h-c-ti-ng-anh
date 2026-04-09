@@ -9,56 +9,6 @@
 <body>
 <div layout:fragment="content">
 
-    <section class="admin-hero">
-        <div class="admin-hero-header">
-            <div class="admin-hero-copy">
-                <span class="eyebrow-pill" th:text="${isAdmin} ? 'Administrator Console' : 'Academic Staff Console'">Administrator Console</span>
-                <h1 th:text="${isAdmin} ? 'Review incoming enrollments and keep interventions moving.' : 'Review incoming enrollments and keep interventions moving.'">
-                    Review incoming enrollments and keep interventions moving.
-                </h1>
-                <p th:text="${isAdmin} ? 'Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.' : 'Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.'">
-                    Focus your day on approvals, active tests, and students who still do not have a mapped remedial path.
-                </p>
-            </div>
-        </div>
-
-        <div class="hero-meta-grid" th:if="${isAdmin}">
-            <article class="hero-meta-card">
-                <span>Pending</span>
-                <strong th:text="${pendingEnrollmentCount}">0</strong>
-                <p>Enrollment requests waiting for approval.</p>
-            </article>
-            <article class="hero-meta-card">
-                <span>Assessments</span>
-                <strong th:text="${activeTestCount}">0</strong>
-                <p>Tests available for current teaching operations.</p>
-            </article>
-            <article class="hero-meta-card">
-                <span>Unassigned</span>
-                <strong th:text="${unassignedErrorCount}">0</strong>
-                <p>Students with errors that still lack remedial mapping.</p>
-            </article>
-        </div>
-
-        <div class="hero-meta-grid" th:unless="${isAdmin}">
-            <article class="hero-meta-card">
-                <span>Pending</span>
-                <strong th:text="${pendingEnrollmentCount}">0</strong>
-                <p>Enrollment requests waiting for staff review.</p>
-            </article>
-            <article class="hero-meta-card">
-                <span>Assessments</span>
-                <strong th:text="${activeTestCount}">0</strong>
-                <p>Tests available for current teaching operations.</p>
-            </article>
-            <article class="hero-meta-card">
-                <span>Unassigned</span>
-                <strong th:text="${unassignedErrorCount}">0</strong>
-                <p>Students with errors that still lack remedial mapping.</p>
-            </article>
-        </div>
-    </section>
-
     <section class="page-section" th:if="${isAdmin}">
         <div class="metric-grid metric-grid-3">
             <article class="metric-card is-amber">

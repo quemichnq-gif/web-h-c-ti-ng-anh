@@ -32,6 +32,7 @@ public class AssessmentController {
 
     private final TestRepository testRepository;
     private final CourseRepository courseRepository;
+    private final LessonRepository lessonRepository;
     private final StudentResultRepository resultRepository;
     private final QuestionRepository questionRepository;
     private final ErrorTypeRepository errorTypeRepository;
@@ -41,11 +42,13 @@ public class AssessmentController {
     private final Path questionAudioRoot = Paths.get("uploads", "question-media", "audio");
 
     public AssessmentController(TestRepository testRepository, CourseRepository courseRepository,
+                                LessonRepository lessonRepository,
                                 StudentResultRepository resultRepository, QuestionRepository questionRepository,
                                 ErrorTypeRepository errorTypeRepository, ErrorTestMappingRepository errorTestMappingRepository,
                                 AuditLogService auditLogService) {
         this.testRepository = testRepository;
         this.courseRepository = courseRepository;
+        this.lessonRepository = lessonRepository;
         this.resultRepository = resultRepository;
         this.questionRepository = questionRepository;
         this.errorTypeRepository = errorTypeRepository;
@@ -105,6 +108,12 @@ public class AssessmentController {
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("courses", courseRepository.findAll());
+        model.addAttribute("lessons", lessonRepository.findAll().stream()
+                .sorted(Comparator
+                        .comparing((Lesson lesson) -> lesson.getCourse() != null && lesson.getCourse().getName() != null ? lesson.getCourse().getName() : "", String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(lesson -> lesson.getSortOrder() != null ? lesson.getSortOrder() : 0)
+                        .thenComparing(lesson -> lesson.getTitle() != null ? lesson.getTitle() : "", String.CASE_INSENSITIVE_ORDER))
+                .toList());
         model.addAttribute("assessmentTypes", AssessmentType.values());
         model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
                 .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
@@ -120,6 +129,7 @@ public class AssessmentController {
                          @RequestParam Long courseId,
                          @RequestParam String assessmentType,
                          @RequestParam(required = false) Long errorTypeId,
+                         @RequestParam(required = false) Long targetLessonId,
                          @RequestParam(required = false) List<String> questionTypes,
                          @RequestParam(required = false) List<String> questionContents,
                          @RequestParam(required = false) List<String> correctAnswers,
@@ -153,6 +163,12 @@ public class AssessmentController {
         test.setDuration(duration);
         test.setCourse(course.get());
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
+        try {
+            applyTargetLesson(test, targetLessonId);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/create";
+        }
         testRepository.save(test);
         try {
             syncRemedialErrorMapping(test, errorTypeId);
@@ -194,6 +210,12 @@ public class AssessmentController {
         }
         model.addAttribute("test", opt.get());
         model.addAttribute("courses", courseRepository.findAll());
+        model.addAttribute("lessons", lessonRepository.findAll().stream()
+                .sorted(Comparator
+                        .comparing((Lesson lesson) -> lesson.getCourse() != null && lesson.getCourse().getName() != null ? lesson.getCourse().getName() : "", String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(lesson -> lesson.getSortOrder() != null ? lesson.getSortOrder() : 0)
+                        .thenComparing(lesson -> lesson.getTitle() != null ? lesson.getTitle() : "", String.CASE_INSENSITIVE_ORDER))
+                .toList());
         model.addAttribute("assessmentTypes", AssessmentType.values());
         model.addAttribute("questions", questionRepository.findByTestId(id));
         model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
@@ -219,6 +241,7 @@ public class AssessmentController {
                          @RequestParam Long courseId,
                          @RequestParam String assessmentType,
                          @RequestParam(required = false) Long errorTypeId,
+                         @RequestParam(required = false) Long targetLessonId,
                          @RequestParam(required = false) List<String> questionTypes,
                          @RequestParam(required = false) List<String> questionContents,
                          @RequestParam(required = false) List<String> correctAnswers,
@@ -255,6 +278,12 @@ public class AssessmentController {
         test.setDescription(description);
         test.setDuration(duration);
         test.setAssessmentType(AssessmentType.valueOf(assessmentType));
+        try {
+            applyTargetLesson(test, targetLessonId);
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/assessments/" + id + "/edit";
+        }
         testRepository.save(test);
         try {
             syncRemedialErrorMapping(test, errorTypeId);
@@ -476,6 +505,26 @@ public class AssessmentController {
         mapping.setErrorType(errorType);
         mapping.setTest(test);
         errorTestMappingRepository.save(mapping);
+    }
+
+    private void applyTargetLesson(Test test, Long targetLessonId) {
+        if (test == null || !test.isRemedialTest()) {
+            if (test != null) {
+                test.setTargetLesson(null);
+            }
+            return;
+        }
+        if (targetLessonId == null) {
+            test.setTargetLesson(null);
+            return;
+        }
+        Lesson lesson = lessonRepository.findById(targetLessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Selected target lesson is invalid."));
+        if (test.getCourse() != null && lesson.getCourse() != null
+                && !Objects.equals(test.getCourse().getId(), lesson.getCourse().getId())) {
+            throw new IllegalArgumentException("Target lesson must belong to the selected course.");
+        }
+        test.setTargetLesson(lesson);
     }
 
     @GetMapping("/{id}/results")
