@@ -11,9 +11,11 @@ import com.example.demo.model.QuestionType;
 import com.example.demo.model.StudentError;
 import com.example.demo.model.Test;
 import com.example.demo.model.User;
+import com.example.demo.model.AssessmentType;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.EnrollmentRepository;
 import com.example.demo.repository.ErrorTypeRepository;
+import com.example.demo.repository.ErrorTestMappingRepository;
 import com.example.demo.repository.LessonQuizQuestionRepository;
 import com.example.demo.repository.LessonRepository;
 import com.example.demo.repository.StudentErrorRepository;
@@ -73,6 +75,7 @@ public class LessonController {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
     private final ErrorTypeRepository errorTypeRepository;
+    private final ErrorTestMappingRepository errorTestMappingRepository;
     private final StudentErrorRepository studentErrorRepository;
     private final TestRepository testRepository;
     private final AuditLogService auditLogService;
@@ -85,6 +88,7 @@ public class LessonController {
                             EnrollmentRepository enrollmentRepository,
                             UserRepository userRepository,
                             ErrorTypeRepository errorTypeRepository,
+                            ErrorTestMappingRepository errorTestMappingRepository,
                             StudentErrorRepository studentErrorRepository,
                             TestRepository testRepository,
                             AuditLogService auditLogService) {
@@ -94,6 +98,7 @@ public class LessonController {
         this.enrollmentRepository = enrollmentRepository;
         this.userRepository = userRepository;
         this.errorTypeRepository = errorTypeRepository;
+        this.errorTestMappingRepository = errorTestMappingRepository;
         this.studentErrorRepository = studentErrorRepository;
         this.testRepository = testRepository;
         this.auditLogService = auditLogService;
@@ -146,6 +151,8 @@ public class LessonController {
         model.addAttribute("submitLabel", "Create Lesson");
         model.addAttribute("lesson", new Lesson());
         model.addAttribute("bloomLevels", BloomLevel.values());
+        model.addAttribute("remedialTests", testRepository.findByAssessmentType(AssessmentType.REMEDIAL_TEST));
+        model.addAttribute("lessonRemedialTestIds", Map.<String, Long>of());
         model.addAttribute("quizQuestions", List.<LessonQuizQuestion>of());
         return "lessons/form";
     }
@@ -154,6 +161,7 @@ public class LessonController {
     public String createLesson(@RequestParam Long courseId,
                                @RequestParam(required = false) List<String> bloomErrorTypeNames,
                                @RequestParam(required = false) List<String> bloomErrorTypeDescriptions,
+                               @RequestParam(required = false) List<String> bloomRemedialTestIds,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -204,6 +212,7 @@ public class LessonController {
             saveLessonImage(lesson, lessonImage);
             saveAttachment(lesson, attachment);
             lessonRepository.save(lesson);
+            syncBloomRemedialMappings(lesson, bloomRemedialTestIds, null);
             saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, questionTypes, correctAnswers, bloomLevels, explanations);
         } catch (IllegalArgumentException ex) {
             ra.addFlashAttribute("error", ex.getMessage());
@@ -236,6 +245,8 @@ public class LessonController {
         model.addAttribute("submitLabel", "Save Changes");
         model.addAttribute("lesson", lesson);
         model.addAttribute("bloomLevels", BloomLevel.values());
+        model.addAttribute("remedialTests", testRepository.findByAssessmentType(AssessmentType.REMEDIAL_TEST));
+        model.addAttribute("lessonRemedialTestIds", buildLessonRemedialTestIds(lesson));
         model.addAttribute("quizQuestions", lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId));
         return "lessons/form";
     }
@@ -245,6 +256,7 @@ public class LessonController {
                                @RequestParam Long courseId,
                                @RequestParam(required = false) List<String> bloomErrorTypeNames,
                                @RequestParam(required = false) List<String> bloomErrorTypeDescriptions,
+                               @RequestParam(required = false) List<String> bloomRemedialTestIds,
                                @RequestParam String code,
                                @RequestParam String title,
                                @RequestParam(required = false) String summary,
@@ -287,6 +299,7 @@ public class LessonController {
         String previousCourseCode = lesson.getCourse() != null ? lesson.getCourse().getCode() : null;
         Long previousCourseId = lesson.getCourse() != null ? lesson.getCourse().getId() : null;
         Integer previousSortOrder = lesson.getSortOrder();
+        Map<BloomLevel, ErrorType> previousBloomErrorTypes = snapshotBloomErrorTypes(lesson);
         int targetSortOrder = normalizeSortOrder(courseId, sortOrder, !Objects.equals(previousCourseId, courseId));
         try {
             shiftLessonsForPlacement(courseId, targetSortOrder, previousCourseId, lesson);
@@ -302,6 +315,7 @@ public class LessonController {
             replaceLessonImageIfNeeded(lesson, lessonImage);
             replaceAttachmentIfNeeded(lesson, attachment);
             lessonRepository.save(lesson);
+            syncBloomRemedialMappings(lesson, bloomRemedialTestIds, previousBloomErrorTypes);
 
             lessonQuizQuestionRepository.deleteByLessonId(lessonId);
             saveLessonQuiz(lesson, quizQuestionTexts, optionAs, optionBs, optionCs, optionDs, questionTypes, correctAnswers, bloomLevels, explanations);
@@ -498,7 +512,7 @@ public class LessonController {
             int errorTypeCount = registerLessonReviewErrorsByBloom(student, lesson, wrongCountsByBloom);
             ra.addFlashAttribute("error",
                     "Review submitted: " + correctAnswers + "/" + questions.size()
-                            + ". Da ghi nhan " + errorTypeCount + " loai loi tu lesson review quiz cua ban.");
+                            + ". " + errorTypeCount + " lesson review error type(s) were recorded for follow-up.");
             return "redirect:/portal/tests";
         }
 
@@ -822,13 +836,6 @@ public class LessonController {
         return code.trim().toUpperCase(Locale.ROOT);
     }
 
-    private ErrorType resolveErrorType(Long errorTypeId) {
-        if (errorTypeId == null) {
-            return null;
-        }
-        return errorTypeRepository.findById(errorTypeId).orElse(null);
-    }
-
     private String normalizeErrorTypeName(String name) {
         if (name == null || name.isBlank()) {
             return null;
@@ -836,27 +843,18 @@ public class LessonController {
         return name.trim();
     }
 
-    private Test resolveRemedialTest(Long remedialTestId) {
-        if (remedialTestId == null) {
+    private Test resolveRemedialTest(String remedialTestId) {
+        if (remedialTestId == null || remedialTestId.isBlank()) {
             return null;
         }
-        return testRepository.findById(remedialTestId)
-                .filter(Test::isRemedialTest)
-                .orElse(null);
-    }
-
-    private void registerLessonReviewError(User student, Lesson lesson) {
-        if (student == null || lesson == null || lesson.getErrorType() == null
-                || student.getId() == null || lesson.getErrorType().getId() == null) {
-            return;
+        try {
+            Long parsedId = Long.valueOf(remedialTestId.trim());
+            return testRepository.findById(parsedId)
+                    .filter(Test::isRemedialTest)
+                    .orElse(null);
+        } catch (NumberFormatException ex) {
+            return null;
         }
-        if (studentErrorRepository.existsByStudentIdAndErrorTypeId(student.getId(), lesson.getErrorType().getId())) {
-            return;
-        }
-        StudentError studentError = new StudentError();
-        studentError.setStudent(student);
-        studentError.setErrorType(lesson.getErrorType());
-        studentErrorRepository.save(studentError);
     }
 
     private BloomLevel parseBloomLevel(String rawValue) {
@@ -962,6 +960,67 @@ public class LessonController {
                 });
     }
 
+    private Map<String, Long> buildLessonRemedialTestIds(Lesson lesson) {
+        Map<String, Long> remedialTestIds = new java.util.LinkedHashMap<>();
+        if (lesson == null) {
+            return remedialTestIds;
+        }
+        for (BloomLevel bloomLevel : BloomLevel.values()) {
+            ErrorType errorType = lesson.getErrorTypeForBloomLevel(bloomLevel);
+            if (errorType == null || errorType.getId() == null) {
+                continue;
+            }
+            errorTestMappingRepository.findByErrorTypeId(errorType.getId())
+                    .map(mapping -> mapping.getTest() != null ? mapping.getTest().getId() : null)
+                    .ifPresent(testId -> remedialTestIds.put(bloomLevel.name(), testId));
+        }
+        return remedialTestIds;
+    }
+
+    private Map<BloomLevel, ErrorType> snapshotBloomErrorTypes(Lesson lesson) {
+        Map<BloomLevel, ErrorType> snapshot = new java.util.EnumMap<>(BloomLevel.class);
+        if (lesson == null) {
+            return snapshot;
+        }
+        for (BloomLevel bloomLevel : BloomLevel.values()) {
+            snapshot.put(bloomLevel, lesson.getErrorTypeForBloomLevel(bloomLevel));
+        }
+        return snapshot;
+    }
+
+    private void syncBloomRemedialMappings(Lesson lesson,
+                                           List<String> bloomRemedialTestIds,
+                                           Map<BloomLevel, ErrorType> previousBloomErrorTypes) {
+        for (BloomLevel bloomLevel : BloomLevel.values()) {
+            ErrorType previousErrorType = previousBloomErrorTypes != null ? previousBloomErrorTypes.get(bloomLevel) : null;
+            ErrorType currentErrorType = lesson.getErrorTypeForBloomLevel(bloomLevel);
+            Test remedialTest = resolveRemedialTest(getValue(bloomRemedialTestIds, bloomLevel.ordinal()));
+
+            if (previousErrorType != null
+                    && previousErrorType.getId() != null
+                    && (currentErrorType == null || !previousErrorType.getId().equals(currentErrorType.getId()))) {
+                errorTestMappingRepository.findByErrorTypeId(previousErrorType.getId())
+                        .ifPresent(errorTestMappingRepository::delete);
+            }
+
+            if (currentErrorType == null || currentErrorType.getId() == null) {
+                continue;
+            }
+
+            if (remedialTest == null) {
+                errorTestMappingRepository.findByErrorTypeId(currentErrorType.getId())
+                        .ifPresent(errorTestMappingRepository::delete);
+                continue;
+            }
+
+            com.example.demo.model.ErrorTestMapping mapping = errorTestMappingRepository.findByErrorTypeId(currentErrorType.getId())
+                    .orElseGet(com.example.demo.model.ErrorTestMapping::new);
+            mapping.setErrorType(currentErrorType);
+            mapping.setTest(remedialTest);
+            errorTestMappingRepository.save(mapping);
+        }
+    }
+
     private String sanitizeLessonContent(String content) {
         if (content == null || content.isBlank()) {
             return "";
@@ -998,3 +1057,4 @@ public class LessonController {
     public record LessonView(Lesson lesson, List<LessonQuizQuestion> quizQuestions) {
     }
 }
+

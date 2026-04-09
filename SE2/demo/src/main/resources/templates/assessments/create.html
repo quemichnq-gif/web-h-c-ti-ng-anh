@@ -77,13 +77,23 @@
                     </select>
                     <div style="margin-top:6px;font-size:12px;color:#94a3b8">Remedial tests still keep a course context, but they are assigned through Error Management.</div>
                 </div>
-                <div class="field" style="grid-column: span 2" id="remedialErrorField" hidden>
+                <div class="field" id="remedialErrorField" hidden>
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Mapped Error Type *</label>
                     <select name="errorTypeId" id="errorTypeId" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;background:#fff">
                         <option value="">-- Choose an error type --</option>
                         <option th:each="et : ${errorTypes}" th:value="${et.id}" th:text="${et.name}">Error Type</option>
                     </select>
                     <div style="margin-top:6px;font-size:12px;color:#94a3b8">When this assessment is a remedial test, map it to the error type it is designed to fix.</div>
+                </div>
+                <div class="field" id="targetLessonField" hidden>
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Lesson</label>
+                    <select name="targetLessonId" id="targetLessonId" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;font-size:14px;outline:none;background:#fff">
+                        <option value="">-- Choose a target lesson --</option>
+                        <option th:each="lesson : ${lessons}"
+                                th:value="${lesson.id}"
+                                th:text="${(lesson.course != null ? lesson.course.name + ' - ' : '') + 'Lesson ' + (lesson.sortOrder != null ? lesson.sortOrder : '-') + ' - ' + lesson.title}">Lesson</option>
+                    </select>
+                    <div style="margin-top:6px;font-size:12px;color:#94a3b8">Optional. Use this to show which lesson this remedial test is meant to support.</div>
                 </div>
             </div>
         </article>
@@ -222,12 +232,16 @@ document.querySelectorAll('.type-card').forEach(card => {
 function syncRemedialErrorField() {
     const selectedType = document.querySelector('input[name="assessmentType"]:checked')?.value;
     const remedialField = document.getElementById('remedialErrorField');
+    const targetLessonField = document.getElementById('targetLessonField');
     const errorTypeSelect = document.getElementById('errorTypeId');
+    const targetLessonSelect = document.getElementById('targetLessonId');
     const isRemedial = selectedType === 'REMEDIAL_TEST';
     remedialField.hidden = !isRemedial;
+    targetLessonField.hidden = !isRemedial;
     errorTypeSelect.required = isRemedial;
     if (!isRemedial) {
         errorTypeSelect.value = '';
+        targetLessonSelect.value = '';
     }
 }
 

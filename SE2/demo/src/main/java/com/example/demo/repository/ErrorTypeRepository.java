@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ErrorTypeRepository extends JpaRepository<ErrorType, Long> {
     Optional<ErrorType> findByNameIgnoreCase(String name);
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }

@@ -31,6 +31,10 @@ public class Test {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_lesson_id")
+    private Lesson targetLesson;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,6 +55,8 @@ public class Test {
     public void setAssessmentType(AssessmentType assessmentType) { this.assessmentType = assessmentType; }
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
+    public Lesson getTargetLesson() { return targetLesson; }
+    public void setTargetLesson(Lesson targetLesson) { this.targetLesson = targetLesson; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

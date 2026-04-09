@@ -92,6 +92,45 @@ public class ErrorManagementController {
         return "redirect:/errors";
     }
 
+    @GetMapping("/types/{id}/edit")
+    public String editForm(@PathVariable Long id, Model model, RedirectAttributes ra) {
+        Optional<ErrorType> errorTypeOpt = errorTypeRepository.findById(id);
+        if (errorTypeOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Error type not found.");
+            return "redirect:/errors";
+        }
+        model.addAttribute("errorType", errorTypeOpt.get());
+        return "errors/edit";
+    }
+
+    @PostMapping("/types/{id}/edit")
+    public String updateType(@PathVariable Long id,
+                             @RequestParam String name,
+                             @RequestParam(required = false) String description,
+                             RedirectAttributes ra) {
+        Optional<ErrorType> errorTypeOpt = errorTypeRepository.findById(id);
+        if (errorTypeOpt.isEmpty()) {
+            ra.addFlashAttribute("error", "Error type not found.");
+            return "redirect:/errors";
+        }
+        String normalizedName = name != null ? name.trim() : "";
+        if (normalizedName.isBlank()) {
+            ra.addFlashAttribute("error", "Error type name is required.");
+            return "redirect:/errors/types/" + id + "/edit";
+        }
+        if (errorTypeRepository.existsByNameIgnoreCaseAndIdNot(normalizedName, id)) {
+            ra.addFlashAttribute("error", "An error type with this name already exists.");
+            return "redirect:/errors/types/" + id + "/edit";
+        }
+
+        ErrorType errorType = errorTypeOpt.get();
+        errorType.setName(normalizedName);
+        errorType.setDescription(description != null && !description.isBlank() ? description.trim() : null);
+        errorTypeRepository.save(errorType);
+        ra.addFlashAttribute("success", "Error type updated successfully.");
+        return "redirect:/errors";
+    }
+
     @PostMapping("/types/{id}/delete")
     public String deleteType(@PathVariable Long id, RedirectAttributes ra) {
         mappingRepository.findByErrorTypeId(id).ifPresent(mappingRepository::delete);

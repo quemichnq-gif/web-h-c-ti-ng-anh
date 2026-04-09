@@ -4,6 +4,53 @@
       layout:decorate="~{fragments/layout}">
 <head>
     <title>Audit Logs</title>
+    <style>
+        .audit-log-table {
+            table-layout: auto;
+        }
+
+        .audit-log-table th:nth-child(1),
+        .audit-log-table td:nth-child(1) {
+            width: 170px;
+        }
+
+        .audit-log-table th:nth-child(2),
+        .audit-log-table td:nth-child(2) {
+            width: 190px;
+            white-space: normal;
+        }
+
+        .audit-log-table th:nth-child(3),
+        .audit-log-table td:nth-child(3) {
+            width: 120px;
+        }
+
+        .audit-log-table th:nth-child(4),
+        .audit-log-table td:nth-child(4) {
+            width: 90px;
+        }
+
+        .audit-log-table th:nth-child(5),
+        .audit-log-table td:nth-child(5) {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .audit-log-action-badge {
+            display: inline-flex;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: normal;
+            line-height: 1.35;
+        }
+    </style>
 </head>
 <body>
 <div layout:fragment="content">
@@ -52,7 +99,7 @@
     </div>
 
     <div class="table-wrapper">
-        <table class="data-table">
+        <table class="data-table audit-log-table">
             <thead>
                 <tr>
                     <th>Time</th>
@@ -66,7 +113,7 @@
                 <tr th:each="entry : ${logs}">
                     <td style="font-size:13px;color:#64748b" th:text="${entry.timestamp != null ? #temporals.format(entry.timestamp, 'dd/MM/yyyy HH:mm:ss') : '-'}">time</td>
                     <td>
-                        <span style="display:inline-flex;padding:4px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:800" th:text="${entry.action}">ACTION</span>
+                        <span class="audit-log-action-badge" th:text="${entry.action}">ACTION</span>
                     </td>
                     <td style="font-weight:700" th:text="${entry.entityType}">ENTITY</td>
                     <td style="font-family:monospace;color:#64748b" th:text="${entry.entityId != null ? entry.entityId : '-'}">1</td>

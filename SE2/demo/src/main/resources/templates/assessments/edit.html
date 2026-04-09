@@ -48,13 +48,24 @@
                         <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == test.course.id}" th:text="${c.name}">Course</option>
                     </select>
                 </div>
-                <div class="field" style="grid-column: span 2" id="remedialErrorField">
+                <div class="field" id="remedialErrorField">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Mapped Error Type *</label>
                     <select name="errorTypeId" id="errorTypeId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
                         <option value="">-- Choose an error type --</option>
                         <option th:each="et : ${errorTypes}" th:value="${et.id}" th:selected="${mappedErrorTypeId == et.id}" th:text="${et.name}">Error Type</option>
                     </select>
                     <div style="margin-top:6px;font-size:12px;color:#94a3b8">When this assessment is a remedial test, map it to the error type it is designed to fix.</div>
+                </div>
+                <div class="field" id="targetLessonField">
+                    <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Lesson</label>
+                    <select name="targetLessonId" id="targetLessonId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
+                        <option value="">-- Choose a target lesson --</option>
+                        <option th:each="lesson : ${lessons}"
+                                th:value="${lesson.id}"
+                                th:selected="${test.targetLesson != null && test.targetLesson.id == lesson.id}"
+                                th:text="${(lesson.course != null ? lesson.course.name + ' - ' : '') + 'Lesson ' + (lesson.sortOrder != null ? lesson.sortOrder : '-') + ' - ' + lesson.title}">Lesson</option>
+                    </select>
+                    <div style="margin-top:6px;font-size:12px;color:#94a3b8">Optional. Use this to show which lesson this remedial test is meant to support.</div>
                 </div>
             </div>
         </article>
@@ -78,8 +89,8 @@
                 <div th:each="q,stat : ${questions}" style="border:1px solid #e2e8f0;border-radius:12px;padding:20px;position:relative;background:#fafafa">
                     <input type="hidden" name="questionTypes" th:value="${q.questionType.name()}">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-                        <span style="font-weight:700;font-size:13px;color:#7c3aed" th:text="'Question ' + ${stat.index+1} + ' · ' + ${q.questionType.name()}">Q1</span>
-                        <button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button>
+                        <span style="font-weight:700;font-size:13px;color:#7c3aed" th:text="'Question ' + ${stat.index+1} + '  -  ' + ${q.questionType.name()}">Q1</span>
+                        <button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">x</button>
                     </div>
                     <div style="display:grid;gap:12px">
                         <textarea name="questionContents" required rows="2" th:text="${q.content}" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box"></textarea>
@@ -147,7 +158,7 @@ function addQuestionWithSeed(type, seed) {
            <input name="optionCs" type="hidden" value="">
            <input name="optionDs" type="hidden" value="">`;
     div.innerHTML = `<input type="hidden" name="questionTypes" value="${type}">
-    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:13px;color:#7c3aed">Question ${qIndex+1} · ${type}</span><button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">×</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-weight:700;font-size:13px;color:#7c3aed">Question ${qIndex+1}  -  ${type}</span><button type="button" onclick="this.parentElement.parentElement.remove();updateCount()" style="background:none;border:none;color:#ef4444;font-size:20px;cursor:pointer">x</button></div>
     <div style="display:grid;gap:12px">
         <textarea name="questionContents" required rows="2" placeholder="Question content..." style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:14px;outline:none;resize:vertical;box-sizing:border-box">${seed.questionContent ?? ''}</textarea>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="media-grid">
@@ -245,12 +256,16 @@ function normalizeAssessmentQuestionType(value) {
 function syncRemedialErrorField() {
     const selectedType = document.querySelector('select[name="assessmentType"]').value;
     const remedialField = document.getElementById('remedialErrorField');
+    const targetLessonField = document.getElementById('targetLessonField');
     const errorTypeSelect = document.getElementById('errorTypeId');
+    const targetLessonSelect = document.getElementById('targetLessonId');
     const isRemedial = selectedType === 'REMEDIAL_TEST';
     remedialField.hidden = !isRemedial;
+    targetLessonField.hidden = !isRemedial;
     errorTypeSelect.required = isRemedial;
     if (!isRemedial) {
         errorTypeSelect.value = '';
+        targetLessonSelect.value = '';
     }
 }
 
@@ -261,3 +276,4 @@ syncRemedialErrorField();
 </div>
 </body>
 </html>
+

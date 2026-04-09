@@ -12,10 +12,7 @@
         }
 
         .error-top-grid {
-            display: grid;
-            grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-            gap: 20px;
-            align-items: start;
+            display: block;
         }
 
         .error-hero {
@@ -61,19 +58,6 @@
             box-shadow: 0 18px 42px rgba(15,23,42,0.06);
         }
 
-        .mapping-card {
-            position: sticky;
-            top: 24px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            border: 1px solid rgba(96,165,250,0.16);
-            box-shadow: 0 18px 40px rgba(37,99,235,0.08);
-        }
-
-        .mapping-form {
-            display: grid;
-            gap: 14px;
-        }
-
         .error-card-head {
             display: flex;
             justify-content: space-between;
@@ -106,8 +90,7 @@
             margin-bottom: 22px;
         }
 
-        .filter-field label,
-        .mapping-field label {
+        .filter-field label {
             display: block;
             margin-bottom: 8px;
             font-size: 12px;
@@ -115,8 +98,7 @@
             color: #64748b;
         }
 
-        .filter-input,
-        .mapping-select {
+        .filter-input {
             width: 100%;
             min-height: 48px;
             border-radius: 14px;
@@ -126,27 +108,29 @@
             background: #fff;
         }
 
-        .mapping-select:focus,
         .filter-input:focus {
             border-color: #93c5fd;
             box-shadow: 0 0 0 4px rgba(147,197,253,0.18);
         }
 
         .table-shell {
-            overflow: visible;
-            border-radius: 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            border-radius: 16px;
             border: 1px solid #edf2f7;
             background: linear-gradient(180deg, #ffffff 0%, #fcfcff 100%);
+            width: 100%;
+            max-width: 100%;
         }
 
         .error-table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: auto;
+            table-layout: fixed;
         }
 
         .error-table thead th {
-            padding: 18px 16px;
+            padding: 12px 14px;
             background: #f6f2ff;
             font-size: 12px;
             color: #94a3b8;
@@ -165,7 +149,7 @@
         }
 
         .error-table td {
-            padding: 20px 16px;
+            padding: 12px 14px;
             border-bottom: 1px solid #eef2f7;
             vertical-align: top;
         }
@@ -176,19 +160,28 @@
 
         .error-table th:nth-child(1),
         .error-table td:nth-child(1) {
-            width: 64px;
+            width: 52px;
+        }
+
+        .error-table th:nth-child(2),
+        .error-table td:nth-child(2) {
+            width: 44%;
         }
 
         .error-table th:nth-child(3),
         .error-table td:nth-child(3) {
-            width: 250px;
+            width: 24%;
         }
 
         .error-table th:nth-child(4),
         .error-table td:nth-child(4) {
-            width: 120px;
-            text-align: right;
+            width: 18%;
+            text-align: left;
             white-space: nowrap;
+        }
+
+        .error-table thead th:nth-child(4) {
+            text-align: center;
         }
 
         .error-name {
@@ -217,6 +210,10 @@
             color: #4338ca;
             font-size: 12px;
             font-weight: 800;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .delete-button {
@@ -231,10 +228,34 @@
             cursor: pointer;
         }
 
+        .edit-button {
+            min-width: 84px;
+            padding: 9px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #334155;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-action-row {
+            display: inline-flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+
         .error-lower-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
             align-items: stretch;
         }
 
@@ -242,6 +263,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
+            min-height: 420px;
         }
 
         .summary-list {
@@ -325,13 +347,8 @@
         }
 
         @media (max-width: 1100px) {
-            .error-top-grid,
             .error-lower-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .mapping-card {
-                position: static;
             }
         }
 
@@ -391,7 +408,7 @@
         <section class="error-hero">
             <div class="error-hero-copy">
                 <h1>Error Taxonomy & Tracking</h1>
-                <p>Review error types created from lesson review flows, then assign the right remedial test for each error pattern.</p>
+                <p>Review error types created from lesson review flows. Remedial tests are now assigned directly from the lesson form.</p>
             </div>
             <div class="error-hero-actions">
                 <a th:href="@{/errors/students}" class="secondary-button">View Student Errors</a>
@@ -401,36 +418,6 @@
         <div th:if="${success}" style="padding:14px 20px;border-radius:14px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:700" th:text="${success}"></div>
 
         <section class="error-top-grid">
-            <article class="error-card mapping-card">
-                <div class="error-card-head">
-                    <div>
-                        <h2>Assign Remedial Test</h2>
-                        <p>Map a focused remedial test to the exact lesson, Bloom label, and error type combination.</p>
-                    </div>
-                </div>
-
-                <form th:action="@{/errors/mappings/create}" method="post" class="mapping-form">
-                    <div class="mapping-field">
-                        <label>Error Type</label>
-                        <select name="errorTypeId" class="mapping-select" required>
-                            <option value="">Choose an error type</option>
-                            <option th:each="et : ${errorTypes}"
-                                    th:value="${et.id}"
-                                    th:text="${errorContextById.containsKey(et.id) ? errorContextById.get(et.id) : et.name}">Type</option>
-                        </select>
-                    </div>
-                    <div class="mapping-field">
-                        <label>Remedial Test</label>
-                        <select name="testId" class="mapping-select" required>
-                            <option value="">Choose a remedial test</option>
-                            <option th:each="t : ${remedialTests}" th:value="${t.id}" th:text="${t.title + ' (' + (t.course != null ? t.course.name : 'General') + ')'}">Test</option>
-                        </select>
-                        <div style="margin-top:8px;font-size:12px;color:#94a3b8">Only tests created as <strong>Remedial Test</strong> can be mapped here.</div>
-                    </div>
-                    <button type="submit" class="primary-button" style="width:100%">Save Mapping</button>
-                </form>
-            </article>
-
             <article class="error-card">
                 <div class="error-card-head">
                     <div>
@@ -476,9 +463,12 @@
                                       th:unless="${mappingByErrorId.containsKey(et.id)}">Not assigned</span>
                             </td>
                             <td data-label="Actions">
+                                <div class="error-action-row">
+                                <a th:href="@{'/errors/types/' + ${et.id} + '/edit'}" class="edit-button">Edit</a>
                                 <form th:action="@{'/errors/types/' + ${et.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this error type?')" style="display:inline">
                                     <button class="delete-button">Delete</button>
                                 </form>
+                                </div>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(errorTypes)}">
@@ -529,7 +519,7 @@
                         <div class="recent-icon">!</div>
                         <div>
                             <div style="font-weight:800" th:text="${se.student != null ? (se.student.fullName != null ? se.student.fullName : se.student.username) : 'Unknown'}">Student</div>
-                            <div style="font-size:13px;color:#64748b" th:text="${'ID ' + (se.student != null ? se.student.id : '?') + ' · ' + (se.errorType != null ? se.errorType.name : 'Unknown Error')}">meta</div>
+                            <div style="font-size:13px;color:#64748b" th:text="${'ID ' + (se.student != null ? se.student.id : '?') + ' - ' + (se.errorType != null ? se.errorType.name : 'Unknown Error')}">meta</div>
                         </div>
                     </div>
                 </div>
