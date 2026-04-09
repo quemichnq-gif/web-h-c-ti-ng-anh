@@ -31,6 +31,19 @@ public class MainController {
     private static final int CHART_INNER_HEIGHT = CHART_BASELINE_Y - CHART_TOP_PADDING;
     private static final DateTimeFormatter TREND_LABEL_FORMATTER = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH);
     private static final DateTimeFormatter TREND_PERIOD_FORMATTER = DateTimeFormatter.ofPattern("MMM yyyy", Locale.ENGLISH);
+    private static final int PULSE_MONTHS = 8;
+    private static final int PULSE_WIDTH = 800;
+    private static final int PULSE_HEIGHT = 300;
+    private static final int PULSE_LEFT_PADDING = 44;
+    private static final int PULSE_RIGHT_PADDING = 44;
+    private static final int PULSE_TOP_PADDING = 34;
+    private static final int PULSE_BOTTOM_PADDING = 52;
+    private static final int PULSE_BASELINE_Y = PULSE_HEIGHT - PULSE_BOTTOM_PADDING;
+    private static final int PULSE_INNER_HEIGHT = PULSE_BASELINE_Y - PULSE_TOP_PADDING;
+    private static final int PULSE_CHART_TOP = PULSE_TOP_PADDING + 12;
+    private static final int PULSE_CHART_INNER_HEIGHT = PULSE_BASELINE_Y - PULSE_CHART_TOP;
+    private static final int PULSE_SCORE_MINI_BASELINE_Y = 142;
+    private static final int PULSE_SCORE_MINI_INNER_HEIGHT = 88;
 
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
@@ -91,6 +104,23 @@ public class MainController {
             model.addAttribute("userCount", userRepository.count());
             model.addAttribute("courseCount", courseRepository.count());
             model.addAttribute("recentErrors", studentErrorRepository.findAllOrderByCreatedAtDesc().stream().limit(10).toList());
+            List<StudentResult> allResults = resultRepository.findAll();
+            List<StudentError> allErrors = studentErrorRepository.findAll();
+            AcademicPulseData academicPulseData = buildAcademicPulse(enrollmentRepository.findAll(), allResults, allErrors);
+            model.addAttribute("academicPulse", academicPulseData.points());
+            model.addAttribute("academicPulseEnrollmentPath", academicPulseData.enrollmentPath());
+            model.addAttribute("academicPulseScorePath", academicPulseData.scorePath());
+            model.addAttribute("academicPulseErrorPath", academicPulseData.errorPath());
+            model.addAttribute("academicPulseScoreAreaPath", academicPulseData.scoreAreaPath());
+            model.addAttribute("academicPulseScoreMiniPath", academicPulseData.scoreMiniPath());
+            model.addAttribute("academicPulseScoreMiniAreaPath", academicPulseData.scoreMiniAreaPath());
+            model.addAttribute("academicPulseErrorMax", academicPulseData.errorMax());
+            model.addAttribute("academicPulsePeakEnrollments", academicPulseData.peakEnrollments());
+            model.addAttribute("academicPulsePeakErrors", academicPulseData.peakErrors());
+            model.addAttribute("academicPulsePeriod", academicPulseData.period());
+            model.addAttribute("academicPulseEnrollments", academicPulseData.totalEnrollments());
+            model.addAttribute("academicPulseErrors", academicPulseData.totalErrors());
+            model.addAttribute("academicPulseAverageScore", academicPulseData.averageScore());
             List<EnrollmentTrendPoint> enrollmentTrend = buildEnrollmentTrend(enrollmentRepository.findAll());
             model.addAttribute("enrollmentTrend", enrollmentTrend);
             model.addAttribute("enrollmentTrendTotal", enrollmentTrend.stream().mapToLong(EnrollmentTrendPoint::getCount).sum());
@@ -431,6 +461,137 @@ public class MainController {
         return points;
     }
 
+    private AcademicPulseData buildAcademicPulse(List<Enrollment> enrollments, List<StudentResult> results, List<StudentError> errors) {
+        YearMonth currentMonth = YearMonth.now();
+        List<YearMonth> months = IntStream.range(0, PULSE_MONTHS)
+                .mapToObj(offset -> currentMonth.minusMonths(PULSE_MONTHS - 1L - offset))
+                .toList();
+
+        Map<YearMonth, Long> enrollmentCounts = new LinkedHashMap<>();
+        Map<YearMonth, Long> errorCounts = new LinkedHashMap<>();
+        Map<YearMonth, List<Double>> scoreBuckets = new LinkedHashMap<>();
+        for (YearMonth month : months) {
+            enrollmentCounts.put(month, 0L);
+            errorCounts.put(month, 0L);
+            scoreBuckets.put(month, new ArrayList<>());
+        }
+
+        for (Enrollment enrollment : enrollments) {
+            if (enrollment == null) continue;
+            LocalDateTime timestamp = enrollment.getEnrolledAt() != null ? enrollment.getEnrolledAt() : enrollment.getCreatedAt();
+            if (timestamp == null) continue;
+            YearMonth month = YearMonth.from(timestamp);
+            if (enrollmentCounts.containsKey(month)) {
+                enrollmentCounts.put(month, enrollmentCounts.get(month) + 1);
+            }
+        }
+
+        for (StudentError error : errors) {
+            if (error == null || error.getCreatedAt() == null) continue;
+            YearMonth month = YearMonth.from(error.getCreatedAt());
+            if (errorCounts.containsKey(month)) {
+                errorCounts.put(month, errorCounts.get(month) + 1);
+            }
+        }
+
+        for (StudentResult result : results) {
+            if (result == null || result.getSubmittedAt() == null || result.getScore() == null) continue;
+            YearMonth month = YearMonth.from(result.getSubmittedAt());
+            if (scoreBuckets.containsKey(month)) {
+                scoreBuckets.get(month).add(result.getScore());
+            }
+        }
+
+        long totalEnrollments = enrollmentCounts.values().stream().mapToLong(Long::longValue).sum();
+        long totalErrors = errorCounts.values().stream().mapToLong(Long::longValue).sum();
+        double averageScore = results.stream()
+                .mapToDouble(r -> r != null && r.getScore() != null ? r.getScore() : 0.0)
+                .average()
+                .orElse(0.0);
+
+        long peakEnrollments = enrollmentCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+        long peakErrors = errorCounts.values().stream().mapToLong(Long::longValue).max().orElse(0L);
+        long countScale = Math.max(Math.max(peakEnrollments, peakErrors), 1L);
+
+        List<AcademicPulsePoint> points = new ArrayList<>();
+        int index = 0;
+        int lastIndex = Math.max(months.size() - 1, 1);
+        int plotWidth = PULSE_WIDTH - PULSE_LEFT_PADDING - PULSE_RIGHT_PADDING;
+        for (YearMonth month : months) {
+            long enrollCount = enrollmentCounts.get(month);
+            long errorCount = errorCounts.get(month);
+            List<Double> bucket = scoreBuckets.get(month);
+            double monthAverage = bucket.isEmpty() ? 0.0 : bucket.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+            int x = months.size() == 1 ? PULSE_WIDTH / 2 : PULSE_LEFT_PADDING + (int) Math.round(index * (plotWidth / (double) lastIndex));
+            int enrollmentY = PULSE_BASELINE_Y - (int) Math.round((enrollCount * (double) PULSE_CHART_INNER_HEIGHT) / countScale);
+            int errorY = PULSE_BASELINE_Y - (int) Math.round((errorCount * (double) PULSE_CHART_INNER_HEIGHT) / countScale);
+            int scoreY = PULSE_BASELINE_Y - (int) Math.round((monthAverage * (double) PULSE_CHART_INNER_HEIGHT) / 10.0);
+            enrollmentY = Math.max(PULSE_CHART_TOP, enrollmentY);
+            errorY = Math.max(PULSE_CHART_TOP, errorY);
+            scoreY = Math.max(PULSE_CHART_TOP, scoreY);
+            int scoreMiniY = PULSE_SCORE_MINI_BASELINE_Y - (int) Math.round((monthAverage * (double) PULSE_SCORE_MINI_INNER_HEIGHT) / 10.0);
+            int enrollmentBarHeight = peakEnrollments == 0 ? 0 : (int) Math.round((enrollCount * 160.0) / peakEnrollments);
+            int errorBarHeight = peakErrors == 0 ? 0 : (int) Math.round((errorCount * 130.0) / peakErrors);
+            int scoreBarHeight = (int) Math.round((monthAverage * 160.0) / 10.0);
+            points.add(new AcademicPulsePoint(
+                    TREND_LABEL_FORMATTER.format(month.atDay(1)),
+                    TREND_PERIOD_FORMATTER.format(month.atDay(1)),
+                    enrollCount,
+                    errorCount,
+                    monthAverage,
+                    x,
+                    enrollmentY,
+                    errorY,
+                    scoreY,
+                    scoreMiniY,
+                    scoreBarHeight,
+                    enrollmentBarHeight,
+                    errorBarHeight
+            ));
+            index++;
+        }
+
+        String enrollmentPath = buildAcademicPulsePath(points, AcademicPulsePoint::getEnrollmentY);
+        String scorePath = buildAcademicPulsePath(points, AcademicPulsePoint::getScoreY);
+        String errorPath = buildAcademicPulsePath(points, AcademicPulsePoint::getErrorY);
+        String scoreAreaPath = buildAcademicPulseAreaPath(points, AcademicPulsePoint::getScoreY, PULSE_BASELINE_Y);
+        String scoreMiniPath = buildAcademicPulsePath(points, AcademicPulsePoint::getScoreMiniY);
+        String scoreMiniAreaPath = buildAcademicPulseAreaPath(points, AcademicPulsePoint::getScoreMiniY, PULSE_SCORE_MINI_BASELINE_Y);
+        return new AcademicPulseData(points, enrollmentPath, scorePath, errorPath, countScale, totalEnrollments, totalErrors, averageScore,
+                peakEnrollments, peakErrors, scoreAreaPath, scoreMiniPath, scoreMiniAreaPath,
+                months.isEmpty() ? "No data" : TREND_PERIOD_FORMATTER.format(months.get(0).atDay(1)) + " - " + TREND_PERIOD_FORMATTER.format(months.get(months.size() - 1).atDay(1)));
+    }
+
+    private String buildAcademicPulsePath(List<AcademicPulsePoint> points, java.util.function.ToIntFunction<AcademicPulsePoint> yGetter) {
+        if (points.isEmpty()) {
+            return "";
+        }
+        StringBuilder path = new StringBuilder();
+        for (int i = 0; i < points.size(); i++) {
+            AcademicPulsePoint point = points.get(i);
+            int y = yGetter.applyAsInt(point);
+            if (i == 0) {
+                path.append("M").append(point.getX()).append(",").append(y);
+            } else {
+                path.append(" L").append(point.getX()).append(",").append(y);
+            }
+        }
+        return path.toString();
+    }
+
+    private String buildAcademicPulseAreaPath(List<AcademicPulsePoint> points, java.util.function.ToIntFunction<AcademicPulsePoint> yGetter, int baselineY) {
+        if (points.isEmpty()) {
+            return "";
+        }
+        String linePath = buildAcademicPulsePath(points, yGetter);
+        AcademicPulsePoint first = points.get(0);
+        AcademicPulsePoint last = points.get(points.size() - 1);
+        return linePath
+                + " L" + last.getX() + "," + baselineY
+                + " L" + first.getX() + "," + baselineY
+                + " Z";
+    }
+
     private String buildEnrollmentTrendLinePath(List<EnrollmentTrendPoint> points) {
         if (points.isEmpty()) {
             return "";
@@ -493,6 +654,182 @@ public class MainController {
 
         public String getMonthKey() {
             return monthKey;
+        }
+    }
+
+    public static class AcademicPulsePoint {
+        private final String label;
+        private final String monthKey;
+        private final long enrollmentCount;
+        private final long errorCount;
+        private final double averageScore;
+        private final int x;
+        private final int enrollmentY;
+        private final int errorY;
+        private final int scoreY;
+        private final int scoreMiniY;
+        private final int scoreBarHeight;
+        private final int enrollmentBarHeight;
+        private final int errorBarHeight;
+
+        public AcademicPulsePoint(String label, String monthKey, long enrollmentCount, long errorCount, double averageScore,
+                                  int x, int enrollmentY, int errorY, int scoreY, int scoreMiniY, int scoreBarHeight, int enrollmentBarHeight, int errorBarHeight) {
+            this.label = label;
+            this.monthKey = monthKey;
+            this.enrollmentCount = enrollmentCount;
+            this.errorCount = errorCount;
+            this.averageScore = averageScore;
+            this.x = x;
+            this.enrollmentY = enrollmentY;
+            this.errorY = errorY;
+            this.scoreY = scoreY;
+            this.scoreMiniY = scoreMiniY;
+            this.scoreBarHeight = scoreBarHeight;
+            this.enrollmentBarHeight = enrollmentBarHeight;
+            this.errorBarHeight = errorBarHeight;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getMonthKey() {
+            return monthKey;
+        }
+
+        public long getEnrollmentCount() {
+            return enrollmentCount;
+        }
+
+        public long getErrorCount() {
+            return errorCount;
+        }
+
+        public double getAverageScore() {
+            return averageScore;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getEnrollmentY() {
+            return enrollmentY;
+        }
+
+        public int getErrorY() {
+            return errorY;
+        }
+
+        public int getScoreY() {
+            return scoreY;
+        }
+
+        public int getScoreMiniY() {
+            return scoreMiniY;
+        }
+
+        public int getScoreBarHeight() {
+            return scoreBarHeight;
+        }
+
+        public int getEnrollmentBarHeight() {
+            return enrollmentBarHeight;
+        }
+
+        public int getErrorBarHeight() {
+            return errorBarHeight;
+        }
+    }
+
+    public static class AcademicPulseData {
+        private final List<AcademicPulsePoint> points;
+        private final String enrollmentPath;
+        private final String scorePath;
+        private final String errorPath;
+        private final long errorMax;
+        private final long totalEnrollments;
+        private final long totalErrors;
+        private final double averageScore;
+        private final long peakEnrollments;
+        private final long peakErrors;
+        private final String scoreAreaPath;
+        private final String scoreMiniPath;
+        private final String scoreMiniAreaPath;
+        private final String period;
+
+        public AcademicPulseData(List<AcademicPulsePoint> points, String enrollmentPath, String scorePath, String errorPath, long errorMax,
+                                 long totalEnrollments, long totalErrors, double averageScore, long peakEnrollments, long peakErrors, String scoreAreaPath, String scoreMiniPath, String scoreMiniAreaPath, String period) {
+            this.points = points;
+            this.enrollmentPath = enrollmentPath;
+            this.scorePath = scorePath;
+            this.errorPath = errorPath;
+            this.errorMax = errorMax;
+            this.totalEnrollments = totalEnrollments;
+            this.totalErrors = totalErrors;
+            this.averageScore = averageScore;
+            this.peakEnrollments = peakEnrollments;
+            this.peakErrors = peakErrors;
+            this.scoreAreaPath = scoreAreaPath;
+            this.scoreMiniPath = scoreMiniPath;
+            this.scoreMiniAreaPath = scoreMiniAreaPath;
+            this.period = period;
+        }
+
+        public List<AcademicPulsePoint> points() {
+            return points;
+        }
+
+        public String enrollmentPath() {
+            return enrollmentPath;
+        }
+
+        public String scorePath() {
+            return scorePath;
+        }
+
+        public String errorPath() {
+            return errorPath;
+        }
+
+        public long errorMax() {
+            return errorMax;
+        }
+
+        public long totalEnrollments() {
+            return totalEnrollments;
+        }
+
+        public long totalErrors() {
+            return totalErrors;
+        }
+
+        public double averageScore() {
+            return averageScore;
+        }
+
+        public long peakEnrollments() {
+            return peakEnrollments;
+        }
+
+        public long peakErrors() {
+            return peakErrors;
+        }
+
+        public String scoreAreaPath() {
+            return scoreAreaPath;
+        }
+
+        public String scoreMiniPath() {
+            return scoreMiniPath;
+        }
+
+        public String scoreMiniAreaPath() {
+            return scoreMiniAreaPath;
+        }
+
+        public String period() {
+            return period;
         }
     }
 }
