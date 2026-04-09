@@ -19,35 +19,38 @@ public class ErrorManagementController {
     private final TestRepository testRepository;
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
+    private final CourseRepository courseRepository;
 
     public ErrorManagementController(ErrorTypeRepository errorTypeRepository,
                                      ErrorTestMappingRepository mappingRepository,
                                      StudentErrorRepository studentErrorRepository,
                                      TestRepository testRepository,
                                      UserRepository userRepository,
-                                     LessonRepository lessonRepository) {
+                                     LessonRepository lessonRepository,
+                                     CourseRepository courseRepository) {
         this.errorTypeRepository = errorTypeRepository;
         this.mappingRepository = mappingRepository;
         this.studentErrorRepository = studentErrorRepository;
         this.testRepository = testRepository;
         this.userRepository = userRepository;
         this.lessonRepository = lessonRepository;
+        this.courseRepository = courseRepository;
     }
 
     @GetMapping
     public String list(Model model,
-                       @RequestParam(required = false) String search,
-                       @RequestParam(required = false) String studentKeyword) {
-        List<ErrorType> types = errorTypeRepository.findAll();
-        if (search != null && !search.isBlank()) {
-            final String q = search.toLowerCase();
-            types = types.stream()
-                    .filter(e -> safe(e.getName()).contains(q) || safe(e.getDescription()).contains(q))
-                    .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
-                    .toList();
-        } else {
-            types = types.stream()
-                    .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
+                       @RequestParam(required = false) Long courseId,
+                       @RequestParam(required = false) BloomLevel bloomLevel,
+                       @RequestParam(defaultValue = "latest") String summaryView) {
+        List<ErrorType> allTypes = errorTypeRepository.findAll().stream()
+                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+        Map<Long, ErrorFilterMeta> filterMetaByErrorId = buildErrorFilterMetaById(allTypes);
+
+        List<ErrorType> types = allTypes;
+        if (courseId != null || bloomLevel != null) {
+            types = allTypes.stream()
+                    .filter(type -> matchesErrorTypeFilters(type, filterMetaByErrorId, courseId, bloomLevel))
                     .toList();
         }
 
@@ -60,18 +63,31 @@ public class ErrorManagementController {
                         LinkedHashMap::new));
 
         List<StudentError> allStudentErrors = studentErrorRepository.findAllOrderByCreatedAtDesc();
-        List<StudentError> recentStudentErrors = allStudentErrors.stream().limit(20).toList();
-        List<ErrorSummaryItem> summaries = buildErrorSummaries(types, allStudentErrors, studentKeyword);
+        List<StudentError> filteredStudentErrors = filterStudentErrors(allStudentErrors, types);
+        List<StudentError> recentStudentErrors = filteredStudentErrors.stream().limit(20).toList();
+        List<ErrorSummaryItem> summaries = buildStudentErrorSummaries(filteredStudentErrors);
+        int totalSummaryCount = summaries.size();
+        if (!"all".equalsIgnoreCase(summaryView) && summaries.size() > 1) {
+            summaries = keepLatestSummaryOnly(summaries, filteredStudentErrors);
+        }
 
         model.addAttribute("errorTypes", types);
+        model.addAttribute("allErrorTypes", allTypes);
+        model.addAttribute("courses", courseRepository.findAll().stream()
+                .sorted(Comparator.comparing(Course::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList());
+        model.addAttribute("bloomLevels", BloomLevel.values());
         model.addAttribute("tests", testRepository.findAll());
         model.addAttribute("remedialTests", testRepository.findByAssessmentType(AssessmentType.REMEDIAL_TEST));
         model.addAttribute("mappingByErrorId", mappingByErrorId);
-        model.addAttribute("errorContextById", buildErrorContextById(types));
+        model.addAttribute("errorContextById", buildErrorContextById(allTypes));
+        model.addAttribute("errorFilterMetaById", filterMetaByErrorId);
         model.addAttribute("studentErrors", recentStudentErrors);
         model.addAttribute("errorSummaries", summaries);
-        model.addAttribute("search", search);
-        model.addAttribute("studentKeyword", studentKeyword);
+        model.addAttribute("selectedCourseId", courseId);
+        model.addAttribute("selectedBloomLevel", bloomLevel);
+        model.addAttribute("summaryView", "all".equalsIgnoreCase(summaryView) ? "all" : "latest");
+        model.addAttribute("totalSummaryCount", totalSummaryCount);
         return "errors/list";
     }
 
@@ -199,15 +215,46 @@ public class ErrorManagementController {
         return studentError.getStudent() != null && Objects.equals(studentError.getStudent().getId(), studentId);
     }
 
-    private List<ErrorSummaryItem> buildErrorSummaries(List<ErrorType> types,
-                                                       List<StudentError> allStudentErrors,
-                                                       String studentKeyword) {
+    private List<StudentError> filterStudentErrors(List<StudentError> allStudentErrors,
+                                                   List<ErrorType> types) {
         Set<Long> visibleErrorTypeIds = types.stream().map(ErrorType::getId).collect(java.util.stream.Collectors.toSet());
-        List<StudentError> filteredErrors = allStudentErrors.stream()
+        return allStudentErrors.stream()
                 .filter(error -> error.getErrorType() != null && visibleErrorTypeIds.contains(error.getErrorType().getId()))
-                .filter(error -> matchesStudentKeyword(error.getStudent(), studentKeyword))
                 .toList();
-        return buildStudentErrorSummaries(filteredErrors);
+    }
+
+    private boolean matchesErrorTypeFilters(ErrorType type,
+                                            Map<Long, ErrorFilterMeta> filterMetaByErrorId,
+                                            Long courseId,
+                                            BloomLevel bloomLevel) {
+        if (type == null || type.getId() == null) {
+            return false;
+        }
+        ErrorFilterMeta meta = filterMetaByErrorId.get(type.getId());
+        if (courseId != null && (meta == null || !Objects.equals(meta.courseId(), courseId))) {
+            return false;
+        }
+        if (bloomLevel != null && (meta == null || meta.bloomLevel() != bloomLevel)) {
+            return false;
+        }
+        return true;
+    }
+
+    private List<ErrorSummaryItem> keepLatestSummaryOnly(List<ErrorSummaryItem> summaries,
+                                                         List<StudentError> filteredStudentErrors) {
+        Optional<Long> latestErrorTypeId = filteredStudentErrors.stream()
+                .map(StudentError::getErrorType)
+                .filter(Objects::nonNull)
+                .map(ErrorType::getId)
+                .filter(Objects::nonNull)
+                .findFirst();
+        if (latestErrorTypeId.isEmpty()) {
+            return summaries.stream().limit(1).toList();
+        }
+        return summaries.stream()
+                .filter(summary -> Objects.equals(summary.id(), latestErrorTypeId.get()))
+                .limit(1)
+                .toList();
     }
 
     private List<ErrorSummaryItem> buildStudentErrorSummaries(List<StudentError> studentErrors) {
@@ -321,6 +368,41 @@ public class ErrorManagementController {
         contextById.putIfAbsent(errorType.getId(), lessonTitle + " - " + bloomLevel.getLabel() + " - " + errorType.getName());
     }
 
+    private Map<Long, ErrorFilterMeta> buildErrorFilterMetaById(List<ErrorType> types) {
+        Map<Long, ErrorFilterMeta> metaById = new LinkedHashMap<>();
+        Set<Long> visibleIds = types.stream()
+                .map(ErrorType::getId)
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+
+        for (Lesson lesson : lessonRepository.findAll()) {
+            if (lesson == null || lesson.getCourse() == null || lesson.getCourse().getId() == null) {
+                continue;
+            }
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.REMEMBER, lesson.getRememberErrorType());
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.UNDERSTAND, lesson.getUnderstandErrorType());
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.APPLY, lesson.getApplyErrorType());
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.ANALYZE, lesson.getAnalyzeErrorType());
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.EVALUATE, lesson.getEvaluateErrorType());
+            addErrorFilterMeta(metaById, visibleIds, lesson, BloomLevel.CREATE, lesson.getCreateErrorType());
+        }
+        return metaById;
+    }
+
+    private void addErrorFilterMeta(Map<Long, ErrorFilterMeta> metaById,
+                                    Set<Long> visibleIds,
+                                    Lesson lesson,
+                                    BloomLevel bloomLevel,
+                                    ErrorType errorType) {
+        if (lesson == null || lesson.getCourse() == null || bloomLevel == null || errorType == null || errorType.getId() == null || !visibleIds.contains(errorType.getId())) {
+            return;
+        }
+        metaById.putIfAbsent(
+                errorType.getId(),
+                new ErrorFilterMeta(lesson.getCourse().getId(), lesson.getCourse().getName(), bloomLevel)
+        );
+    }
+
     public record ErrorSummaryItem(Long id,
                                    String name,
                                    String description,
@@ -333,6 +415,9 @@ public class ErrorManagementController {
         public String sortKey() {
             return label + " " + username + " " + id;
         }
+    }
+
+    public record ErrorFilterMeta(Long courseId, String courseName, BloomLevel bloomLevel) {
     }
 }
 

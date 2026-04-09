@@ -165,22 +165,27 @@
 
         .error-table th:nth-child(2),
         .error-table td:nth-child(2) {
-            width: 44%;
+            width: 38%;
         }
 
         .error-table th:nth-child(3),
         .error-table td:nth-child(3) {
-            width: 24%;
+            width: 14%;
         }
 
         .error-table th:nth-child(4),
         .error-table td:nth-child(4) {
+            width: 22%;
+        }
+
+        .error-table th:nth-child(5),
+        .error-table td:nth-child(5) {
             width: 18%;
             text-align: left;
             white-space: nowrap;
         }
 
-        .error-table thead th:nth-child(4) {
+        .error-table thead th:nth-child(5) {
             text-align: center;
         }
 
@@ -214,6 +219,20 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .bloom-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #fed7aa;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         .delete-button {
@@ -428,13 +447,30 @@
 
                 <form method="get" th:action="@{/errors}" class="toolbar-grid">
                     <div class="filter-field">
-                        <label>Filter Error Types</label>
-                        <input name="search" th:value="${search}" placeholder="Search by error name or description" class="filter-input">
+                        <label>Filter by Course</label>
+                        <select name="courseId" class="filter-input">
+                            <option value="">All courses</option>
+                            <option th:each="course : ${courses}"
+                                    th:value="${course.id}"
+                                    th:selected="${selectedCourseId != null and selectedCourseId == course.id}"
+                                    th:text="${course.name}">
+                                Course
+                            </option>
+                        </select>
                     </div>
                     <div class="filter-field">
-                        <label>Filter Affected Students</label>
-                        <input name="studentKeyword" th:value="${studentKeyword}" placeholder="ID, username, or full name" class="filter-input">
+                        <label>Filter by Bloom Level</label>
+                        <select name="bloomLevel" class="filter-input">
+                            <option value="">All Bloom levels</option>
+                            <option th:each="level : ${bloomLevels}"
+                                    th:value="${level.name()}"
+                                    th:selected="${selectedBloomLevel != null and selectedBloomLevel.name() == level.name()}"
+                                    th:text="${level.label}">
+                                Bloom
+                            </option>
+                        </select>
                     </div>
+                    <input type="hidden" name="summaryView" th:value="${summaryView}">
                     <button type="submit" class="primary-button">Apply</button>
                 </form>
 
@@ -444,6 +480,7 @@
                         <tr>
                             <th>#</th>
                             <th>Error Type</th>
+                            <th>Bloom</th>
                             <th>Assigned Test</th>
                             <th>Actions</th>
                         </tr>
@@ -454,6 +491,13 @@
                             <td data-label="Error Type">
                                 <div class="error-name" th:text="${et.name}">Name</div>
                                 <div class="error-description" th:text="${et.description}">desc</div>
+                            </td>
+                            <td data-label="Bloom">
+                                <span class="bloom-badge"
+                                      th:if="${errorFilterMetaById.containsKey(et.id) and errorFilterMetaById.get(et.id).bloomLevel() != null}"
+                                      th:text="${errorFilterMetaById.get(et.id).bloomLevel().label}">Remember</span>
+                                <span class="mapping-badge" style="background:#f8fafc;color:#94a3b8"
+                                      th:unless="${errorFilterMetaById.containsKey(et.id) and errorFilterMetaById.get(et.id).bloomLevel() != null}">-</span>
                             </td>
                             <td data-label="Assigned Test">
                                 <span class="mapping-badge"
@@ -472,7 +516,7 @@
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(errorTypes)}">
-                            <td colspan="4" class="empty-state">No error types match the current filter.</td>
+                            <td colspan="5" class="empty-state">No error types match the current filter.</td>
                         </tr>
                         </tbody>
                     </table>
@@ -485,9 +529,18 @@
                 <div class="error-card-head">
                     <div>
                         <h2>Error Summary</h2>
-                        <p>Aggregated in the controller and sorted by impact.</p>
+                        <p th:if="${summaryView == 'all'}">Showing all matched error groups.</p>
+                        <p th:unless="${summaryView == 'all'}">Showing only the group with the latest student error record.</p>
                     </div>
-                    <div style="font-size:12px;color:#64748b;font-weight:800" th:text="${#lists.size(errorSummaries) + ' groups'}">0 groups</div>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a th:if="${summaryView != 'all' and totalSummaryCount > 1}"
+                           th:href="@{/errors(courseId=${selectedCourseId}, bloomLevel=${selectedBloomLevel}, summaryView='all')}"
+                           class="secondary-button">Show All</a>
+                        <a th:if="${summaryView == 'all'}"
+                           th:href="@{/errors(courseId=${selectedCourseId}, bloomLevel=${selectedBloomLevel}, summaryView='latest')}"
+                           class="secondary-button">Show Latest Only</a>
+                        <div style="font-size:12px;color:#64748b;font-weight:800" th:text="${totalSummaryCount + ' groups'}">0 groups</div>
+                    </div>
                 </div>
 
                 <div class="summary-list" th:if="${!#lists.isEmpty(errorSummaries)}">
