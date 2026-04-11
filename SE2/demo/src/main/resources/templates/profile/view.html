@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{fragments/layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{fragments/layout}">
+
 <head>
     <title>My Profile</title>
     <style>
@@ -19,8 +18,8 @@
             padding: 22px 24px;
             border-radius: 26px;
             background:
-                radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 22%),
-                radial-gradient(circle at left center, rgba(255,255,255,0.08), transparent 28%),
+                radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 22%),
+                radial-gradient(circle at left center, rgba(255, 255, 255, 0.08), transparent 28%),
                 linear-gradient(135deg, #6d28d9 0%, #7c3aed 48%, #8b5cf6 100%);
             color: #fff;
             box-shadow: 0 18px 34px rgba(124, 58, 237, 0.14);
@@ -31,8 +30,8 @@
             position: absolute;
             inset: 0;
             background:
-                linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
             background-size: 30px 30px;
             opacity: 0.18;
             pointer-events: none;
@@ -59,7 +58,7 @@
         .profile-hero p {
             margin: 12px 0 0;
             max-width: 540px;
-            color: rgba(255,255,255,0.82);
+            color: rgba(255, 255, 255, 0.82);
             line-height: 1.5;
         }
 
@@ -69,7 +68,7 @@
             min-height: 32px;
             padding: 0 14px;
             border-radius: 999px;
-            background: rgba(255,255,255,0.18);
+            background: rgba(255, 255, 255, 0.18);
             color: #fff;
             font-size: 0.76rem;
             font-weight: 800;
@@ -86,8 +85,8 @@
             min-width: 214px;
             padding: 10px 12px;
             border-radius: 18px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(12px);
             justify-self: end;
         }
@@ -99,7 +98,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.14);
+            background: rgba(255, 255, 255, 0.14);
             color: #fff;
             font-size: 1.3rem;
             font-weight: 900;
@@ -115,7 +114,7 @@
         .profile-hero-mini span {
             display: block;
             margin-top: 4px;
-            color: rgba(255,255,255,0.76);
+            color: rgba(255, 255, 255, 0.76);
             font-size: 0.72rem;
             font-weight: 800;
             letter-spacing: 0.06em;
@@ -126,15 +125,15 @@
             display: grid;
             grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
             gap: 18px;
-            align-items: start;
+            align-items: stretch;
         }
 
         .profile-card {
             padding: 22px;
             border-radius: 24px;
-            background: rgba(255,255,255,0.98);
-            border: 1px solid rgba(148,163,184,0.14);
-            box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
         }
 
         .profile-card-head {
@@ -304,7 +303,7 @@
         .profile-action-card:hover {
             transform: translateY(-1px);
             border-color: rgba(139, 92, 246, 0.2);
-            box-shadow: 0 12px 22px rgba(15,23,42,0.05);
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.05);
         }
 
         .profile-action-card.logout {
@@ -391,106 +390,113 @@
         }
     </style>
 </head>
+
 <body>
-<div layout:fragment="content">
-    <section class="profile-page">
-        <section class="profile-hero">
-            <div class="profile-hero-content">
-                <div>
-                    <span class="profile-role-pill">Profile Center</span>
-                    <h1>My Profile</h1>
-                    <p>Review your account details, update personal information, and manage your security settings from one place.</p>
-                </div>
-                <div class="profile-hero-mini">
-                    <div class="profile-hero-mini-avatar"
-                         th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U</div>
+    <div layout:fragment="content">
+        <section class="profile-page">
+            <section class="profile-hero">
+                <div class="profile-hero-content">
                     <div>
-                        <strong th:text="${user.fullName}">User Name</strong>
-                        <span th:text="${user.role}">ROLE</span>
+                        <span class="profile-role-pill">Profile Center</span>
+                        <h1>My Profile</h1>
+                        <p>Review your account details, update personal information, and manage your security settings
+                            from one place.</p>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="profile-grid">
-            <article class="profile-card">
-                <div class="profile-card-head">
-                    <div>
-                        <h2>Personal Information</h2>
-                        <p>Core account details currently stored for your portal profile.</p>
-                    </div>
-                </div>
-
-                <div class="profile-identity">
-                    <div class="profile-avatar"
-                         th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U</div>
-                    <div>
-                        <div class="profile-name" th:text="${user.fullName}">Name</div>
-                        <div class="profile-subtitle" th:text="${user.role}">ROLE</div>
-                    </div>
-                </div>
-
-                <div class="profile-meta-grid">
-                    <div class="profile-meta-item">
-                        <span>Username</span>
-                        <strong th:text="${user.username}">username</strong>
-                    </div>
-                    <div class="profile-meta-item status-card">
-                        <span>Account Status</span>
-                        <strong class="status-value">
-                            <span th:text="${user.status == 'ACTIVE' ? 'Active' : user.status}"
-                                  th:class="${user.status == 'ACTIVE' ? 'profile-status active' : 'profile-status inactive'}">ACTIVE</span>
-                        </strong>
-                    </div>
-                    <div class="profile-meta-item">
-                        <span>Email</span>
-                        <strong th:text="${user.email}">email</strong>
-                    </div>
-                    <div class="profile-meta-item">
-                        <span>Phone</span>
-                        <strong th:text="${user.phone != null ? user.phone : 'Not set'}">phone</strong>
-                    </div>
-                </div>
-            </article>
-
-            <article class="profile-card">
-                <div class="profile-card-head">
-                    <div>
-                        <h2>Quick Actions</h2>
-                        <p>Manage your profile and account access without leaving this page.</p>
-                    </div>
-                </div>
-
-                <div class="profile-actions">
-                    <a th:href="@{/profile/edit}" class="profile-action-card">
-                        <div class="profile-action-icon edit">E</div>
-                        <div>
-                            <div class="profile-action-title">Edit Profile</div>
-                            <div class="profile-action-copy">Update your personal information and contact details.</div>
+                    <div class="profile-hero-mini">
+                        <div class="profile-hero-mini-avatar"
+                            th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U
                         </div>
-                    </a>
-
-                    <a th:href="@{/profile/change-password}" class="profile-action-card">
-                        <div class="profile-action-icon security">P</div>
                         <div>
-                            <div class="profile-action-title">Change Password</div>
-                            <div class="profile-action-copy">Refresh your password to keep your account secure.</div>
+                            <strong th:text="${user.fullName}">User Name</strong>
+                            <span th:text="${user.role}">ROLE</span>
                         </div>
-                    </a>
+                    </div>
+                </div>
+            </section>
 
-                    <form th:action="@{/logout}" method="post">
-                        <button type="submit" class="profile-action-card logout">
-                            <div class="profile-action-icon logout">L</div>
+            <section class="profile-grid">
+                <article class="profile-card">
+                    <div class="profile-card-head">
+                        <div>
+                            <h2>Personal Information</h2>
+                            <p>Core account details currently stored for your portal profile.</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-identity">
+                        <div class="profile-avatar"
+                            th:text="${user.fullName != null ? user.fullName.substring(0,1).toUpperCase() : 'U'}">U
+                        </div>
+                        <div>
+                            <div class="profile-name" th:text="${user.fullName}">Name</div>
+                            <div class="profile-subtitle" th:text="${user.role}">ROLE</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-meta-grid">
+                        <div class="profile-meta-item">
+                            <span>Username</span>
+                            <strong th:text="${user.username}">username</strong>
+                        </div>
+                        <div class="profile-meta-item status-card">
+                            <span>Account Status</span>
+                            <strong class="status-value">
+                                <span th:text="${user.status == 'ACTIVE' ? 'Active' : user.status}"
+                                    th:class="${user.status == 'ACTIVE' ? 'profile-status active' : 'profile-status inactive'}">ACTIVE</span>
+                            </strong>
+                        </div>
+                        <div class="profile-meta-item">
+                            <span>Email</span>
+                            <strong th:text="${user.email}">email</strong>
+                        </div>
+                        <div class="profile-meta-item">
+                            <span>Phone</span>
+                            <strong th:text="${user.phone != null ? user.phone : 'Not set'}">phone</strong>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="profile-card">
+                    <div class="profile-card-head">
+                        <div>
+                            <h2>Quick Actions</h2>
+                            <p>Manage your profile and account access without leaving this page.</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <a th:href="@{/profile/edit}" class="profile-action-card">
+                            <div class="profile-action-icon edit">E</div>
                             <div>
-                                <div class="profile-action-title" style="color:#dc2626">Logout</div>
-                                <div class="profile-action-copy">Sign out of Academic Portal on this device.</div>
+                                <div class="profile-action-title">Edit Profile</div>
+                                <div class="profile-action-copy">Update your personal information and contact details.
+                                </div>
                             </div>
-                        </button>
-                    </form>
-                </div>
-            </article>
+                        </a>
+
+                        <a th:href="@{/profile/change-password}" class="profile-action-card">
+                            <div class="profile-action-icon security">P</div>
+                            <div>
+                                <div class="profile-action-title">Change Password</div>
+                                <div class="profile-action-copy">Refresh your password to keep your account secure.
+                                </div>
+                            </div>
+                        </a>
+
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="profile-action-card logout">
+                                <div class="profile-action-icon logout">L</div>
+                                <div>
+                                    <div class="profile-action-title" style="color:#dc2626">Logout</div>
+                                    <div class="profile-action-copy">Sign out of Academic Portal on this device.</div>
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </section>
         </section>
-    </section>
-</div>
+    </div>
 </body>
+
 </html>
