@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: student_errors
+-- Mô tả: Thống kê các lỗi sinh viên thường mắc
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `student_errors`
---
-
 DROP TABLE IF EXISTS `student_errors`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `student_errors` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) NOT NULL,
@@ -17,4 +18,3 @@ CREATE TABLE `student_errors` (
   CONSTRAINT `FKd1obj998ct29frdkh49v00n8j` FOREIGN KEY (`error_type_id`) REFERENCES `error_types` (`id`),
   CONSTRAINT `FKreiie0glfnqm3wvce0pumkhl5` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;

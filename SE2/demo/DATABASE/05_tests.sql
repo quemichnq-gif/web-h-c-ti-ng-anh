@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: tests
+-- Mô tả: Thông tin các bài kiểm tra
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `tests`
---
-
 DROP TABLE IF EXISTS `tests`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `tests` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `description` text,
@@ -25,5 +26,9 @@ CREATE TABLE `tests` (
   CONSTRAINT `FKa9ekvwmlio4eibo0hcwntdjxf` FOREIGN KEY (`lesson_id`) REFERENCES `lessons` (`id`),
   CONSTRAINT `FKme3q644jfvsrl0oagxwsrpvjp` FOREIGN KEY (`target_lesson_id`) REFERENCES `lessons` (`id`),
   CONSTRAINT `FKnn88a30eakyhdu5nt1m5trxit` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho tests
+-- ------------------------------------------
+INSERT INTO `tests` (`code`, `title`, `duration`, `course_id`, `assessment_type`) VALUES ('TEST-001', 'Kiểm tra đầu khóa', 60, 1, 'COURSE_ASSESSMENT');

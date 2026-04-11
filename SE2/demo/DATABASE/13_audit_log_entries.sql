@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: audit_log_entries
+-- Mô tả: Nhật ký hoạt động của hệ thống
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `audit_log_entries`
---
-
 DROP TABLE IF EXISTS `audit_log_entries`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `audit_log_entries` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `action` varchar(100) NOT NULL,
@@ -15,4 +16,3 @@ CREATE TABLE `audit_log_entries` (
   `timestamp` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;

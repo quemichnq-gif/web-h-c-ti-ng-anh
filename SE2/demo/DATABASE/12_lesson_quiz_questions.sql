@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: lesson_quiz_questions
+-- Mô tả: Câu hỏi trắc nghiệm nhanh trong bài học
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `lesson_quiz_questions`
---
-
 DROP TABLE IF EXISTS `lesson_quiz_questions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `lesson_quiz_questions` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `bloom_level` enum('REMEMBER','UNDERSTAND','APPLY','ANALYZE','EVALUATE','CREATE') NOT NULL,
@@ -23,4 +24,3 @@ CREATE TABLE `lesson_quiz_questions` (
   KEY `FKkjt0eh6g5jt0uhvl3b0olvdfq` (`lesson_id`),
   CONSTRAINT `FKkjt0eh6g5jt0uhvl3b0olvdfq` FOREIGN KEY (`lesson_id`) REFERENCES `lessons` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;

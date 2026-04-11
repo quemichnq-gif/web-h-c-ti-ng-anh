@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: enrollments
+-- Mô tả: Ghi danh sinh viên vào khóa học
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `enrollments`
---
-
 DROP TABLE IF EXISTS `enrollments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `enrollments` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL,
@@ -28,5 +29,9 @@ CREATE TABLE `enrollments` (
   CONSTRAINT `fk_enrollments_courses` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_enrollments_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `FKh4vhe0oan3i5dbhg6b777mstl` FOREIGN KEY (`academic_staff_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho enrollments
+-- ------------------------------------------
+INSERT INTO `enrollments` (`user_id`, `student_id`, `course_id`, `status`) VALUES (3, 3, 1, 'APPROVED');

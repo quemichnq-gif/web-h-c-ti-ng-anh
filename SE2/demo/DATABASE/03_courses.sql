@@ -1,22 +1,29 @@
+-- ==========================================
+-- BẢNG: courses
+-- Mô tả: Thông tin về các khóa học tiếng Anh
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `courses`
---
-
 DROP TABLE IF EXISTS `courses`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `courses` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `description` text,
-  `end_date` date DEFAULT NULL,
-  `name` varchar(255) NOT NULL,
-  `start_date` date DEFAULT NULL,
-  `code` varchar(50) DEFAULT NULL,
-  `created_at` datetime(6) DEFAULT NULL,
-  `status` enum('DRAFT','OPEN','CLOSED','PENDING','IN_PROGRESS','COMPLETED') DEFAULT NULL,
-  `updated_at` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UK_61og8rbqdd2y28rx2et5fdnxd` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+    `id`          BIGINT NOT NULL AUTO_INCREMENT,
+    `code`        VARCHAR(50) NOT NULL,
+    `name`        VARCHAR(255) NOT NULL,
+    `description` TEXT,
+    `status`      ENUM('DRAFT', 'OPEN', 'CLOSED', 'PENDING', 'IN_PROGRESS', 'COMPLETED') DEFAULT 'DRAFT',
+    `start_date`  DATE DEFAULT NULL,
+    `end_date`    DATE DEFAULT NULL,
+    `created_at`  DATETIME(6) DEFAULT NULL,
+    `updated_at`  DATETIME(6) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_courses_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho courses
+-- ------------------------------------------
+INSERT INTO `courses` (`code`, `name`, `description`, `status`, `start_date`, `end_date`, `created_at`) VALUES
+('IELTS-W-T2', 'IELTS Academic Writing Task 2', 'Học cách viết luận Academic IELTS đạt band 7.0+', 'OPEN', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 3 MONTH), NOW()),
+('BIZ-ENG',    'Communicative Business English', 'Tiếng Anh giao tiếp chuyên sâu cho môi trường văn phòng.', 'OPEN', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 6 MONTH), NOW());

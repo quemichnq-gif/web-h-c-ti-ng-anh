@@ -1,28 +1,37 @@
+-- ==========================================
+-- BẢNG: users
+-- Mô tả: Lưu trữ thông tin tài khoản người dùng
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `users`
---
-
 DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `users` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) NOT NULL,
-  `full_name` varchar(255) DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
-  `phone` varchar(255) DEFAULT NULL,
-  `role` enum('ADMIN','ACADEMIC_STAFF','STUDENT') NOT NULL,
-  `status` varchar(255) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `created_at` datetime(6) DEFAULT NULL,
-  `reset_code_expires_at` datetime(6) DEFAULT NULL,
-  `reset_token` varchar(255) DEFAULT NULL,
-  `reset_token_expires_at` datetime(6) DEFAULT NULL,
-  `reset_verification_code` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UK_6dotkott2kjsp8vw4d0m25fb7` (`email`),
-  UNIQUE KEY `UK_r43af9ap4edm43mmtq01oddj6` (`username`),
-  UNIQUE KEY `UK_kpeyao30ym7l5vf8wsterwase` (`reset_token`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+    `id`                     BIGINT NOT NULL AUTO_INCREMENT,
+    `username`               VARCHAR(255) NOT NULL,
+    `password`               VARCHAR(255) NOT NULL,
+    `full_name`              VARCHAR(255) DEFAULT NULL,
+    `email`                  VARCHAR(255) NOT NULL,
+    `phone`                  VARCHAR(255) DEFAULT NULL,
+    `role`                   ENUM('ADMIN', 'ACADEMIC_STAFF', 'STUDENT') NOT NULL,
+    `status`                 VARCHAR(255) NOT NULL DEFAULT 'ACTIVE',
+    `created_at`             DATETIME(6) DEFAULT NULL,
+    `reset_token`            VARCHAR(255) DEFAULT NULL,
+    `reset_token_expires_at` DATETIME(6) DEFAULT NULL,
+    `reset_verification_code` VARCHAR(255) DEFAULT NULL,
+    `reset_code_expires_at`  DATETIME(6) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_users_username` (`username`),
+    UNIQUE KEY `uk_users_email` (`email`),
+    UNIQUE KEY `uk_users_reset_token` (`reset_token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho users
+-- ------------------------------------------
+-- Mật khẩu mặc định là mã hóa của "maitrang123", "staff123", "student123"
+INSERT INTO `users` (`username`, `password`, `full_name`, `email`, `role`, `status`, `created_at`) VALUES
+('maitrang', '$2a$10$8.UnVuG9HHgffUDAlk8Kn.2NvEn50XhH6fUu3Kz0lH3p6a.8y8v6.', 'Mai Trang (Admin)', 'maitrang@university.edu', 'ADMIN', 'ACTIVE', NOW()),
+('staff', '$2a$10$8.UnVuG9HHgffUDAlk8Kn.2NvEn50XhH6fUu3Kz0lH3p6a.8y8v6.', 'Nguyễn Văn Nhân', 'staff@university.edu', 'ACADEMIC_STAFF', 'ACTIVE', NOW()),
+('student1', '$2a$10$8.UnVuG9HHgffUDAlk8Kn.2NvEn50XhH6fUu3Kz0lH3p6a.8y8v6.', 'Trần Anh Tuấn', 'student1@university.edu', 'STUDENT', 'ACTIVE', NOW());

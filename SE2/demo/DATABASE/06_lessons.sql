@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: lessons
+-- Mô tả: Thông tin các bài học trong khóa
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `lessons`
---
-
 DROP TABLE IF EXISTS `lessons`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `lessons` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `_order` int DEFAULT NULL,
@@ -54,5 +55,9 @@ CREATE TABLE `lessons` (
   CONSTRAINT `FKhilsd00rot6l7nt19dbtn6p81` FOREIGN KEY (`create_error_type_id`) REFERENCES `error_types` (`id`),
   CONSTRAINT `FKmbjqdqbkc08wy7i1x4mypghv` FOREIGN KEY (`evaluate_error_type_id`) REFERENCES `error_types` (`id`),
   CONSTRAINT `FKt059foamaa8c8g0mknc9n65xu` FOREIGN KEY (`remember_error_type_id`) REFERENCES `error_types` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho lessons
+-- ------------------------------------------
+INSERT INTO `lessons` (`code`, `title`, `course_id`, `sort_order`, `status`) VALUES ('LES-001', 'Giới thiệu về Writing Task 2', 1, 1, 'PUBLISHED');
