@@ -49,4 +49,8 @@ public class AuditLogService {
     public synchronized long count() {
         return auditLogRepository.count();
     }
+
+    public synchronized void deleteAll() {
+        auditLogRepository.deleteAllInBatch();
+    }
 }

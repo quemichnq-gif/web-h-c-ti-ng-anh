@@ -152,6 +152,41 @@ public class ErrorManagementController {
         mappingRepository.findByErrorTypeId(id).ifPresent(mappingRepository::delete);
         List<StudentError> related = studentErrorRepository.findByErrorTypeId(id);
         studentErrorRepository.deleteAll(related);
+        List<Lesson> lessons = lessonRepository.findAll();
+        boolean updated = false;
+        for (Lesson lesson : lessons) {
+            if (lesson.getErrorType() != null && id.equals(lesson.getErrorType().getId())) {
+                lesson.setErrorType(null);
+                updated = true;
+            }
+            if (lesson.getRememberErrorType() != null && id.equals(lesson.getRememberErrorType().getId())) {
+                lesson.setRememberErrorType(null);
+                updated = true;
+            }
+            if (lesson.getUnderstandErrorType() != null && id.equals(lesson.getUnderstandErrorType().getId())) {
+                lesson.setUnderstandErrorType(null);
+                updated = true;
+            }
+            if (lesson.getApplyErrorType() != null && id.equals(lesson.getApplyErrorType().getId())) {
+                lesson.setApplyErrorType(null);
+                updated = true;
+            }
+            if (lesson.getAnalyzeErrorType() != null && id.equals(lesson.getAnalyzeErrorType().getId())) {
+                lesson.setAnalyzeErrorType(null);
+                updated = true;
+            }
+            if (lesson.getEvaluateErrorType() != null && id.equals(lesson.getEvaluateErrorType().getId())) {
+                lesson.setEvaluateErrorType(null);
+                updated = true;
+            }
+            if (lesson.getCreateErrorType() != null && id.equals(lesson.getCreateErrorType().getId())) {
+                lesson.setCreateErrorType(null);
+                updated = true;
+            }
+        }
+        if (updated) {
+            lessonRepository.saveAll(lessons);
+        }
         errorTypeRepository.deleteById(id);
         ra.addFlashAttribute("success", "Error type deleted successfully.");
         return "redirect:/errors";

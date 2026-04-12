@@ -100,7 +100,7 @@
                             <form th:unless="${u.status == 'ACTIVE'}" th:action="@{'/users/' + ${u.id} + '/activate'}" method="post" style="display:inline">
                                 <button type="submit" style="padding:5px 12px;border:1px solid #10b981;border-radius:8px;font-size:12px;font-weight:700;color:#059669;background:none;cursor:pointer">Activate</button>
                             </form>
-                            <button onclick="confirmDelete(this)" th:data-username="${u.username}" th:data-action="@{'/users/' + ${u.id} + '/delete'}"
+                            <button type="button" onclick="confirmDelete(this)" th:data-username="${u.username}" th:data-action="@{'/users/' + ${u.id} + '/delete'}"
                                     style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
                         </div>
                     </td>
@@ -137,6 +137,7 @@
         <div style="display:flex;gap:12px;justify-content:flex-end">
             <button onclick="document.getElementById('deleteModal').style.display='none'" style="padding:10px 20px;border:1px solid #e2e8f0;border-radius:10px;font-weight:700;background:none;cursor:pointer">Cancel</button>
             <form id="deleteForm" method="post" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button type="submit" id="deleteBtn" disabled style="padding:10px 20px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;opacity:0.5">Delete Account</button>
             </form>
         </div>

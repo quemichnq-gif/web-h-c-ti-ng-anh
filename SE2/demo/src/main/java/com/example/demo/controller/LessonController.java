@@ -23,6 +23,7 @@ import com.example.demo.repository.TestRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AuditLogService;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -366,17 +367,22 @@ public class LessonController {
         Lesson lesson = lessonOpt.get();
         courseId = lesson.getCourse() != null ? lesson.getCourse().getId() : null;
         int deletedOrder = lesson.getSortOrder();
-        deleteStoredLessonImage(lesson);
-        deleteStoredAttachment(lesson);
-        lessonQuizQuestionRepository.deleteByLessonId(lessonId);
-        lessonRepository.delete(lesson);
-        reorderLessonsAfterDeletion(courseId, deletedOrder);
-        auditLogService.log("LESSON_DELETED", "LESSON", lessonId,
-                "Deleted lesson '" + lesson.getTitle() + "' (" + lesson.getCode()
-                        + ") from course '" + safe(lesson.getCourse() != null ? lesson.getCourse().getCode() : null) + "'.");
+        try {
+            clearTestTargetLessonReferences(lessonId);
+            deleteStoredLessonImage(lesson);
+            deleteStoredAttachment(lesson);
+            lessonQuizQuestionRepository.deleteByLessonId(lessonId);
+            lessonRepository.delete(lesson);
+            reorderLessonsAfterDeletion(courseId, deletedOrder);
+            auditLogService.log("LESSON_DELETED", "LESSON", lessonId,
+                    "Deleted lesson '" + lesson.getTitle() + "' (" + lesson.getCode()
+                            + ") from course '" + safe(lesson.getCourse() != null ? lesson.getCourse().getCode() : null) + "'.");
 
-        ra.addFlashAttribute("success", "Lesson deleted successfully.");
-        return courseId != null ? "redirect:/lessons?courseId=" + courseId : "redirect:/lessons";
+            ra.addFlashAttribute("success", "Lesson deleted successfully.");
+        } catch (DataIntegrityViolationException ex) {
+            ra.addFlashAttribute("error", "This lesson cannot be deleted because another test still points to it. Remove that link first.");
+        }
+        return "redirect:/lessons";
     }
 
     @GetMapping("/lessons/{lessonId}/file")
@@ -636,6 +642,24 @@ public class LessonController {
             lesson.setSortOrder(lesson.getSortOrder() - 1);
             lessonRepository.save(lesson);
         }
+    }
+
+    private void clearTestTargetLessonReferences(Long lessonId) {
+        if (lessonId == null) {
+            return;
+        }
+        List<Test> linkedTests = testRepository.findAll().stream()
+                .filter(test -> test != null
+                        && test.getTargetLesson() != null
+                        && lessonId.equals(test.getTargetLesson().getId()))
+                .toList();
+        if (linkedTests.isEmpty()) {
+            return;
+        }
+        for (Test test : linkedTests) {
+            test.setTargetLesson(null);
+        }
+        testRepository.saveAll(linkedTests);
     }
 
     private void replaceAttachmentIfNeeded(Lesson lesson, MultipartFile attachment) {

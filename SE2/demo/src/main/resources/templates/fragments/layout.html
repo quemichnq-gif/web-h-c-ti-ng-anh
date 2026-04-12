@@ -751,7 +751,7 @@
                 <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/errors}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
                     Errors</a></li>
-                <li sec:authorize="hasAnyRole('ADMIN', 'ACADEMIC_STAFF')" class="menu-item"><a th:href="@{/audit-logs}" class="menu-link">
+                <li sec:authorize="hasRole('ADMIN')" class="menu-item"><a th:href="@{/audit-logs}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                     Audit Logs</a></li>
                 

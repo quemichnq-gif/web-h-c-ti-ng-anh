@@ -70,6 +70,7 @@
                             <a th:href="@{'/assessments/' + ${t.id} + '/edit'}" class="action-btn-mini edit-btn">Edit</a>
                             <a th:href="@{'/assessments/' + ${t.id} + '/results'}" class="action-btn-mini results-btn">Results</a>
                             <form th:action="@{'/assessments/' + ${t.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this test?')" style="display:contents">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <button type="submit" class="action-btn-mini delete-btn">Delete</button>
                             </form>
                         </div>
@@ -214,9 +215,17 @@
 
 .assessment-table-wrapper .assessment-table thead th:first-child,
 .assessment-table-wrapper .assessment-table tbody td:first-child {
-    width: 24px !important;
+    width: 30px !important;
     padding-left: 14px !important;
-    padding-right: 0 !important;
+    padding-right: 12px !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+.assessment-table-wrapper .assessment-table thead th:nth-child(2),
+.assessment-table-wrapper .assessment-table tbody td:nth-child(2) {
+    padding-left: 12px !important;
 }
 
 .assessment-table-wrapper .assessment-table thead th:last-child,
@@ -235,7 +244,7 @@
 .assessment-table-wrapper .assessment-table thead th:nth-child(2),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(2) {
     width: 30% !important;
-    padding-left: 0 !important;
+    padding-left: 12px !important;
     padding-right: 4px !important;
 }
 

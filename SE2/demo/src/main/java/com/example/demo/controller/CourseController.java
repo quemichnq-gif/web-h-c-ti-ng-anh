@@ -4,6 +4,7 @@ import com.example.demo.model.Course;
 import com.example.demo.model.CourseStatus;
 import com.example.demo.repository.CourseRepository;
 import com.example.demo.repository.EnrollmentRepository;
+import com.example.demo.repository.LessonRepository;
 import com.example.demo.repository.TestRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,12 +21,14 @@ public class CourseController {
 
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final LessonRepository lessonRepository;
     private final TestRepository testRepository;
 
     public CourseController(CourseRepository courseRepository, EnrollmentRepository enrollmentRepository,
-                            TestRepository testRepository) {
+                            LessonRepository lessonRepository, TestRepository testRepository) {
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.lessonRepository = lessonRepository;
         this.testRepository = testRepository;
     }
 
@@ -141,15 +144,24 @@ public class CourseController {
 
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        long lessons = lessonRepository.countByCourseId(id);
         long enrolled = courseRepository.findById(id)
                 .map(enrollmentRepository::countByCourse).orElse(0L);
         long tests = courseRepository.findById(id)
                 .map(testRepository::countByCourse).orElse(0L);
+
+        if (lessons > 0 || enrolled > 0 || tests > 0) {
+            StringBuilder msg = new StringBuilder("This course cannot be deleted because it still has related data:");
+            if (lessons > 0) msg.append(" ").append(lessons).append(" lesson(s)");
+            if (enrolled > 0) msg.append(lessons > 0 ? "," : "").append(" ").append(enrolled).append(" enrollment(s)");
+            if (tests > 0) msg.append((lessons > 0 || enrolled > 0) ? "," : "").append(" ").append(tests).append(" test(s)");
+            msg.append(". Remove the related records first.");
+            ra.addFlashAttribute("error", msg.toString());
+            return "redirect:/courses";
+        }
+
         courseRepository.deleteById(id);
-        String msg = "Course deleted successfully.";
-        if (enrolled > 0) msg += " Removed " + enrolled + " related enrollment(s).";
-        if (tests > 0) msg += " There are " + tests + " related test(s).";
-        ra.addFlashAttribute("success", msg);
+        ra.addFlashAttribute("success", "Course deleted successfully.");
         return "redirect:/courses";
     }
 

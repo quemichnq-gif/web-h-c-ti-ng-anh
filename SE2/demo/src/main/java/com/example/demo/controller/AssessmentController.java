@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/assessments")
@@ -108,17 +110,14 @@ public class AssessmentController {
     @GetMapping("/create")
     public String createForm(Model model) {
         model.addAttribute("courses", courseRepository.findAll());
-        model.addAttribute("lessons", lessonRepository.findAll().stream()
-                .sorted(Comparator
-                        .comparing((Lesson lesson) -> lesson.getCourse() != null && lesson.getCourse().getName() != null ? lesson.getCourse().getName() : "", String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(lesson -> lesson.getSortOrder() != null ? lesson.getSortOrder() : 0)
-                        .thenComparing(lesson -> lesson.getTitle() != null ? lesson.getTitle() : "", String.CASE_INSENSITIVE_ORDER))
-                .toList());
         model.addAttribute("assessmentTypes", AssessmentType.values());
-        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
-                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList());
         return "assessments/create";
+    }
+
+    @GetMapping("/context")
+    @ResponseBody
+    public ResponseEntity<AssessmentContextResponse> context(@RequestParam Long courseId) {
+        return ResponseEntity.ok(buildAssessmentContext(courseId));
     }
 
     @PostMapping("/create")
@@ -210,17 +209,8 @@ public class AssessmentController {
         }
         model.addAttribute("test", opt.get());
         model.addAttribute("courses", courseRepository.findAll());
-        model.addAttribute("lessons", lessonRepository.findAll().stream()
-                .sorted(Comparator
-                        .comparing((Lesson lesson) -> lesson.getCourse() != null && lesson.getCourse().getName() != null ? lesson.getCourse().getName() : "", String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(lesson -> lesson.getSortOrder() != null ? lesson.getSortOrder() : 0)
-                        .thenComparing(lesson -> lesson.getTitle() != null ? lesson.getTitle() : "", String.CASE_INSENSITIVE_ORDER))
-                .toList());
         model.addAttribute("assessmentTypes", AssessmentType.values());
         model.addAttribute("questions", questionRepository.findByTestId(id));
-        model.addAttribute("errorTypes", errorTypeRepository.findAll().stream()
-                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
-                .toList());
         model.addAttribute("mappedErrorTypeId", errorTestMappingRepository.findByTestId(id).stream()
                 .map(ErrorTestMapping::getErrorType)
                 .filter(Objects::nonNull)
@@ -312,6 +302,7 @@ public class AssessmentController {
         return "redirect:/assessments";
     }
 
+    @Transactional
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         Optional<Test> testOpt = testRepository.findById(id);
@@ -320,14 +311,23 @@ public class AssessmentController {
             return "redirect:/assessments";
         }
         Test test = testOpt.get();
+        String testTitle = test.getTitle();
+        String testCode = test.getCode();
+        String courseCode = test.getCourse() != null ? test.getCourse().getCode() : null;
         List<Question> questions = questionRepository.findByTestId(id);
+        List<StudentResult> results = resultRepository.findByTestId(id);
+        resultRepository.deleteAll(results);
         errorTestMappingRepository.findByTestId(id).forEach(errorTestMappingRepository::delete);
+        lessonRepository.findByTestId(id).forEach(lesson -> {
+            lesson.setTest(null);
+            lessonRepository.save(lesson);
+        });
         deleteQuestionMedia(questions);
         questionRepository.deleteAll(questions);
         testRepository.delete(test);
         auditLogService.log("ASSESSMENT_DELETED", "ASSESSMENT", id,
-                "Deleted assessment '" + test.getTitle() + "' (" + test.getCode()
-                        + ") from course '" + safe(test.getCourse() != null ? test.getCourse().getCode() : null) + "'.");
+                "Deleted assessment '" + safe(testTitle) + "' (" + safe(testCode)
+                        + ") from course '" + safe(courseCode) + "'.");
         ra.addFlashAttribute("success", "Test deleted successfully.");
         return "redirect:/assessments";
     }
@@ -509,6 +509,9 @@ public class AssessmentController {
         }
         ErrorType errorType = errorTypeRepository.findById(errorTypeId)
                 .orElseThrow(() -> new IllegalArgumentException("Selected error type is invalid."));
+        if (test.getCourse() != null && !isErrorTypeAvailableForCourse(test.getCourse().getId(), errorTypeId)) {
+            throw new IllegalArgumentException("Selected error type does not belong to the selected course.");
+        }
         errorTestMappingRepository.findByErrorTypeId(errorTypeId).ifPresent(errorTestMappingRepository::delete);
         ErrorTestMapping mapping = new ErrorTestMapping();
         mapping.setErrorType(errorType);
@@ -534,6 +537,111 @@ public class AssessmentController {
             throw new IllegalArgumentException("Target lesson must belong to the selected course.");
         }
         test.setTargetLesson(lesson);
+    }
+
+    private AssessmentContextResponse buildAssessmentContext(Long courseId) {
+        List<LessonOption> lessons = lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId).stream()
+                .map(lesson -> new LessonOption(lesson.getId(), buildLessonLabel(lesson)))
+                .toList();
+
+        Map<Long, ErrorType> errorTypesById = new LinkedHashMap<>();
+
+        // Include error types created directly from lesson Bloom mappings.
+        for (Lesson lesson : lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId)) {
+            if (lesson == null) {
+                continue;
+            }
+            addErrorTypeIfPresent(errorTypesById, lesson.getErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getRememberErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getUnderstandErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getApplyErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getAnalyzeErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getEvaluateErrorType());
+            addErrorTypeIfPresent(errorTypesById, lesson.getCreateErrorType());
+        }
+
+        // Also include error types already mapped to remedial tests in this course.
+        List<Long> testIds = testRepository.findByCourseId(courseId).stream()
+                .map(Test::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (!testIds.isEmpty()) {
+            errorTestMappingRepository.findByTestIdIn(testIds).stream()
+                    .map(ErrorTestMapping::getErrorType)
+                    .forEach(errorType -> addErrorTypeIfPresent(errorTypesById, errorType));
+        }
+
+        List<ErrorTypeOption> errorTypes = errorTypesById.values().stream()
+                .sorted(Comparator.comparing(ErrorType::getName, String.CASE_INSENSITIVE_ORDER))
+                .map(errorType -> new ErrorTypeOption(
+                        errorType.getId(),
+                        errorType.getName(),
+                        errorType.getDescription()))
+                .toList();
+
+        return new AssessmentContextResponse(lessons, errorTypes);
+    }
+
+    private void addErrorTypeIfPresent(Map<Long, ErrorType> errorTypesById, ErrorType errorType) {
+        if (errorType == null || errorType.getId() == null) {
+            return;
+        }
+        errorTypesById.putIfAbsent(errorType.getId(), errorType);
+    }
+
+    private String buildLessonLabel(Lesson lesson) {
+        String courseName = lesson.getCourse() != null && lesson.getCourse().getName() != null
+                ? lesson.getCourse().getName()
+                : "Course";
+        String lessonOrder = lesson.getSortOrder() != null ? String.valueOf(lesson.getSortOrder()) : "-";
+        String title = lesson.getTitle() != null ? lesson.getTitle() : "Untitled";
+        return courseName + " - Lesson " + lessonOrder + " - " + title;
+    }
+
+    private boolean isErrorTypeAvailableForCourse(Long courseId, Long errorTypeId) {
+        if (courseId == null || errorTypeId == null) {
+            return false;
+        }
+        for (Lesson lesson : lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId)) {
+            if (lesson == null) {
+                continue;
+            }
+            if (matchesErrorTypeId(lesson.getErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getRememberErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getUnderstandErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getApplyErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getAnalyzeErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getEvaluateErrorType(), errorTypeId)
+                    || matchesErrorTypeId(lesson.getCreateErrorType(), errorTypeId)) {
+                return true;
+            }
+        }
+
+        List<Long> testIds = testRepository.findByCourseId(courseId).stream()
+                .map(Test::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (testIds.isEmpty()) {
+            return false;
+        }
+        return errorTestMappingRepository.findByTestIdIn(testIds).stream()
+                .map(ErrorTestMapping::getErrorType)
+                .filter(Objects::nonNull)
+                .anyMatch(errorType -> errorTypeId.equals(errorType.getId()));
+    }
+
+    private boolean matchesErrorTypeId(ErrorType errorType, Long errorTypeId) {
+        return errorType != null && errorType.getId() != null && errorTypeId.equals(errorType.getId());
+    }
+
+    private record AssessmentContextResponse(List<LessonOption> lessons,
+                                             List<ErrorTypeOption> errorTypes) {
+    }
+
+    private record LessonOption(Long id, String label) {
+    }
+
+    private record ErrorTypeOption(Long id, String name, String description) {
     }
 
     @GetMapping("/{id}/results")

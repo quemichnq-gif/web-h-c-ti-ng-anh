@@ -218,23 +218,26 @@ public class EnrollmentController {
 
     @PostMapping("/{id}/approve")
     public String approve(@PathVariable Long id,
+                          @RequestParam(required = false) Long courseId,
+                          @RequestParam(required = false) String status,
+                          @RequestParam(required = false) String search,
                           Authentication authentication,
                           RedirectAttributes ra) {
         Optional<Enrollment> enrollment = enrollmentRepository.findById(id);
         if (enrollment.isEmpty()) {
             ra.addFlashAttribute("error", "Enrollment not found.");
-            return "redirect:/enrollments";
+            return redirectEnrollments(courseId, status, search);
         }
 
         Enrollment current = enrollment.get();
         if (current.getStatus() != EnrollmentStatus.PENDING) {
             ra.addFlashAttribute("error", "Only PENDING enrollments can be approved.");
-            return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+            return redirectEnrollments(courseId, status, search);
         }
 
         if (!isCourseOpenForEnrollment(current.getCourse())) {
             ra.addFlashAttribute("error", "Cannot approve an enrollment for a closed course.");
-            return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+            return redirectEnrollments(courseId, status, search);
         }
 
         current.setStatus(EnrollmentStatus.APPROVED);
@@ -246,24 +249,27 @@ public class EnrollmentController {
                 "Approved enrollment for student '" + current.getStudent().getUsername()
                         + "' in course '" + current.getCourse().getCode() + "'.");
         ra.addFlashAttribute("success", "Enrollment approved successfully.");
-        return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+        return redirectEnrollments(courseId, status, search);
     }
 
     @PostMapping("/{id}/reject")
     public String reject(@PathVariable Long id,
                          @RequestParam(required = false) String reason,
+                         @RequestParam(required = false) Long courseId,
+                         @RequestParam(required = false) String status,
+                         @RequestParam(required = false) String search,
                          Authentication authentication,
                          RedirectAttributes ra) {
         Optional<Enrollment> enrollment = enrollmentRepository.findById(id);
         if (enrollment.isEmpty()) {
             ra.addFlashAttribute("error", "Enrollment not found.");
-            return "redirect:/enrollments";
+            return redirectEnrollments(courseId, status, search);
         }
 
         Enrollment current = enrollment.get();
         if (current.getStatus() != EnrollmentStatus.PENDING) {
             ra.addFlashAttribute("error", "Only PENDING enrollments can be rejected.");
-            return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+            return redirectEnrollments(courseId, status, search);
         }
 
         current.setStatus(EnrollmentStatus.REJECTED);
@@ -275,23 +281,26 @@ public class EnrollmentController {
                 "Rejected enrollment for student '" + current.getStudent().getUsername()
                         + "' in course '" + current.getCourse().getCode() + "'. Reason: " + safe(current.getRejectReason()));
         ra.addFlashAttribute("success", "Enrollment rejected successfully.");
-        return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+        return redirectEnrollments(courseId, status, search);
     }
 
     @PostMapping("/{id}/remove")
     public String remove(@PathVariable Long id,
+                         @RequestParam(required = false) Long courseId,
+                         @RequestParam(required = false) String status,
+                         @RequestParam(required = false) String search,
                          Authentication authentication,
                          RedirectAttributes ra) {
         Optional<Enrollment> enrollment = enrollmentRepository.findById(id);
         if (enrollment.isEmpty()) {
             ra.addFlashAttribute("error", "Enrollment not found.");
-            return "redirect:/enrollments";
+            return redirectEnrollments(courseId, status, search);
         }
 
         if (authentication == null || authentication.getAuthorities().stream()
                 .noneMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))) {
             ra.addFlashAttribute("error", "Only admins can delete enrollments.");
-            return "redirect:/enrollments?courseId=" + enrollment.get().getCourse().getId();
+            return redirectEnrollments(courseId, status, search);
         }
 
         Enrollment current = enrollment.get();
@@ -300,7 +309,24 @@ public class EnrollmentController {
                 "Deleted enrollment for student '" + current.getStudent().getUsername()
                         + "' in course '" + current.getCourse().getCode() + "'.");
         ra.addFlashAttribute("success", "Enrollment deleted successfully.");
-        return "redirect:/enrollments?courseId=" + current.getCourse().getId();
+        return redirectEnrollments(courseId, status, search);
+    }
+
+    private String redirectEnrollments(Long courseId, String status, String search) {
+        StringBuilder redirect = new StringBuilder("redirect:/enrollments");
+        boolean hasQuery = false;
+        if (courseId != null) {
+            redirect.append("?courseId=").append(courseId);
+            hasQuery = true;
+        }
+        if (status != null && !status.isBlank()) {
+            redirect.append(hasQuery ? "&" : "?").append("status=").append(status);
+            hasQuery = true;
+        }
+        if (search != null && !search.isBlank()) {
+            redirect.append(hasQuery ? "&" : "?").append("search=").append(search);
+        }
+        return redirect.toString();
     }
 
     private Optional<User> resolveAcademicStaff(Authentication authentication) {

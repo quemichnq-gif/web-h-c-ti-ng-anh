@@ -510,6 +510,7 @@
                                 <div class="error-action-row">
                                 <a th:href="@{'/errors/types/' + ${et.id} + '/edit'}" class="edit-button">Edit</a>
                                 <form th:action="@{'/errors/types/' + ${et.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this error type?')" style="display:inline">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                     <button class="delete-button">Delete</button>
                                 </form>
                                 </div>

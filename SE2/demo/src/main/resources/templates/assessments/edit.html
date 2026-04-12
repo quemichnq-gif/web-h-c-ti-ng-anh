@@ -21,7 +21,7 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
                 <div class="field" style="grid-column: span 2">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Assessment Type</label>
-                    <select name="assessmentType" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                    <select name="assessmentType" id="assessmentType" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
                         <option th:each="type : ${assessmentTypes}" th:value="${type.name()}" th:selected="${type == test.assessmentType}"
                                 th:text="${type.name() == 'COURSE_ASSESSMENT' ? 'Course Assessment' : 'Remedial Test'}">Type</option>
                     </select>
@@ -44,26 +44,21 @@
                 </div>
                 <div class="field">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Course</label>
-                    <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+                    <select name="courseId" id="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
                         <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == test.course.id}" th:text="${c.name}">Course</option>
                     </select>
                 </div>
                 <div class="field" id="remedialErrorField">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Mapped Error Type *</label>
                     <select name="errorTypeId" id="errorTypeId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
-                        <option value="">-- Choose an error type --</option>
-                        <option th:each="et : ${errorTypes}" th:value="${et.id}" th:selected="${mappedErrorTypeId == et.id}" th:text="${et.name}">Error Type</option>
+                        <option value="">-- Choose a course first --</option>
                     </select>
                     <div style="margin-top:6px;font-size:12px;color:#94a3b8">When this assessment is a remedial test, map it to the error type it is designed to fix.</div>
                 </div>
                 <div class="field" id="targetLessonField">
                     <label style="font-size:13px;font-weight:700;color:#374151;display:block;margin-bottom:8px">Target Lesson</label>
                     <select name="targetLessonId" id="targetLessonId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;background:#fff">
-                        <option value="">-- Choose a target lesson --</option>
-                        <option th:each="lesson : ${lessons}"
-                                th:value="${lesson.id}"
-                                th:selected="${test.targetLesson != null && test.targetLesson.id == lesson.id}"
-                                th:text="${(lesson.course != null ? lesson.course.name + ' - ' : '') + 'Lesson ' + (lesson.sortOrder != null ? lesson.sortOrder : '-') + ' - ' + lesson.title}">Lesson</option>
+                        <option value="">-- Choose a course first --</option>
                     </select>
                     <div style="margin-top:6px;font-size:12px;color:#94a3b8">Optional. Use this to show which lesson this remedial test is meant to support.</div>
                 </div>
@@ -134,8 +129,10 @@
         </div>
     </form>
 </div>
-<script>
+<script th:inline="javascript">
 let qIndex = document.getElementById('questionsContainer').children.length;
+const currentErrorTypeId = /*[[${mappedErrorTypeId}]]*/ null;
+const currentTargetLessonId = /*[[${test.targetLesson != null ? test.targetLesson.id : null}]]*/ null;
 function updateCount() {
     document.getElementById('qCount').textContent = document.getElementById('questionsContainer').children.length;
 }
@@ -254,11 +251,12 @@ function normalizeAssessmentQuestionType(value) {
 }
 
 function syncRemedialErrorField() {
-    const selectedType = document.querySelector('select[name="assessmentType"]').value;
+    const selectedType = document.getElementById('assessmentType').value;
     const remedialField = document.getElementById('remedialErrorField');
     const targetLessonField = document.getElementById('targetLessonField');
     const errorTypeSelect = document.getElementById('errorTypeId');
     const targetLessonSelect = document.getElementById('targetLessonId');
+    const courseId = document.getElementById('courseId').value;
     const isRemedial = selectedType === 'REMEDIAL_TEST';
     remedialField.hidden = !isRemedial;
     targetLessonField.hidden = !isRemedial;
@@ -266,10 +264,86 @@ function syncRemedialErrorField() {
     if (!isRemedial) {
         errorTypeSelect.value = '';
         targetLessonSelect.value = '';
+        errorTypeSelect.innerHTML = '<option value="">-- Choose a course first --</option>';
+        targetLessonSelect.innerHTML = '<option value="">-- Choose a course first --</option>';
+        return;
+    }
+    if (courseId) {
+        loadAssessmentContext(
+            courseId,
+            targetLessonSelect.value || currentTargetLessonId,
+            errorTypeSelect.value || currentErrorTypeId
+        );
+    } else {
+        errorTypeSelect.innerHTML = '<option value="">-- Choose a course first --</option>';
+        targetLessonSelect.innerHTML = '<option value="">-- Choose a course first --</option>';
     }
 }
 
-document.querySelector('select[name="assessmentType"]').addEventListener('change', syncRemedialErrorField);
+async function loadAssessmentContext(courseId, selectedLessonId, selectedErrorTypeId) {
+    const errorTypeSelect = document.getElementById('errorTypeId');
+    const targetLessonSelect = document.getElementById('targetLessonId');
+    errorTypeSelect.disabled = true;
+    targetLessonSelect.disabled = true;
+    errorTypeSelect.innerHTML = '<option value="">Loading...</option>';
+    targetLessonSelect.innerHTML = '<option value="">Loading...</option>';
+    try {
+        const response = await fetch('/assessments/context?courseId=' + encodeURIComponent(courseId), {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!response.ok) {
+            throw new Error('Unable to load course context.');
+        }
+        const data = await response.json();
+        const lessons = Array.isArray(data.lessons) ? data.lessons : [];
+        const errorTypes = Array.isArray(data.errorTypes) ? data.errorTypes : [];
+
+        targetLessonSelect.innerHTML = '<option value="">-- Choose a target lesson --</option>';
+        if (lessons.length === 0) {
+            targetLessonSelect.innerHTML = '<option value="">-- No lessons available for this course --</option>';
+        } else {
+            lessons.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.label;
+                if (String(selectedLessonId || '') === String(item.id)) {
+                    option.selected = true;
+                }
+                targetLessonSelect.appendChild(option);
+            });
+        }
+
+        errorTypeSelect.innerHTML = '<option value="">-- Choose an error type --</option>';
+        if (errorTypes.length === 0) {
+            errorTypeSelect.innerHTML = '<option value="">-- No error types mapped for this course --</option>';
+        } else {
+            errorTypes.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.description ? `${item.name} - ${item.description}` : item.name;
+                if (String(selectedErrorTypeId || '') === String(item.id)) {
+                    option.selected = true;
+                }
+                errorTypeSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        errorTypeSelect.innerHTML = '<option value="">-- Failed to load course data --</option>';
+        targetLessonSelect.innerHTML = '<option value="">-- Failed to load course data --</option>';
+        console.error(error);
+    } finally {
+        errorTypeSelect.disabled = false;
+        targetLessonSelect.disabled = false;
+    }
+}
+
+document.getElementById('assessmentType').addEventListener('change', syncRemedialErrorField);
+document.getElementById('courseId').addEventListener('change', () => {
+    const selectedType = document.getElementById('assessmentType').value;
+    if (selectedType === 'REMEDIAL_TEST' && document.getElementById('courseId').value) {
+        loadAssessmentContext(document.getElementById('courseId').value, null, null);
+    }
+});
 syncRemedialErrorField();
 </script>
 

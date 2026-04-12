@@ -54,6 +54,83 @@
             gap: 16px;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-icon-button {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--layout-border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            padding: 0;
+            box-shadow: 0 8px 20px rgba(148, 163, 184, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            color: var(--layout-muted);
+        }
+
+        .header-icon-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(124, 58, 237, 0.24);
+            background: #fff;
+            box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+            color: var(--layout-primary);
+        }
+
+        .header-icon-button svg {
+            width: 19px;
+            height: 19px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .settings-user-button {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--layout-border);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            box-shadow: 0 8px 20px rgba(148, 163, 184, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .settings-user-button:hover {
+            transform: translateY(-2px);
+            border-color: rgba(124, 58, 237, 0.24);
+            background: #fff;
+            box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        .settings-user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: block;
+            background:
+                radial-gradient(circle at 52% 36%, rgba(92, 60, 33, 0.95) 0 11%, transparent 11.5%),
+                radial-gradient(circle at 50% 72%, #f4c9a3 0 25%, transparent 25.5%),
+                radial-gradient(circle at 50% 40%, #ffd8b8 0 33%, transparent 33.5%),
+                linear-gradient(180deg, #8b5cf6 0%, #f5d6bb 0%, #f5d6bb 66%, #f59e0b 66%, #f59e0b 100%);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+        }
+
         .header-dropdown {
             position: relative;
         }
@@ -694,12 +771,15 @@
 
             <div class="header-actions">
                 <div class="header-dropdown" data-dropdown="notifications">
-                    <button type="button" class="header-icon-button has-badge header-dropdown-toggle" aria-label="Notifications" aria-expanded="false">
+                    <button type="button"
+                            class="header-icon-button has-badge header-dropdown-toggle"
+                            aria-label="Notifications"
+                            aria-expanded="false"
+                            th:attr="data-badge=${notificationCount != null and notificationCount > 0 ? notificationCount : null}">
                         <svg viewBox="0 0 24 24">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
-                        <span class="badge" th:if="${notificationCount != null and notificationCount > 0}" th:text="${notificationCount}">3</span>
                     </button>
                     <div class="header-dropdown-panel" role="menu" aria-label="Notifications preview">
                         <div class="header-dropdown-head">
@@ -734,9 +814,12 @@
                         <path d="M5 10.5V21h14V10.5"></path>
                     </svg>
                 </a>
-                <button type="button" class="settings-user-button" aria-label="Account">
-                    <span class="settings-user-avatar"></span>
-                </button>
+                <a th:href="@{/profile}" class="header-icon-button" aria-label="Profile">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 21a8 8 0 0 0-16 0"></path>
+                        <circle cx="12" cy="8" r="4"></circle>
+                    </svg>
+                </a>
             </div>
         </div>
     </header>
@@ -992,18 +1075,10 @@
                 }
             });
 
-            const badge = trigger.querySelector(".badge");
-            if (badge) {
-                if (remaining > 0) {
-                    badge.textContent = String(remaining);
-                } else {
-                    badge.remove();
-                }
-            } else if (remaining > 0) {
-                const newBadge = document.createElement("span");
-                newBadge.className = "badge";
-                newBadge.textContent = String(remaining);
-                trigger.appendChild(newBadge);
+            if (remaining > 0) {
+                trigger.setAttribute("data-badge", String(remaining));
+            } else {
+                trigger.removeAttribute("data-badge");
             }
 
             const list = dropdown.querySelector(".header-dropdown-list");

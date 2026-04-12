@@ -79,19 +79,20 @@
                         <div style="font-weight:900;color:#0f172a">Lesson Review Quiz</div>
                         <div style="font-size:13px;color:#64748b">Add or replace the review questions for this lesson, and tag each question with a Bloom level.</div>
                     </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap">
-                        <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer">
-                            Import File
-                            <input id="quiz-import-file" type="file" accept=".txt,.csv,text/plain,text/csv" hidden onchange="importQuizFile(event)">
-                        </label>
-                        <button type="button" onclick="addQuizQuestion('SHORT_ANSWER')" style="padding:10px 14px;background:#fff;border:1px solid #1d4ed8;color:#1d4ed8;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer">+ Short Answer</button>
-                        <button type="button" onclick="addQuizQuestion('MULTIPLE_CHOICE')" class="primary-button" style="padding:10px 14px;border-radius:10px;font-size:12px">+ Multiple Choice</button>
-                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-start;align-items:center;margin:8px 0 14px">
+                    <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-size:12px;font-weight:800;cursor:pointer">
+                        Import File
+                        <input id="quiz-import-file" type="file" accept=".txt,.csv,text/plain,text/csv" hidden onchange="importQuizFile(event)">
+                    </label>
                 </div>
                 <div style="margin-bottom:12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px dashed #cbd5e1;color:#64748b;font-size:12px;line-height:1.6">
                     Import supports `.txt` or `.csv`. TXT format: one block per question with keys `TYPE`, `BLOOM`, `QUESTION`, `A`, `B`, `C`, `D`, `ANSWER`, `EXPLANATION`. Separate blocks with `---`.
                 </div>
                 <div id="quiz-builder" style="display:grid;gap:14px"></div>
+                <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px">
+                    <button type="button" onclick="addQuizQuestion('MULTIPLE_CHOICE')" class="primary-button" style="padding:10px 14px;border-radius:10px;font-size:12px;min-width:42px">+</button>
+                </div>
             </div>
 
             <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0">
@@ -102,13 +103,12 @@
                     </div>
                 </div>
                 <div style="display:grid;gap:8px">
-                    <div style="display:grid;grid-template-columns:110px 1fr 1fr 220px;gap:8px;padding:0 4px 4px;color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em" class="lesson-error-row lesson-error-head">
+                    <div style="display:grid;grid-template-columns:110px 1fr 1fr;gap:8px;padding:0 4px 4px;color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em" class="lesson-error-row lesson-error-head">
                         <div>Bloom</div>
                         <div>Error Type</div>
                         <div>Description</div>
-                        <div>Remedial Test</div>
                     </div>
-                    <div th:each="level : ${bloomLevels}" style="display:grid;grid-template-columns:110px 1fr 1fr 220px;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e2e8f0" class="lesson-error-row">
+                    <div th:each="level : ${bloomLevels}" style="display:grid;grid-template-columns:110px 1fr 1fr;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e2e8f0" class="lesson-error-row">
                         <div style="font-size:11px;font-weight:900;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.08em" th:text="${level.label}">Remember</div>
                         <input name="bloomErrorTypeNames"
                                th:value="${lesson.getErrorTypeForBloomLevel(level) != null ? lesson.getErrorTypeForBloomLevel(level).name : ''}"
@@ -118,13 +118,6 @@
                                th:value="${lesson.getErrorTypeForBloomLevel(level) != null ? lesson.getErrorTypeForBloomLevel(level).description : ''}"
                                placeholder="Short note"
                                style="width:100%;padding:10px 11px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
-                        <select name="bloomRemedialTestIds" style="width:100%;padding:10px 11px;border-radius:10px;border:1px solid #cbd5e1;outline:none;background:#fff">
-                            <option value="">No remedial test</option>
-                            <option th:each="test : ${remedialTests}"
-                                    th:value="${test.id}"
-                                    th:selected="${lessonRemedialTestIds[level.name()] == test.id}"
-                                    th:text="${test.title + (test.course != null ? ' (' + test.course.name + ')' : '')}">Remedial Test</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -223,7 +216,22 @@ function addQuizQuestion(typeOrSeed, providedSeed) {
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="font-weight:800;color:#1d4ed8">Question ${quizIndex}</div>
-                <span style="padding:5px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:900;letter-spacing:0.06em">${typeLabel}</span>
+                <div class="quiz-type-dropdown" style="position:relative;width:fit-content;flex:0 0 auto">
+                    <button type="button"
+                            class="quiz-type-pill quiz-item-type-badge"
+                            onclick="toggleQuizTypeMenu(this)"
+                            style="width:fit-content;min-width:0;max-width:none;padding:8px 22px 8px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:900;letter-spacing:0.04em;display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;cursor:pointer;outline:none;white-space:nowrap">
+                        <span class="quiz-type-pill-label">${typeLabel}</span>
+                        <svg aria-hidden="true" viewBox="0 0 20 20" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto">
+                            <path d="M5 7l5 6 5-6"></path>
+                        </svg>
+                    </button>
+                    <div class="quiz-type-menu" style="position:absolute;top:calc(100% + 6px);left:0;z-index:20;min-width:100%;padding:5px;border-radius:12px;border:1px solid #dbeafe;background:#fff;box-shadow:0 12px 28px rgba(15,23,42,0.10);display:none;gap:4px">
+                        <button type="button" onclick="setQuizQuestionType(this, 'MULTIPLE_CHOICE')" style="width:100%;padding:8px 10px;border:0;border-radius:9px;background:${questionType === 'MULTIPLE_CHOICE' ? '#e0e7ff' : '#fff'};color:#1d4ed8;font-size:11px;font-weight:800;text-align:left;cursor:pointer">Multiple Choice</button>
+                        <button type="button" onclick="setQuizQuestionType(this, 'SHORT_ANSWER')" style="width:100%;padding:8px 10px;border:0;border-radius:9px;background:${questionType === 'SHORT_ANSWER' ? '#ffedd5' : '#fff'};color:#c2410c;font-size:11px;font-weight:800;text-align:left;cursor:pointer">Short Answer</button>
+                    </div>
+                    <input type="hidden" class="quiz-type-select" value="${questionType}">
+                </div>
             </div>
             <button type="button" onclick="this.closest('.quiz-item').remove()" style="padding:6px 10px;border-radius:10px;border:1px solid #fecaca;background:#fff;color:#dc2626;font-size:12px;font-weight:800;cursor:pointer">Remove</button>
         </div>
@@ -250,10 +258,10 @@ function addQuizQuestion(typeOrSeed, providedSeed) {
             <input value="${formatBloomHint(seed?.bloomLevel ?? 'REMEMBER')}" disabled style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="quiz-option-grid quiz-options-block" ${questionType === 'SHORT_ANSWER' ? 'hidden' : ''}>
-            <input name="optionAs" placeholder="Option A" value="${seed?.optionA ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
-            <input name="optionBs" placeholder="Option B" value="${seed?.optionB ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
-            <input name="optionCs" placeholder="Option C" value="${seed?.optionC ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
-            <input name="optionDs" placeholder="Option D" value="${seed?.optionD ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionAs" class="quiz-mc-input" placeholder="Option A" value="${seed?.optionA ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionBs" class="quiz-mc-input" placeholder="Option B" value="${seed?.optionB ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionCs" class="quiz-mc-input" placeholder="Option C" value="${seed?.optionC ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
+            <input name="optionDs" class="quiz-mc-input" placeholder="Option D" value="${seed?.optionD ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
         </div>
         <div style="display:grid;grid-template-columns:120px 1fr;gap:10px" class="quiz-answer-grid quiz-answer-block" ${questionType === 'SHORT_ANSWER' ? 'hidden' : ''}>
             <select name="correctAnswers" class="quiz-correct-select" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
@@ -262,7 +270,7 @@ function addQuizQuestion(typeOrSeed, providedSeed) {
                 <option value="C" ${seed?.correctAnswer === 'C' ? 'selected' : ''}>Correct: C</option>
                 <option value="D" ${seed?.correctAnswer === 'D' ? 'selected' : ''}>Correct: D</option>
             </select>
-            <input placeholder="Correct option note" value="${seed?.explanation ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none" disabled>
+            <input class="quiz-mc-note" placeholder="Correct option note" value="${seed?.explanation ?? ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none" disabled>
         </div>
         <div class="quiz-short-answer-block" ${questionType === 'MULTIPLE_CHOICE' ? 'hidden' : ''}>
             <input name="correctAnswers" class="quiz-short-answer-input" placeholder="Accepted short answer" value="${questionType === 'SHORT_ANSWER' ? (seed?.correctAnswer ?? '') : ''}" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid #cbd5e1;outline:none">
@@ -285,6 +293,56 @@ function addQuizQuestion(typeOrSeed, providedSeed) {
     `;
     wrap.appendChild(item);
     ensureQuizEditors(item);
+    toggleQuizQuestionType(item.querySelector('.quiz-type-select'), questionType);
+}
+
+function addSelectedQuizQuestion(selectId) {
+    const select = document.getElementById(selectId);
+    const type = select && select.value ? select.value : 'MULTIPLE_CHOICE';
+    addQuizQuestion(type);
+}
+
+function toggleQuizTypeMenu(trigger) {
+    const dropdown = trigger?.closest('.quiz-type-dropdown');
+    if (!dropdown) {
+        return;
+    }
+    const menu = dropdown.querySelector('.quiz-type-menu');
+    if (!menu) {
+        return;
+    }
+    const shouldOpen = menu.style.display === 'none' || !menu.style.display;
+    document.querySelectorAll('.quiz-type-menu').forEach(otherMenu => {
+        if (otherMenu !== menu) {
+            otherMenu.style.display = 'none';
+        }
+    });
+    if (shouldOpen) {
+        menu.style.display = 'grid';
+    } else {
+        menu.style.display = 'none';
+    }
+}
+
+function setQuizQuestionType(trigger, type) {
+    const dropdown = trigger?.closest('.quiz-type-dropdown');
+    if (!dropdown) {
+        return;
+    }
+    const item = dropdown.closest('.quiz-item');
+    const select = dropdown.querySelector('.quiz-type-select');
+    const menu = dropdown.querySelector('.quiz-type-menu');
+    const label = dropdown.querySelector('.quiz-type-pill-label');
+    if (select) {
+        select.value = type;
+    }
+    if (label) {
+        label.textContent = type === 'SHORT_ANSWER' ? 'Short Answer' : 'Multiple Choice';
+    }
+    if (menu) {
+        menu.style.display = 'none';
+    }
+    toggleQuizQuestionType(item, type);
 }
 
 function formatBloomLabel(level) {
@@ -310,6 +368,89 @@ function ensureQuizEditors(scope) {
         }
     });
 }
+
+function toggleQuizQuestionType(selectOrItem, forcedType) {
+    const item = selectOrItem?.closest ? selectOrItem.closest('.quiz-item') : selectOrItem;
+    if (!item) {
+        return;
+    }
+    const select = item.querySelector('.quiz-type-select');
+    const nextType = forcedType || select?.value || 'MULTIPLE_CHOICE';
+    if (select && select.value !== nextType) {
+        select.value = nextType;
+    }
+
+    const badge = item.querySelector('.quiz-item-type-badge');
+    const dropdown = item.querySelector('.quiz-type-dropdown');
+    const optionBlock = item.querySelector('.quiz-options-block');
+    const answerBlock = item.querySelector('.quiz-answer-block');
+    const shortBlock = item.querySelector('.quiz-short-answer-block');
+    const hiddenType = item.querySelector('input[name="questionTypes"]');
+    const shortInput = item.querySelector('.quiz-short-answer-input');
+    const correctSelect = item.querySelector('.quiz-correct-select');
+    const optionInputs = item.querySelectorAll('.quiz-mc-input');
+    const mcNote = item.querySelector('.quiz-mc-note');
+
+    if (hiddenType) {
+        hiddenType.value = nextType;
+    }
+    if (badge) {
+        const label = dropdown?.querySelector('.quiz-type-pill-label');
+        if (label) {
+            label.textContent = nextType === 'SHORT_ANSWER' ? 'Short Answer' : 'Multiple Choice';
+        }
+        badge.style.background = nextType === 'SHORT_ANSWER' ? '#fff7ed' : '#eff6ff';
+        badge.style.color = nextType === 'SHORT_ANSWER' ? '#c2410c' : '#1d4ed8';
+        badge.style.borderColor = nextType === 'SHORT_ANSWER' ? '#fed7aa' : '#cbd5e1';
+    }
+    if (optionBlock) {
+        optionBlock.hidden = nextType === 'SHORT_ANSWER';
+        optionBlock.style.display = nextType === 'SHORT_ANSWER' ? 'none' : 'grid';
+    }
+    if (answerBlock) {
+        answerBlock.hidden = nextType === 'SHORT_ANSWER';
+        answerBlock.style.display = nextType === 'SHORT_ANSWER' ? 'none' : 'grid';
+    }
+    if (shortBlock) {
+        shortBlock.hidden = nextType === 'MULTIPLE_CHOICE';
+        shortBlock.style.display = nextType === 'MULTIPLE_CHOICE' ? 'none' : 'block';
+    }
+    optionInputs.forEach(input => {
+        if (nextType === 'SHORT_ANSWER') {
+            input.value = '';
+            input.disabled = true;
+        } else {
+            input.disabled = false;
+        }
+    });
+    if (mcNote) {
+        mcNote.disabled = nextType === 'SHORT_ANSWER';
+        if (nextType === 'SHORT_ANSWER') {
+            mcNote.value = '';
+        }
+    }
+    if (correctSelect) {
+        correctSelect.disabled = nextType === 'SHORT_ANSWER';
+        if (nextType === 'SHORT_ANSWER') {
+            correctSelect.value = 'A';
+        }
+    }
+    if (shortInput) {
+        shortInput.disabled = nextType === 'MULTIPLE_CHOICE';
+        if (nextType === 'MULTIPLE_CHOICE') {
+            shortInput.value = '';
+        }
+    }
+    if (badge) {
+        badge.setAttribute('aria-label', nextType === 'SHORT_ANSWER' ? 'Short Answer' : 'Multiple Choice');
+    }
+}
+
+document.addEventListener('click', event => {
+    if (!event.target.closest('.quiz-type-dropdown')) {
+        document.querySelectorAll('.quiz-type-menu').forEach(menu => menu.style.display = 'none');
+    }
+});
 
 function syncQuizEditor(editor) {
     const hiddenInput = editor.parentElement.querySelector('textarea');
@@ -556,6 +697,7 @@ ensureQuizEditors(document);
 </div>
 </body>
 </html>
+
 
 
 

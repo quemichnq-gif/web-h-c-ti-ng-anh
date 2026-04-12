@@ -51,6 +51,7 @@
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
                             <a th:href="@{'/courses/' + ${c.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
                             <form th:action="@{'/courses/' + ${c.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this course?')">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                                 <button style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
                             </form>
                         </div>

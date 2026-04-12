@@ -2,6 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
+import com.example.demo.model.Enrollment;
+import com.example.demo.model.StudentError;
+import com.example.demo.model.StudentResult;
 import com.example.demo.repository.*;
 import com.example.demo.service.AuditLogService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -239,10 +242,33 @@ public class UserController {
             return "redirect:/users";
         }
         User user = userOpt.get();
-        userRepository.delete(user);
-        auditLogService.log("USER_DELETED", "USER", id,
-                "Deleted user '" + user.getUsername() + "' with role " + user.getRole() + ".");
-        ra.addFlashAttribute("success", "Account deleted successfully.");
+        try {
+            List<Enrollment> linkedEnrollments = enrollmentRepository.findAll().stream()
+                    .filter(enrollment -> (enrollment.getStudent() != null
+                            && id.equals(enrollment.getStudent().getId()))
+                            || (enrollment.getAcademicStaff() != null
+                            && id.equals(enrollment.getAcademicStaff().getId())))
+                    .toList();
+            List<StudentResult> results = resultRepository.findByStudent(user);
+            List<StudentError> errors = errorRepository.findByStudent(user);
+
+            if (!linkedEnrollments.isEmpty()) {
+                enrollmentRepository.deleteAll(linkedEnrollments);
+            }
+            if (!results.isEmpty()) {
+                resultRepository.deleteAll(results);
+            }
+            if (!errors.isEmpty()) {
+                errorRepository.deleteAll(errors);
+            }
+
+            userRepository.delete(user);
+            auditLogService.log("USER_DELETED", "USER", id,
+                    "Deleted user '" + user.getUsername() + "' with role " + user.getRole() + ".");
+            ra.addFlashAttribute("success", "Account deleted successfully.");
+        } catch (Exception ex) {
+            ra.addFlashAttribute("error", "This account could not be deleted. Please remove linked records first.");
+        }
         return "redirect:/users";
     }
 

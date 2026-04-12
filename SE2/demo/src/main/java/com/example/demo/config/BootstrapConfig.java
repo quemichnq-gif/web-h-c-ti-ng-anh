@@ -41,6 +41,14 @@ public class BootstrapConfig {
                                StudentErrorRepository studentErrorRepository,
                                PasswordEncoder passwordEncoder) {
         return args -> {
+            if (userRepository.count() > 0
+                    || courseRepository.count() > 0
+                    || lessonRepository.count() > 0
+                    || testRepository.count() > 0
+                    || errorTypeRepository.count() > 0) {
+                return;
+            }
+
             User admin = upsertUser(userRepository, passwordEncoder,
                     ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, Role.ADMIN,
                     "ACTIVE", ADMIN_FULL_NAME, ADMIN_PHONE, SEED_TIME);
