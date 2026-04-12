@@ -61,7 +61,7 @@
                 </div>
             </div>
             <div style="padding:20px 22px;display:grid;grid-template-columns:1.15fr 0.85fr;gap:18px" class="lesson-list-grid">
-                <div>
+                <div style="min-width:0">
                     <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Summary</div>
                     <div style="color:#334155;font-size:14px;line-height:1.7;margin-bottom:16px" th:text="${view.lesson.summary != null && !view.lesson.summary.isBlank() ? view.lesson.summary : 'No summary provided.'}">Summary</div>
                     <div th:if="${view.lesson.hasImage()}" style="margin-bottom:16px">
@@ -71,7 +71,7 @@
                     <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Content Preview</div>
                     <div class="lesson-rich-content lesson-rich-content-preview" th:utext="${view.lesson.content}">Content</div>
                 </div>
-                <div style="display:grid;gap:14px;align-content:start">
+                <div style="display:grid;gap:14px;align-content:start;min-width:0">
                     <div style="padding:16px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0">
                         <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Metadata</div>
                         <div style="display:grid;gap:8px;font-size:13px;color:#334155;margin-bottom:14px">
@@ -160,11 +160,16 @@
     color: #475569;
     font-size: 13px;
     line-height: 1.7;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .lesson-rich-content-preview {
     max-height: 220px;
     overflow: auto;
+    max-width: 100%;
 }
 
 .lesson-rich-content img {
@@ -172,11 +177,35 @@
     border-radius: 16px;
     display: block;
     margin: 12px 0;
+    height: auto;
 }
 
 .lesson-rich-content a {
     color: #1d4ed8;
     font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.lesson-rich-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+.lesson-rich-content pre,
+.lesson-rich-content code,
+.lesson-rich-content blockquote,
+.lesson-rich-content iframe,
+.lesson-rich-content video {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+
+.lesson-list-grid > * {
+    min-width: 0;
 }
 
 @media (max-width: 900px) {
