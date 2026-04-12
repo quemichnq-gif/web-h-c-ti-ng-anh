@@ -59,25 +59,33 @@ public class EnrollmentController {
         model.addAttribute("pendingEnrollments", enrollmentRepository.findByStatus(EnrollmentStatus.PENDING));
         model.addAttribute("statusOptions", EnrollmentStatus.values());
 
+        List<Enrollment> enrollments;
+        EnrollmentStatus filterStatus = parseStatus(status);
+
         if (courseId != null) {
-            List<Enrollment> enrollments;
-            EnrollmentStatus filterStatus = parseStatus(status);
             if (filterStatus != null) {
                 enrollments = enrollmentRepository.findByCourseIdAndStatus(courseId, filterStatus);
             } else {
                 enrollments = enrollmentRepository.findByCourseId(courseId);
             }
-
-            if (search != null && !search.isBlank()) {
-                String q = search.toLowerCase();
-                enrollments = enrollments.stream()
-                        .filter(e -> (e.getStudent().getFullName() != null && e.getStudent().getFullName().toLowerCase().contains(q))
-                                || e.getStudent().getEmail().toLowerCase().contains(q))
-                        .toList();
+        } else {
+            if (filterStatus != null) {
+                enrollments = enrollmentRepository.findByStatus(filterStatus);
+            } else {
+                enrollments = enrollmentRepository.findAll();
             }
-
-            model.addAttribute("enrollments", enrollments);
         }
+
+        if (search != null && !search.isBlank()) {
+            String q = search.toLowerCase();
+            enrollments = enrollments.stream()
+                    .filter(e -> (e.getStudent().getFullName() != null && e.getStudent().getFullName().toLowerCase().contains(q))
+                            || (e.getStudent().getUsername() != null && e.getStudent().getUsername().toLowerCase().contains(q))
+                            || e.getStudent().getEmail().toLowerCase().contains(q))
+                    .toList();
+        }
+
+        model.addAttribute("enrollments", enrollments);
 
         model.addAttribute("students", userRepository.findByRole(Role.STUDENT));
         return "enrollments/list";
@@ -337,9 +345,8 @@ public class EnrollmentController {
         }
 
         LocalDate today = LocalDate.now();
-        if (course.getStartDate() != null && course.getStartDate().isAfter(today)) {
-            return false;
-        }
+        // Allow enrollment as long as the course hasn't ended.
+        // It's normal to enroll BEFORE the start date.
         return course.getEndDate() == null || !course.getEndDate().isBefore(today);
     }
 }

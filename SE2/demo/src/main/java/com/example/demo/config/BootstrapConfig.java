@@ -388,10 +388,10 @@ public class BootstrapConfig {
         question.setContent(content);
         question.setCorrectAnswer(correctAnswer);
         question.setCorrectOption(normalizeCorrectOption(correctAnswer));
-        question.setOptionA(optionA);
-        question.setOptionB(optionB);
-        question.setOptionC(optionC);
-        question.setOptionD(optionD);
+        question.setOptionA(optionA != null ? optionA : "");
+        question.setOptionB(optionB != null ? optionB : "");
+        question.setOptionC(optionC != null ? optionC : "");
+        question.setOptionD(optionD != null ? optionD : "");
         return questionRepository.save(question);
     }
 
@@ -415,10 +415,10 @@ public class BootstrapConfig {
         question.setQuestionText(questionText);
         question.setQuestionType(questionType);
         question.setCorrectAnswer(correctAnswer);
-        question.setOptionA(optionA);
-        question.setOptionB(optionB);
-        question.setOptionC(optionC);
-        question.setOptionD(optionD);
+        question.setOptionA(optionA != null ? optionA : "");
+        question.setOptionB(optionB != null ? optionB : "");
+        question.setOptionC(optionC != null ? optionC : "");
+        question.setOptionD(optionD != null ? optionD : "");
         question.setBloomLevel(bloomLevel);
         question.setExplanation(explanation);
         return lessonQuizQuestionRepository.save(question);
