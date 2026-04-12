@@ -16,28 +16,33 @@
 </div>
 <div th:if="${success}" data-auto-dismiss="1500" style="padding:14px 20px;border-radius:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;font-weight:600;margin-bottom:20px" th:text="${success}"></div>
 
-<article class="chart-card" style="margin-bottom:20px">
+<article class="chart-card" style="margin-bottom:24px; padding: 24px;">
     <form method="get" th:action="@{/assessments}" class="filter-form">
-        <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Filter by Type</label>
-            <select name="type" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+        <div class="filter-group">
+            <label class="filter-label">Filter by Type</label>
+            <select name="type" class="filter-select">
                 <option value="">All Types</option>
                 <option value="COURSE_ASSESSMENT" th:selected="${selectedType == 'COURSE_ASSESSMENT'}">Course Assessment</option>
                 <option value="REMEDIAL_TEST" th:selected="${selectedType == 'REMEDIAL_TEST'}">Remedial Test</option>
             </select>
         </div>
-        <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Filter by Course</label>
-            <select name="courseId" style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none">
+        <div class="filter-group">
+            <label class="filter-label">Filter by Course</label>
+            <select name="courseId" class="filter-select">
                 <option value="">All Courses</option>
                 <option th:each="c : ${courses}" th:value="${c.id}" th:selected="${c.id == selectedCourseId}" th:text="${c.name}">Course</option>
             </select>
         </div>
-        <div>
-            <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px">Search</label>
-            <input name="search" th:value="${search}" placeholder="Title, description, or course..." style="width:100%;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;box-sizing:border-box">
+        <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <input name="search" th:value="${search}" class="filter-input" placeholder="Title, code, or description...">
         </div>
-        <button type="submit" class="primary-button" style="min-height:42px;padding:0 20px;border-radius:10px">Filter</button>
+        <div class="filter-group">
+            <button type="submit" class="filter-submit-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Apply Filter
+            </button>
+        </div>
     </form>
 </article>
 
@@ -60,12 +65,12 @@
                     <td style="font-size:13px" th:text="${t.course != null ? t.course.name : 'N/A'}">Course</td>
                     <td><span style="background:#eff6ff;color:#2563eb;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700" th:text="${t.duration != null ? t.duration + ' min' : 'N/A'}">60 min</span></td>
                     <td style="font-weight:700;text-align:center" th:text="${questionCounts != null && questionCounts[t.id] != null ? questionCounts[t.id] : 0}">0</td>
-                    <td>
-                        <div style="display:flex;gap:8px;flex-wrap:wrap">
-                            <a th:href="@{'/assessments/' + ${t.id} + '/edit'}" style="padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:700;color:#374151">Edit</a>
-                            <a th:href="@{'/assessments/' + ${t.id} + '/results'}" style="padding:5px 12px;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;font-weight:700;color:#166534">Results</a>
-                            <form th:action="@{'/assessments/' + ${t.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this test?')" style="display:inline">
-                                <button style="padding:5px 12px;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:700;color:#dc2626;background:none;cursor:pointer">Delete</button>
+                    <td style="vertical-align:middle">
+                        <div style="display:flex;gap:6px;align-items:center;justify-content:center">
+                            <a th:href="@{'/assessments/' + ${t.id} + '/edit'}" class="action-btn-mini edit-btn">Edit</a>
+                            <a th:href="@{'/assessments/' + ${t.id} + '/results'}" class="action-btn-mini results-btn">Results</a>
+                            <form th:action="@{'/assessments/' + ${t.id} + '/delete'}" method="post" onsubmit="return confirm('Delete this test?')" style="display:contents">
+                                <button type="submit" class="action-btn-mini delete-btn">Delete</button>
                             </form>
                         </div>
                     </td>
@@ -81,9 +86,123 @@
 <style>
 .filter-form {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 14px;
-    align-items: end;
+    grid-template-columns: 1fr 1fr 1fr 180px;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    margin-left: 4px;
+}
+
+.filter-input, .filter-select {
+    width: 100%;
+    border: 2px solid #f1f5f9;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #f8fafc;
+    color: #1e293b;
+    box-sizing: border-box;
+}
+
+.filter-input:hover, .filter-select:hover {
+    border-color: #e2e8f0;
+    background: #f1f5f9;
+}
+
+.filter-input:focus, .filter-select:focus {
+    border-color: #6366f1;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.filter-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.filter-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 15px rgba(79, 70, 229, 0.3);
+    filter: brightness(1.1);
+}
+
+.filter-submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Action Buttons Styling */
+.action-btn-mini {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-btn {
+    border-color: #e2e8f0;
+    color: #475569;
+    background: #ffffff;
+}
+.edit-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.results-btn {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+.results-btn:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.delete-btn {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+.delete-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
 }
 
 .assessment-table-wrapper .assessment-table thead th,
@@ -102,20 +221,20 @@
 
 .assessment-table-wrapper .assessment-table thead th:last-child,
 .assessment-table-wrapper .assessment-table tbody td:last-child {
-    padding-right: 10px !important;
+    padding-right: 14px !important;
 }
 
 .assessment-table-wrapper .assessment-table tbody td:nth-child(6) {
-    text-align: left !important;
+    text-align: center !important;
 }
 
 .assessment-table-wrapper .assessment-table {
-    min-width: 980px;
+    min-width: 1000px;
 }
 
 .assessment-table-wrapper .assessment-table thead th:nth-child(2),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(2) {
-    width: 31% !important;
+    width: 30% !important;
     padding-left: 0 !important;
     padding-right: 4px !important;
 }
@@ -127,23 +246,26 @@
 
 .assessment-table-wrapper .assessment-table thead th:nth-child(4),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(4) {
-    width: 19% !important;
+    width: 18% !important;
     padding-left: 4px !important;
 }
 
 .assessment-table-wrapper .assessment-table thead th:nth-child(5),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(5) {
-    width: 9% !important;
+    width: 8% !important;
 }
 
 .assessment-table-wrapper .assessment-table thead th:nth-child(6),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(6) {
-    width: 8% !important;
+    width: 10% !important;
+    text-align: center !important;
 }
 
+/* Column 7: Actions */
 .assessment-table-wrapper .assessment-table thead th:nth-child(7),
 .assessment-table-wrapper .assessment-table tbody td:nth-child(7) {
-    width: 14% !important;
+    width: 20% !important;
+    text-align: center !important;
 }
 
 @media (max-width: 920px) {
