@@ -1,6 +1,6 @@
 # HƯỚNG DẪN CÀI ĐẶT & CHẠY DỰ ÁN
 **Dự án:** LMS (Web Học Tiếng Anh Academic Portal)
-**Phiên bản:** 1.1 (Cập nhật 12/04/2026)
+**Phiên bản:** 1.2 (Cập nhật 12/04/2026)
 
 ---
 
@@ -17,21 +17,22 @@
 - **RAM:** Cấu hình đề nghị tối thiểu 4GB.
 
 ## 3. CÀI ĐẶT CƠ SỞ DỮ LIỆU
-1. Tạo Database trong MySQL:
+1. Tạo Database trong MySQL *(tùy chọn — ứng dụng sẽ tự tạo nếu chưa có nhờ tham số `createDatabaseIfNotExist=true`)*:
    ```sql
    CREATE DATABASE student_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
    ```
-2. Import dữ liệu: Trong thư mục `DATABASE/`, hãy chạy 13 file SQL theo thứ tự đánh số từ `01` đến `13`.
-   - *Lưu ý:* Các file đã được thiết lập `FOREIGN_KEY_CHECKS = 0` và có sẵn dữ liệu mẫu (Seed Data) để bạn sử dụng ngay.
+2. Import cấu trúc bảng *(tùy chọn — ứng dụng dùng `ddl-auto=update` sẽ tự tạo bảng từ Java Entity)*:
+   Trong thư mục `DATABASE/`, hãy chạy 13 file SQL theo thứ tự đánh số từ `01` đến `13`.
+   - *Lưu ý:* Các file chỉ chứa cấu trúc bảng (`CREATE TABLE`), **không** có dữ liệu mẫu. Dữ liệu mẫu (Seed Data) sẽ được ứng dụng tự động nạp khi khởi chạy lần đầu thông qua `BootstrapConfig`.
 
 ## 4. CẤU HÌNH DỰ ÁN
 Mở file `src/main/resources/application.properties` để cấu hình các thông số sau:
 
 ### KẾT NỐI DATABASE
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/student_management?useSSL=false
-spring.datasource.username=your_username (Mặc định: root)
-spring.datasource.password=your_password (Mật khẩu MySQL của bạn)
+spring.datasource.url=jdbc:mysql://localhost:3306/student_management?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+spring.datasource.username=root (hoặc username MySQL của bạn)
+spring.datasource.password= (điền mật khẩu MySQL của bạn, mặc định để trống)
 ```
 
 ### CẤU HÌNH UPLOAD FILE (Bài học)
@@ -46,6 +47,7 @@ Nếu muốn sử dụng chức năng reset mật khẩu qua Email, hãy điền
 spring.mail.username=your_email@gmail.com
 spring.mail.password=your_app_password
 ```
+> **Lưu ý:** Cần sử dụng **App Password** (mật khẩu ứng dụng) của Google, không phải mật khẩu Gmail thông thường. Truy cập [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) để tạo.
 
 ## 5. CHẠY CHƯƠNG TRÌNH
 1. Mở Terminal tại thư mục `SE2/demo/`.
@@ -55,10 +57,10 @@ spring.mail.password=your_app_password
 3. Truy cập địa chỉ: `http://localhost:8080`
 
 ## 6. THÔNG TIN TÀI KHOẢN MẶC ĐỊNH
-Dữ liệu mẫu đã được nạp sẵn các tài khoản sau:
+Các tài khoản mặc định sẽ được tự động tạo khi ứng dụng khởi chạy lần đầu (thông qua `BootstrapConfig`):
 - **Quản trị viên (Admin):** `maitrang` / mật khẩu: `maitrang123`
-- **Nhân viên (Staff):** `staff` / mật khẩu: `staff123`
+- **Nhân viên Học vụ (Academic Staff):** `staff` / mật khẩu: `staff123`
 - **Sinh viên (Student):** `student1` / mật khẩu: `student123` (có các user từ student1 đến student6)
 
 ---
-*Ghi chú: Để tài khoản hoạt động đầy đủ, hãy đảm bảo bạn đã import file `01_users.sql` và `02_authorities.sql` thành công.*
+*Ghi chú: Các tài khoản mặc định sẽ được tự động tạo khi ứng dụng khởi chạy lần đầu (thông qua BootstrapConfig). Không cần import dữ liệu thủ công.*

@@ -1,0 +1,36 @@
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:8080 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8080...
+* Connected to localhost (::1) port 8080
+> POST /login HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/8.7.1
+> Accept: */*
+> Cookie: JSESSIONID=059D28D9385D7CF72FF2B4EEB5805D6C
+> Content-Length: 141
+> Content-Type: application/x-www-form-urlencoded
+> 
+} [141 bytes data]
+* upload completely sent off: 141 bytes
+< HTTP/1.1 302 
+< Vary: Origin
+< Vary: Access-Control-Request-Method
+< Vary: Access-Control-Request-Headers
+* Replaced cookie JSESSIONID="B7C4D53D32015D8443421018B84BAD1F" for domain localhost, path /, expire 0
+< Set-Cookie: JSESSIONID=B7C4D53D32015D8443421018B84BAD1F; Path=/; HttpOnly
+< X-Content-Type-Options: nosniff
+< X-XSS-Protection: 0
+< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+< Pragma: no-cache
+< Expires: 0
+< X-Frame-Options: SAMEORIGIN
+< Location: http://localhost:8080/
+< Content-Length: 0
+< Date: Sun, 12 Apr 2026 14:14:31 GMT
+< 
+100   141    0     0  100   141      0   1682 --:--:-- --:--:-- --:--:--  1698
+* Connection #0 to host localhost left intact

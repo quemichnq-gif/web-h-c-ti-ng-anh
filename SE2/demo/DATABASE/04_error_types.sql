@@ -14,7 +14,3 @@ CREATE TABLE `error_types` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ------------------------------------------
--- Dữ liệu mẫu cho error_types
--- ------------------------------------------
-INSERT INTO `error_types` (`name`, `description`) VALUES ('Grammar', 'Các lỗi về ngữ pháp cơ bản'), ('Vocabulary', 'Dùng từ sai ngữ cảnh');

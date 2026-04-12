@@ -57,7 +57,3 @@ CREATE TABLE `lessons` (
   CONSTRAINT `FKt059foamaa8c8g0mknc9n65xu` FOREIGN KEY (`remember_error_type_id`) REFERENCES `error_types` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ------------------------------------------
--- Dữ liệu mẫu cho lessons
--- ------------------------------------------
-INSERT INTO `lessons` (`code`, `title`, `course_id`, `sort_order`, `status`) VALUES ('LES-001', 'Giới thiệu về Writing Task 2', 1, 1, 'PUBLISHED');

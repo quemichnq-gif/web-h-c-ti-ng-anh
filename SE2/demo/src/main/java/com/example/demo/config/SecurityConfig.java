@@ -37,52 +37,50 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/register", "/login", "/forgot-password", "/verify-reset-code", "/reset-password").permitAll()
-                
-                // Admin-only routes
-                .requestMatchers("/users/**", "/users").hasRole("ADMIN")
-                    .requestMatchers("/audit-logs/**", "/audit-logs").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                    .requestMatchers("/admin/reports/**", "/admin/reports").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                
-                // Admin + Academic Staff routes
-                .requestMatchers("/enrollments/*/remove").hasRole("ADMIN")
-                .requestMatchers("/enrollments/**", "/enrollments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                .requestMatchers("/lessons/**", "/lessons").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                .requestMatchers("/assessments/**", "/assessments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                .requestMatchers("/errors/**", "/errors").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                .requestMatchers("/students/**", "/students").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
-                
-                // Portal (Student) routes
-                .requestMatchers("/portal/**", "/portal", "/student/**", "/student").hasRole("STUDENT")
-                
-                // General authenticated routes
-                .requestMatchers("/reports/my").authenticated()
-                .requestMatchers("/courses/**", "/courses", "/profile/**", "/profile").authenticated()
-                
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                .logoutSuccessUrl("/login?logout")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-                .permitAll()
-            )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**", "/logout")
-            )
-            .headers(headers -> headers.frameOptions(f -> f.sameOrigin()))
-            .authenticationProvider(authenticationProvider());
-            
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/register", "/login", "/forgot-password", "/verify-reset-code",
+                                "/reset-password")
+                        .permitAll()
+
+                        // Admin-only routes
+                        .requestMatchers("/users/**", "/users").hasRole("ADMIN")
+                        .requestMatchers("/audit-logs/**", "/audit-logs").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                        .requestMatchers("/admin/reports/**", "/admin/reports").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+
+                        // Admin + Academic Staff routes
+                        .requestMatchers("/enrollments/*/remove").hasRole("ADMIN")
+                        .requestMatchers("/enrollments/**", "/enrollments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                        .requestMatchers("/lessons/**", "/lessons").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                        .requestMatchers("/assessments/**", "/assessments").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                        .requestMatchers("/errors/**", "/errors").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+                        .requestMatchers("/students/**", "/students").hasAnyRole("ADMIN", "ACADEMIC_STAFF")
+
+                        // Portal (Student) routes
+                        .requestMatchers("/portal/**", "/portal", "/student/**", "/student").hasRole("STUDENT")
+
+                        // General authenticated routes
+                        .requestMatchers("/reports/my").authenticated()
+                        .requestMatchers("/courses/**", "/courses", "/profile/**", "/profile").authenticated()
+
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/login?error=true")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .permitAll())
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/h2-console/**", "/logout"))
+                .headers(headers -> headers.frameOptions(f -> f.sameOrigin()))
+                .authenticationProvider(authenticationProvider());
+
         return http.build();
     }
 }

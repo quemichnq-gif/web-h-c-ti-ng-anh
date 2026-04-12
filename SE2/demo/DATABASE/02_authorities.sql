@@ -16,10 +16,3 @@ CREATE TABLE `authorities` (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ------------------------------------------
--- Dữ liệu mẫu cho authorities
--- ------------------------------------------
-INSERT INTO `authorities` (`username`, `authority`) VALUES
-('maitrang', 'ROLE_ADMIN'),
-('staff',    'ROLE_ACADEMIC_STAFF'),
-('student1', 'ROLE_STUDENT');

@@ -28,7 +28,3 @@ CREATE TABLE `tests` (
   CONSTRAINT `FKnn88a30eakyhdu5nt1m5trxit` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ------------------------------------------
--- Dữ liệu mẫu cho tests
--- ------------------------------------------
-INSERT INTO `tests` (`code`, `title`, `duration`, `course_id`, `assessment_type`) VALUES ('TEST-001', 'Kiểm tra đầu khóa', 60, 1, 'COURSE_ASSESSMENT');

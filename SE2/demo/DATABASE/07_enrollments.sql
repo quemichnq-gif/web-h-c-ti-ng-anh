@@ -26,10 +26,3 @@ CREATE TABLE `enrollments` (
     CONSTRAINT `fk_enrollments_staff` FOREIGN KEY (`academic_staff_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ------------------------------------------
--- Dữ liệu mẫu cho enrollments
--- ------------------------------------------
--- Giả định student1 có ID là 3, khóa học 1 là IELTS
-INSERT INTO `enrollments` (`student_id`, `course_id`, `status`, `enrolled_at`, `created_at`) VALUES
-(3, 1, 'APPROVED', NOW(), NOW());
-

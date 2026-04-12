@@ -23,7 +23,7 @@ public class CourseController {
     private final TestRepository testRepository;
 
     public CourseController(CourseRepository courseRepository, EnrollmentRepository enrollmentRepository,
-                            TestRepository testRepository) {
+            TestRepository testRepository) {
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
         this.testRepository = testRepository;
@@ -31,7 +31,7 @@ public class CourseController {
 
     @GetMapping
     public String list(Model model, @RequestParam(required = false) String search,
-                       @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status) {
         List<Course> courses = courseRepository.findAll();
 
         if (search != null && !search.isBlank()) {
@@ -63,20 +63,22 @@ public class CourseController {
         model.addAttribute("statuses", CourseStatus.values());
 
         // ✅ CÁCH 2: Hoặc chỉ chọn một số status cụ thể (nếu ARCHIVED chưa có)
-        // model.addAttribute("statuses", List.of(CourseStatus.DRAFT, CourseStatus.OPEN, CourseStatus.CLOSED));
+        // model.addAttribute("statuses", List.of(CourseStatus.DRAFT, CourseStatus.OPEN,
+        // CourseStatus.CLOSED));
 
         return "courses/create";
     }
 
     @PostMapping("/create")
     public String create(@RequestParam String code,
-                         @RequestParam String name,
-                         @RequestParam(required = false) String description,
-                         @RequestParam String status,
-                         @RequestParam(required = false) String startDate,
-                         @RequestParam(required = false) String endDate,
-                         RedirectAttributes ra) {
-        if (courseRepository.findAll().stream().anyMatch(course -> course.getCode() != null && course.getCode().equalsIgnoreCase(code))) {
+            @RequestParam String name,
+            @RequestParam(required = false) String description,
+            @RequestParam String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            RedirectAttributes ra) {
+        if (courseRepository.findAll().stream()
+                .anyMatch(course -> course.getCode() != null && course.getCode().equalsIgnoreCase(code))) {
             ra.addFlashAttribute("error", "Course code '" + code + "' already exists.");
             return "redirect:/courses/create";
         }
@@ -86,8 +88,10 @@ public class CourseController {
         course.setName(name);
         course.setDescription(description);
         course.setStatus(CourseStatus.valueOf(status));
-        if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
-        if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
+        if (startDate != null && !startDate.isBlank())
+            course.setStartDate(LocalDate.parse(startDate));
+        if (endDate != null && !endDate.isBlank())
+            course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
         ra.addFlashAttribute("success", "Course '" + name + "' created successfully.");
         return "redirect:/courses";
@@ -107,13 +111,13 @@ public class CourseController {
 
     @PostMapping("/{id}/edit")
     public String update(@PathVariable Long id,
-                         @RequestParam String code,
-                         @RequestParam String name,
-                         @RequestParam(required = false) String description,
-                         @RequestParam String status,
-                         @RequestParam(required = false) String startDate,
-                         @RequestParam(required = false) String endDate,
-                         RedirectAttributes ra) {
+            @RequestParam String code,
+            @RequestParam String name,
+            @RequestParam(required = false) String description,
+            @RequestParam String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            RedirectAttributes ra) {
         Optional<Course> opt = courseRepository.findById(id);
         if (opt.isEmpty()) {
             ra.addFlashAttribute("error", "Course not found.");
@@ -121,7 +125,8 @@ public class CourseController {
         }
 
         boolean codeUsedByAnother = courseRepository.findAll().stream()
-                .anyMatch(course -> !course.getId().equals(id) && course.getCode() != null && course.getCode().equalsIgnoreCase(code));
+                .anyMatch(course -> !course.getId().equals(id) && course.getCode() != null
+                        && course.getCode().equalsIgnoreCase(code));
         if (codeUsedByAnother) {
             ra.addFlashAttribute("error", "Course code '" + code + "' is already in use.");
             return "redirect:/courses/" + id + "/edit";
@@ -132,8 +137,10 @@ public class CourseController {
         course.setName(name);
         course.setDescription(description);
         course.setStatus(CourseStatus.valueOf(status));
-        if (startDate != null && !startDate.isBlank()) course.setStartDate(LocalDate.parse(startDate));
-        if (endDate != null && !endDate.isBlank()) course.setEndDate(LocalDate.parse(endDate));
+        if (startDate != null && !startDate.isBlank())
+            course.setStartDate(LocalDate.parse(startDate));
+        if (endDate != null && !endDate.isBlank())
+            course.setEndDate(LocalDate.parse(endDate));
         courseRepository.save(course);
         ra.addFlashAttribute("success", "Course updated successfully.");
         return "redirect:/courses";
@@ -147,8 +154,10 @@ public class CourseController {
                 .map(testRepository::countByCourse).orElse(0L);
         courseRepository.deleteById(id);
         String msg = "Course deleted successfully.";
-        if (enrolled > 0) msg += " Removed " + enrolled + " related enrollment(s).";
-        if (tests > 0) msg += " There are " + tests + " related test(s).";
+        if (enrolled > 0)
+            msg += " Removed " + enrolled + " related enrollment(s).";
+        if (tests > 0)
+            msg += " There are " + tests + " related test(s).";
         ra.addFlashAttribute("success", msg);
         return "redirect:/courses";
     }
