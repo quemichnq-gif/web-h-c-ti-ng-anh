@@ -11,11 +11,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Configuration
 public class BootstrapConfig {
+
+    private static final LocalDateTime SEED_TIME = LocalDateTime.of(2026, 4, 1, 9, 0);
+    private static final LocalDateTime SEED_TIME_2 = LocalDateTime.of(2026, 4, 1, 10, 0);
+    private static final LocalDateTime SEED_TIME_3 = LocalDateTime.of(2026, 4, 2, 9, 0);
 
     private static final String ADMIN_USERNAME = "maitrang";
     private static final String ADMIN_EMAIL = "maitrang@university.edu";
@@ -23,229 +27,465 @@ public class BootstrapConfig {
     private static final String ADMIN_FULL_NAME = "Mai Trang (Admin)";
     private static final String ADMIN_PHONE = "0901234567";
 
-    private final Random random = new Random();
-
     @Bean
     CommandLineRunner seedData(UserRepository userRepository,
                                CourseRepository courseRepository,
+                               LessonRepository lessonRepository,
                                EnrollmentRepository enrollmentRepository,
                                ErrorTypeRepository errorTypeRepository,
                                ErrorTestMappingRepository errorTestMappingRepository,
                                TestRepository testRepository,
                                QuestionRepository questionRepository,
+                               LessonQuizQuestionRepository lessonQuizQuestionRepository,
                                StudentResultRepository studentResultRepository,
                                StudentErrorRepository studentErrorRepository,
                                PasswordEncoder passwordEncoder) {
         return args -> {
-            upsertAdminUser(userRepository, passwordEncoder);
-            backfillLegacyCourses(courseRepository);
+            User admin = upsertUser(userRepository, passwordEncoder,
+                    ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD, Role.ADMIN,
+                    "ACTIVE", ADMIN_FULL_NAME, ADMIN_PHONE, SEED_TIME);
 
-            if (userRepository.findByUsername("staff").isEmpty()) {
-                User staff = new User();
-                staff.setUsername("staff");
-                staff.setEmail("staff@university.edu");
-                staff.setPassword(passwordEncoder.encode("staff123"));
-                staff.setRole(Role.ACADEMIC_STAFF);
-                staff.setStatus("ACTIVE");
-                staff.setFullName("Nguyen Van Nhan");
-                userRepository.save(staff);
+            User staff = upsertUser(userRepository, passwordEncoder,
+                    "staff", "staff@university.edu", "staff123", Role.ACADEMIC_STAFF,
+                    "ACTIVE", "Nguyen Van Nhan", "0902345678", SEED_TIME);
 
-                String[] names = {"Tran Anh Tuan", "Pham Thi Mai", "Le Gia Hung", "Vu Nhat Minh", "Hoang Kim Chi", "Do Bao Ngoc"};
-                for (int i = 1; i <= 6; i++) {
-                    User student = new User();
-                    student.setUsername("student" + i);
-                    student.setEmail("student" + i + "@university.edu");
-                    student.setPassword(passwordEncoder.encode("student123"));
-                    student.setRole(Role.STUDENT);
-                    student.setStatus("ACTIVE");
-                    student.setFullName(names[i - 1]);
-                    userRepository.save(student);
-                }
-            }
+            List<User> students = List.of(
+                    upsertUser(userRepository, passwordEncoder,
+                            "student1", "student1@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Tran Anh Tuan", null, SEED_TIME),
+                    upsertUser(userRepository, passwordEncoder,
+                            "student2", "student2@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Pham Thi Mai", null, SEED_TIME),
+                    upsertUser(userRepository, passwordEncoder,
+                            "student3", "student3@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Le Gia Hung", null, SEED_TIME),
+                    upsertUser(userRepository, passwordEncoder,
+                            "student4", "student4@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Vu Nhat Minh", null, SEED_TIME),
+                    upsertUser(userRepository, passwordEncoder,
+                            "student5", "student5@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Hoang Kim Chi", null, SEED_TIME),
+                    upsertUser(userRepository, passwordEncoder,
+                            "student6", "student6@university.edu", "student123", Role.STUDENT,
+                            "ACTIVE", "Do Bao Ngoc", null, SEED_TIME)
+            );
 
-            if (courseRepository.count() == 0) {
-                Course c1 = new Course();
-                c1.setCode("IELTS-WRITING-T2");
-                c1.setName("IELTS Academic Writing Task 2");
-                c1.setDescription("Hoc cach viet luan Academic IELTS dat band 7.0+");
-                c1.setStatus(CourseStatus.OPEN);
-                c1.setStartDate(LocalDate.now().minusWeeks(2));
-                c1.setEndDate(LocalDate.now().plusMonths(3));
-                courseRepository.save(c1);
+            ErrorType grammar = upsertErrorType(errorTypeRepository,
+                    "Grammar", "Cac loi ve ngu phap co ban");
+            ErrorType vocabulary = upsertErrorType(errorTypeRepository,
+                    "Vocabulary", "Dung tu sai ngu canh");
+            ErrorType pronunciation = upsertErrorType(errorTypeRepository,
+                    "Pronunciation", "Loi phat am am cuoi va am gio");
 
-                Course c2 = new Course();
-                c2.setCode("BUSINESS-ENGLISH");
-                c2.setName("Communicative Business English");
-                c2.setDescription("Tieng Anh giao tiep chuyen sau cho moi truong van phong quoc te.");
-                c2.setStatus(CourseStatus.OPEN);
-                c2.setStartDate(LocalDate.now().plusWeeks(1));
-                c2.setEndDate(LocalDate.now().plusMonths(6));
-                courseRepository.save(c2);
+            Course writingCourse = upsertCourse(courseRepository,
+                    "IELTS-WRITING-T2",
+                    "IELTS Academic Writing Task 2",
+                    "Hoc cach viet luan Academic IELTS dat band 7.0+",
+                    CourseStatus.OPEN,
+                    LocalDate.of(2026, 4, 15),
+                    LocalDate.of(2026, 7, 15),
+                    SEED_TIME);
 
-                Course c3 = new Course();
-                c3.setCode("TOEIC-800-PLUS");
-                c3.setName("TOEIC Intensive 800+");
-                c3.setDescription("Luyen de TOEIC than toc, nam vung meo thi dat diem cao.");
-                c3.setStatus(CourseStatus.OPEN);
-                c3.setStartDate(LocalDate.now().minusMonths(1));
-                c3.setEndDate(LocalDate.now().plusMonths(2));
-                courseRepository.save(c3);
+            Course businessCourse = upsertCourse(courseRepository,
+                    "BUSINESS-ENGLISH",
+                    "Communicative Business English",
+                    "Tieng Anh giao tiep chuyen sau cho moi truong van phong quoc te.",
+                    CourseStatus.OPEN,
+                    LocalDate.of(2026, 4, 20),
+                    LocalDate.of(2026, 10, 20),
+                    SEED_TIME);
 
-                List<User> students = userRepository.findByRole(Role.STUDENT);
-                for (User s : students) {
-                    Enrollment e = new Enrollment();
-                    e.setStudent(s);
-                    e.setCourse(c1);
-                    e.setStatus(EnrollmentStatus.APPROVED);
-                    e.setEnrolledAt(LocalDateTime.now().minusDays(random.nextInt(10)));
-                    enrollmentRepository.save(e);
+            Course toeicCourse = upsertCourse(courseRepository,
+                    "TOEIC-800-PLUS",
+                    "TOEIC Intensive 800+",
+                    "Luyen de TOEIC than toc, nam vung meo thi dat diem cao.",
+                    CourseStatus.OPEN,
+                    LocalDate.of(2026, 3, 20),
+                    LocalDate.of(2026, 8, 20),
+                    SEED_TIME);
 
-                    if (random.nextBoolean()) {
-                        Enrollment e2 = new Enrollment();
-                        e2.setStudent(s);
-                        e2.setCourse(c3);
-                        e2.setStatus(random.nextBoolean() ? EnrollmentStatus.PENDING : EnrollmentStatus.APPROVED);
-                        e2.setEnrolledAt(LocalDateTime.now().minusDays(random.nextInt(5)));
-                        enrollmentRepository.save(e2);
-                    }
-                }
+            Lesson writingLesson1 = upsertLesson(lessonRepository, writingCourse, grammar,
+                    "LES-001",
+                    "Gioi thieu ve Writing Task 2",
+                    "Overview of essay structure, task response, and common mistakes.",
+                    "Noi dung gioi thieu ve cau truc bai Writing Task 2.",
+                    1,
+                    Lesson.LessonStatus.PUBLISHED,
+                    45,
+                    "https://example.com/videos/writing-task-2-intro");
 
-                ErrorType et1 = new ErrorType();
-                et1.setName("Grammar: Subject-Verb Agreement");
-                et1.setDescription("Mac loi chia dong tu khong khop voi chu ngu so it hoac so nhieu.");
-                errorTypeRepository.save(et1);
+            Lesson writingLesson2 = upsertLesson(lessonRepository, writingCourse, grammar,
+                    "LES-002",
+                    "Thesis Statement and Topic Sentences",
+                    "How to write a clear thesis statement and supporting topic sentences.",
+                    "Nang cao ky nang viet thesis statement va topic sentence.",
+                    2,
+                    Lesson.LessonStatus.PUBLISHED,
+                    50,
+                    "https://example.com/videos/thesis-statement");
 
-                ErrorType et2 = new ErrorType();
-                et2.setName("Pronunciation: Final Sounds /s/ & /z/");
-                et2.setDescription("Mat am duoi hoac phat am sai am gio.");
-                errorTypeRepository.save(et2);
+            Lesson businessLesson1 = upsertLesson(lessonRepository, businessCourse, vocabulary,
+                    "BUS-001",
+                    "Business Greetings and Introductions",
+                    "Useful language for office meetings and introductions.",
+                    "Cac mau cau giao tiep trong moi truong cong so.",
+                    1,
+                    Lesson.LessonStatus.PUBLISHED,
+                    40,
+                    "https://example.com/videos/business-greetings");
 
-                Test t1 = new Test();
-                t1.setTitle("Midterm Writing Challenge");
-                t1.setCode("MIDTERM-WRITING-CHALLENGE");
-                t1.setDescription("Kiem tra ky nang viet luan hoc thuat.");
-                t1.setDuration(60);
-                t1.setCourse(c1);
-                t1.setAssessmentType(AssessmentType.COURSE_ASSESSMENT);
-                testRepository.save(t1);
+            Lesson toeicLesson1 = upsertLesson(lessonRepository, toeicCourse, pronunciation,
+                    "TOEIC-001",
+                    "Listening Warm-up",
+                    "Short listening strategies for part 1 and part 2.",
+                    "Kich hoat ky nang nghe co ban cho bai thi TOEIC.",
+                    1,
+                    Lesson.LessonStatus.DRAFT,
+                    30,
+                    "https://example.com/videos/toeic-listening-warmup");
 
-                Test remedial = new Test();
-                remedial.setTitle("Grammar Recovery Drill");
-                remedial.setCode("GRAMMAR-RECOVERY-DRILL");
-                remedial.setDescription("Bai test bo sung cho hoc sinh dang gap loi ngu phap lap lai.");
-                remedial.setDuration(25);
-                remedial.setCourse(c1);
-                remedial.setAssessmentType(AssessmentType.REMEDIAL_TEST);
-                testRepository.save(remedial);
+            Test writingTest = upsertTest(testRepository, writingCourse, writingLesson1,
+                    "TEST-WRITING-001",
+                    "Writing Skills Check",
+                    "Kiem tra ky nang viet co ban.",
+                    60,
+                    AssessmentType.COURSE_ASSESSMENT);
 
-                seedQuestion(questionRepository, t1, QuestionType.SHORT_ANSWER,
-                        "Chia dong tu: The team (be) _______ winning.", "is",
-                        null, null, null, null);
-                seedQuestion(questionRepository, t1, QuestionType.MULTIPLE_CHOICE,
-                        "Choose the sentence with correct agreement.", "B",
-                        "The students studies hard.", "The students study hard.", "The students studying hard.", "The students studys hard.");
-                seedQuestion(questionRepository, t1, QuestionType.SHORT_ANSWER,
-                        "Complete: Each of the students _____ responsible.", "is",
-                        null, null, null, null);
-                seedQuestion(questionRepository, t1, QuestionType.MULTIPLE_CHOICE,
-                        "Pick the best verb: My advice _____ practical.", "A",
-                        "is", "are", "be", "being");
-                seedQuestion(questionRepository, remedial, QuestionType.MULTIPLE_CHOICE,
-                        "Choose the correct sentence.", "C",
-                        "She go to class every day.", "The team are winning.", "Each student is ready.", "My friends studies late.");
-                seedQuestion(questionRepository, remedial, QuestionType.SHORT_ANSWER,
-                        "Fill in the blank: The list of items _____ on the desk.", "is",
-                        null, null, null, null);
+            Test remedialTest = upsertTest(testRepository, writingCourse, writingLesson2,
+                    "TEST-WRITING-REMEDIAL",
+                    "Grammar Recovery Drill",
+                    "Bai test bo sung cho hoc vien gap loi ngu phap lap lai.",
+                    25,
+                    AssessmentType.REMEDIAL_TEST);
 
-                ErrorTestMapping mapping = new ErrorTestMapping();
-                mapping.setErrorType(et1);
-                mapping.setTest(remedial);
-                errorTestMappingRepository.save(mapping);
+            Test businessTest = upsertTest(testRepository, businessCourse, businessLesson1,
+                    "TEST-BUSINESS-001",
+                    "Business English Starter",
+                    "Kiem tra tu vung va giao tiep cong so.",
+                    30,
+                    AssessmentType.COURSE_ASSESSMENT);
 
-                for (int i = 0; i < Math.min(3, students.size()); i++) {
-                    StudentResult res = new StudentResult();
-                    res.setStudent(students.get(i));
-                    res.setTest(t1);
-                    res.setScore(7.5 + i * 0.5);
-                    res.setSubmittedAt(LocalDateTime.now().minusHours(random.nextInt(48)));
-                    studentResultRepository.save(res);
+            List<Question> writingQuestions = List.of(
+                    upsertQuestion(questionRepository, writingTest,
+                            "Which sentence uses the correct verb form?",
+                            QuestionType.MULTIPLE_CHOICE,
+                            "B", "The team is ready.", "The team are ready.", "The team be ready.", null),
+                    upsertQuestion(questionRepository, writingTest,
+                            "Complete the sentence: Each of the students ___ responsible.",
+                            QuestionType.SHORT_ANSWER,
+                            "is", null, null, null, null),
+                    upsertQuestion(questionRepository, writingTest,
+                            "Choose the best topic sentence for an opinion essay.",
+                            QuestionType.MULTIPLE_CHOICE,
+                            "A", "This essay explains both sides.", "I strongly believe online learning is effective.", "Many people study every day.", null),
+                    upsertQuestion(questionRepository, writingTest,
+                            "Fill in the blank: The list of items ___ on the desk.",
+                            QuestionType.SHORT_ANSWER,
+                            "is", null, null, null, null)
+            );
 
-                    StudentError se = new StudentError();
-                    se.setStudent(students.get(i));
-                    se.setErrorType(et1);
-                    se.setCreatedAt(LocalDateTime.now().minusHours(i * 4L));
-                    studentErrorRepository.save(se);
-                }
-            }
+            List<Question> remedialQuestions = List.of(
+                    upsertQuestion(questionRepository, remedialTest,
+                            "Pick the correct sentence.",
+                            QuestionType.MULTIPLE_CHOICE,
+                            "C", "She go to class every day.", "The team are winning.", "Each student is ready.", null),
+                    upsertQuestion(questionRepository, remedialTest,
+                            "Complete: The data ___ accurate.",
+                            QuestionType.SHORT_ANSWER,
+                            "are", null, null, null, null)
+            );
+
+            upsertQuestion(questionRepository, businessTest,
+                    "Choose the best greeting for a morning meeting.",
+                    QuestionType.MULTIPLE_CHOICE,
+                    "D", "Good night everyone.", "See you tomorrow.", "Thanks for your help.", "Good morning, everyone.");
+            upsertQuestion(questionRepository, businessTest,
+                    "Complete the sentence: Our manager ___ the report yesterday.",
+                    QuestionType.SHORT_ANSWER,
+                    "reviewed", null, null, null, null);
+
+            upsertLessonQuizQuestion(lessonQuizQuestionRepository, writingLesson1,
+                    1,
+                    "What is the main purpose of a thesis statement?",
+                    QuestionType.MULTIPLE_CHOICE,
+                    "A", "To present the essay position", "To list every example", "To copy the introduction", "To finish the conclusion",
+                    BloomLevel.UNDERSTAND,
+                    "A thesis statement tells the reader the essay position.");
+
+            upsertLessonQuizQuestion(lessonQuizQuestionRepository, writingLesson1,
+                    2,
+                    "Write one sentence that can be used as a topic sentence.",
+                    QuestionType.SHORT_ANSWER,
+                    "Any clear topic sentence", null, null, null, null,
+                    BloomLevel.APPLY,
+                    "The answer should state one clear main idea.");
+
+            upsertLessonQuizQuestion(lessonQuizQuestionRepository, writingLesson2,
+                    1,
+                    "Which part of an essay comes after the introduction?",
+                    QuestionType.MULTIPLE_CHOICE,
+                    "B", "Reference list", "Body paragraph", "Title page", "Appendix",
+                    BloomLevel.REMEMBER,
+                    "The body paragraph follows the introduction.");
+
+            upsertLessonQuizQuestion(lessonQuizQuestionRepository, businessLesson1,
+                    1,
+                    "What is a polite way to start a meeting?",
+                    QuestionType.MULTIPLE_CHOICE,
+                    "C", "Let's finish immediately.", "Close the door.", "Good morning, everyone.", "I disagree with all of you.",
+                    BloomLevel.REMEMBER,
+                    "A polite greeting is suitable for a meeting.");
+
+            upsertEnrollment(enrollmentRepository, students.get(0), writingCourse, staff,
+                    EnrollmentStatus.APPROVED, SEED_TIME_2, SEED_TIME_2, null, null);
+            upsertEnrollment(enrollmentRepository, students.get(1), writingCourse, staff,
+                    EnrollmentStatus.APPROVED, SEED_TIME_2.plusMinutes(10), SEED_TIME_2.plusMinutes(10), null, null);
+            upsertEnrollment(enrollmentRepository, students.get(2), writingCourse, staff,
+                    EnrollmentStatus.APPROVED, SEED_TIME_2.plusMinutes(20), SEED_TIME_2.plusMinutes(20), null, null);
+            upsertEnrollment(enrollmentRepository, students.get(3), writingCourse, staff,
+                    EnrollmentStatus.APPROVED, SEED_TIME_2.plusMinutes(30), SEED_TIME_2.plusMinutes(30), null, null);
+            upsertEnrollment(enrollmentRepository, students.get(4), businessCourse, staff,
+                    EnrollmentStatus.PENDING, SEED_TIME_2.plusMinutes(40), SEED_TIME_2.plusMinutes(40), "Waiting for review", "Requested by student");
+            upsertEnrollment(enrollmentRepository, students.get(5), toeicCourse, staff,
+                    EnrollmentStatus.REJECTED, SEED_TIME_2.plusMinutes(50), SEED_TIME_2.plusMinutes(50), "Missing prerequisites", "Incomplete placement test");
+
+            upsertErrorTestMapping(errorTestMappingRepository, grammar, remedialTest);
+            upsertErrorTestMapping(errorTestMappingRepository, vocabulary, businessTest);
+
+            upsertStudentError(studentErrorRepository, students.get(0), grammar, SEED_TIME_3);
+            upsertStudentError(studentErrorRepository, students.get(1), grammar, SEED_TIME_3.plusHours(1));
+            upsertStudentError(studentErrorRepository, students.get(2), vocabulary, SEED_TIME_3.plusHours(2));
+
+            upsertStudentResult(studentResultRepository, students.get(0), writingTest,
+                    8.5, SEED_TIME_3.plusDays(1), buildSampleDetails(writingQuestions, 8.5));
+            upsertStudentResult(studentResultRepository, students.get(1), writingTest,
+                    7.0, SEED_TIME_3.plusDays(1).plusHours(2), buildSampleDetails(writingQuestions, 7.0));
+            upsertStudentResult(studentResultRepository, students.get(2), remedialTest,
+                    9.0, SEED_TIME_3.plusDays(2), buildSampleDetails(remedialQuestions, 9.0));
 
             backfillLegacyResultDetails(studentResultRepository, questionRepository);
         };
     }
 
-    private void backfillLegacyCourses(CourseRepository courseRepository) {
-        List<Course> courses = courseRepository.findAll();
-        int sequence = 1;
-        for (Course course : courses) {
-            boolean changed = false;
-            if (course.getCode() == null || course.getCode().isBlank()) {
-                course.setCode(buildCourseCode(course.getName(), sequence++));
-                changed = true;
-            }
-            if (course.getStatus() == null) {
-                course.setStatus(CourseStatus.OPEN);
-                changed = true;
-            }
-            if (changed) {
-                courseRepository.save(course);
-            }
+    private User upsertUser(UserRepository userRepository,
+                            PasswordEncoder passwordEncoder,
+                            String username,
+                            String email,
+                            String rawPassword,
+                            Role role,
+                            String status,
+                            String fullName,
+                            String phone,
+                            LocalDateTime createdAt) {
+        User user = userRepository.findByUsername(username)
+                .or(() -> userRepository.findByEmail(email))
+                .orElseGet(User::new);
+        user.setUsername(username);
+        user.setEmail(email);
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(rawPassword));
         }
+        user.setRole(role);
+        user.setStatus(status);
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        if (createdAt != null) {
+            user.setCreatedAt(createdAt);
+        }
+        return userRepository.save(user);
     }
 
-    private String buildCourseCode(String name, int fallbackIndex) {
-        String base = name == null ? "" : name.toUpperCase().replaceAll("[^A-Z0-9]+", "-").replaceAll("^-|-$", "");
-        if (base.isBlank()) {
-            return "COURSE-" + fallbackIndex;
-        }
-        if (base.length() > 40) {
-            base = base.substring(0, 40);
-        }
-        return base + "-" + fallbackIndex;
+    private Course upsertCourse(CourseRepository courseRepository,
+                                String code,
+                                String name,
+                                String description,
+                                CourseStatus status,
+                                LocalDate startDate,
+                                LocalDate endDate,
+                                LocalDateTime seedTime) {
+        Course course = courseRepository.findByCodeIgnoreCase(code).orElseGet(Course::new);
+        course.setCode(code);
+        course.setName(name);
+        course.setDescription(description);
+        course.setStatus(status);
+        course.setStartDate(startDate);
+        course.setEndDate(endDate);
+        course.setCreatedAt(seedTime);
+        course.setUpdatedAt(seedTime);
+        return courseRepository.save(course);
     }
 
-    private void upsertAdminUser(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        User admin = userRepository.findByUsername(ADMIN_USERNAME)
-                .or(() -> userRepository.findByEmail(ADMIN_EMAIL))
-                .orElseGet(() -> userRepository.findByRole(Role.ADMIN).stream().findFirst().orElseGet(User::new));
-
-        admin.setUsername(ADMIN_USERNAME);
-        admin.setEmail(ADMIN_EMAIL);
-        admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
-        admin.setRole(Role.ADMIN);
-        admin.setStatus("ACTIVE");
-        admin.setFullName(ADMIN_FULL_NAME);
-        admin.setPhone(ADMIN_PHONE);
-        userRepository.save(admin);
+    private ErrorType upsertErrorType(ErrorTypeRepository errorTypeRepository,
+                                      String name,
+                                      String description) {
+        ErrorType errorType = errorTypeRepository.findByNameIgnoreCase(name).orElseGet(ErrorType::new);
+        errorType.setName(name);
+        errorType.setDescription(description);
+        return errorTypeRepository.save(errorType);
     }
 
-    private void seedQuestion(QuestionRepository questionRepository,
-                              Test test,
-                              QuestionType type,
-                              String content,
-                              String correctAnswer,
-                              String optionA,
-                              String optionB,
-                              String optionC,
-                              String optionD) {
-        Question question = new Question();
+    private Lesson upsertLesson(LessonRepository lessonRepository,
+                                Course course,
+                                ErrorType errorType,
+                                String code,
+                                String title,
+                                String summary,
+                                String content,
+                                int sortOrder,
+                                Lesson.LessonStatus status,
+                                Integer duration,
+                                String videoUrl) {
+        Lesson lesson = lessonRepository.findByCodeIgnoreCase(code).orElseGet(Lesson::new);
+        lesson.setCourse(course);
+        lesson.setErrorType(errorType);
+        lesson.setCode(code);
+        lesson.setTitle(title);
+        lesson.setSummary(summary);
+        lesson.setContent(content);
+        lesson.setSortOrder(sortOrder);
+        lesson.setStatus(status);
+        lesson.setDuration(duration);
+        lesson.setVideoUrl(videoUrl);
+        lesson.setCreatedAt(SEED_TIME);
+        lesson.setUpdatedAt(SEED_TIME);
+        return lessonRepository.save(lesson);
+    }
+
+    private Test upsertTest(TestRepository testRepository,
+                            Course course,
+                            Lesson targetLesson,
+                            String code,
+                            String title,
+                            String description,
+                            Integer duration,
+                            AssessmentType assessmentType) {
+        Test test = testRepository.findByCodeIgnoreCase(code).orElseGet(Test::new);
+        test.setCourse(course);
+        test.setTargetLesson(targetLesson);
+        test.setCode(code);
+        test.setTitle(title);
+        test.setDescription(description);
+        test.setDuration(duration);
+        test.setAssessmentType(assessmentType);
+        test.setCreatedAt(SEED_TIME);
+        test.setUpdatedAt(SEED_TIME);
+        return testRepository.save(test);
+    }
+
+    private Question upsertQuestion(QuestionRepository questionRepository,
+                                    Test test,
+                                    String content,
+                                    QuestionType questionType,
+                                    String correctAnswer,
+                                    String optionA,
+                                    String optionB,
+                                    String optionC,
+                                    String optionD) {
+        Question question = questionRepository.findFirstByTestIdAndContentIgnoreCase(test.getId(), content)
+                .orElseGet(Question::new);
         question.setTest(test);
-        question.setQuestionType(type);
+        question.setQuestionType(questionType);
         question.setContent(content);
+        question.setCorrectAnswer(correctAnswer);
+        question.setCorrectOption(normalizeCorrectOption(correctAnswer));
+        question.setOptionA(optionA);
+        question.setOptionB(optionB);
+        question.setOptionC(optionC);
+        question.setOptionD(optionD);
+        return questionRepository.save(question);
+    }
+
+    private LessonQuizQuestion upsertLessonQuizQuestion(LessonQuizQuestionRepository lessonQuizQuestionRepository,
+                                                        Lesson lesson,
+                                                        int sortOrder,
+                                                        String questionText,
+                                                        QuestionType questionType,
+                                                        String correctAnswer,
+                                                        String optionA,
+                                                        String optionB,
+                                                        String optionC,
+                                                        String optionD,
+                                                        BloomLevel bloomLevel,
+                                                        String explanation) {
+        LessonQuizQuestion question = lessonQuizQuestionRepository
+                .findByLessonIdAndSortOrder(lesson.getId(), sortOrder)
+                .orElseGet(LessonQuizQuestion::new);
+        question.setLesson(lesson);
+        question.setSortOrder(sortOrder);
+        question.setQuestionText(questionText);
+        question.setQuestionType(questionType);
         question.setCorrectAnswer(correctAnswer);
         question.setOptionA(optionA);
         question.setOptionB(optionB);
         question.setOptionC(optionC);
         question.setOptionD(optionD);
-        questionRepository.save(question);
+        question.setBloomLevel(bloomLevel);
+        question.setExplanation(explanation);
+        return lessonQuizQuestionRepository.save(question);
+    }
+
+    private Enrollment upsertEnrollment(EnrollmentRepository enrollmentRepository,
+                                        User student,
+                                        Course course,
+                                        User academicStaff,
+                                        EnrollmentStatus status,
+                                        LocalDateTime enrolledAt,
+                                        LocalDateTime processedAt,
+                                        String rejectReason,
+                                        String note) {
+        Enrollment enrollment = enrollmentRepository.findByStudentAndCourse(student, course)
+                .orElseGet(Enrollment::new);
+        enrollment.setStudent(student);
+        enrollment.setCourse(course);
+        enrollment.setAcademicStaff(academicStaff);
+        enrollment.setStatus(status);
+        enrollment.setEnrolledAt(enrolledAt);
+        enrollment.setProcessedAt(processedAt);
+        enrollment.setRejectReason(rejectReason);
+        enrollment.setNote(note);
+        enrollment.setCreatedAt(enrolledAt);
+        enrollment.setUpdatedAt(processedAt);
+        return enrollmentRepository.save(enrollment);
+    }
+
+    private ErrorTestMapping upsertErrorTestMapping(ErrorTestMappingRepository errorTestMappingRepository,
+                                                    ErrorType errorType,
+                                                    Test test) {
+        ErrorTestMapping mapping = errorTestMappingRepository.findByErrorTypeId(errorType.getId())
+                .orElseGet(ErrorTestMapping::new);
+        mapping.setErrorType(errorType);
+        mapping.setTest(test);
+        return errorTestMappingRepository.save(mapping);
+    }
+
+    private StudentError upsertStudentError(StudentErrorRepository studentErrorRepository,
+                                            User student,
+                                            ErrorType errorType,
+                                            LocalDateTime createdAt) {
+        Optional<StudentError> existing = studentErrorRepository.findByStudentId(student.getId()).stream()
+                .filter(entry -> entry.getErrorType() != null && errorType.getId().equals(entry.getErrorType().getId()))
+                .findFirst();
+        StudentError studentError = existing.orElseGet(StudentError::new);
+        studentError.setStudent(student);
+        studentError.setErrorType(errorType);
+        studentError.setCreatedAt(createdAt);
+        return studentErrorRepository.save(studentError);
+    }
+
+    private StudentResult upsertStudentResult(StudentResultRepository studentResultRepository,
+                                              User student,
+                                              Test test,
+                                              double score,
+                                              LocalDateTime submittedAt,
+                                              List<ResultQuestionDetail> details) {
+        StudentResult result = studentResultRepository.findByStudentIdAndTestId(student.getId(), test.getId())
+                .orElseGet(StudentResult::new);
+        result.setStudent(student);
+        result.setTest(test);
+        result.setScore(score);
+        result.setSubmittedAt(submittedAt);
+        result.setAnswerDetails(details);
+        return studentResultRepository.save(result);
     }
 
     private void backfillLegacyResultDetails(StudentResultRepository studentResultRepository,
@@ -316,5 +556,12 @@ public class BootstrapConfig {
             return null;
         }
         return key + ". " + value;
+    }
+
+    private String normalizeCorrectOption(String value) {
+        if (value == null || value.isBlank()) {
+            return "A";
+        }
+        return value.trim().substring(0, 1).toUpperCase();
     }
 }
