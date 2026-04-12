@@ -357,7 +357,9 @@ public class AssessmentController {
 
             String type = (questionTypes != null && i < questionTypes.size()) ? questionTypes.get(i) : "SHORT_ANSWER";
             q.setQuestionType(QuestionType.valueOf(type));
-            q.setCorrectAnswer(correctAnswers != null && i < correctAnswers.size() ? correctAnswers.get(i) : "");
+            String correctAnswer = correctAnswers != null && i < correctAnswers.size() ? correctAnswers.get(i) : "";
+            q.setCorrectAnswer(correctAnswer);
+            q.setCorrectOption(normalizeCorrectOption(correctAnswer));
 
             if (QuestionType.MULTIPLE_CHOICE.name().equals(type)) {
                 q.setOptionA(getVal(optionAs, i));
@@ -376,6 +378,13 @@ public class AssessmentController {
 
     private MultipartFile getFile(List<MultipartFile> files, int index) {
         return files != null && index < files.size() ? files.get(index) : null;
+    }
+
+    private String normalizeCorrectOption(String value) {
+        if (value == null || value.isBlank()) {
+            return "A";
+        }
+        return value.trim().substring(0, 1).toUpperCase();
     }
 
     private void copyExistingMediaIfNeeded(Question target,

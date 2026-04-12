@@ -5,6 +5,7 @@ import com.example.demo.model.AssessmentType;
 import com.example.demo.model.Test;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+import java.util.Optional;
 
 public interface TestRepository extends JpaRepository<Test, Long> {
     List<Test> findByCourse(Course course);
@@ -14,4 +15,5 @@ public interface TestRepository extends JpaRepository<Test, Long> {
     long countByCourse(Course course);
     boolean existsByCodeIgnoreCase(String code);
     boolean existsByCodeIgnoreCaseAndIdNot(String code, Long id);
+    Optional<Test> findByCodeIgnoreCase(String code);
 }

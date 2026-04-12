@@ -23,6 +23,9 @@ public class Question {
     @Column(name = "correct_answer", nullable = false)
     private String correctAnswer;
 
+    @Column(name = "correct_option", nullable = false, length = 1)
+    private String correctOption;
+
     // Optional fields for Multiple Choice
     @Column(name = "option_a") private String optionA;
     @Column(name = "option_b") private String optionB;
@@ -57,6 +60,8 @@ public class Question {
     public void setContent(String content) { this.content = content; }
     public String getCorrectAnswer() { return correctAnswer; }
     public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
+    public String getCorrectOption() { return correctOption; }
+    public void setCorrectOption(String correctOption) { this.correctOption = correctOption; }
     
     public String getOptionA() { return optionA; }
     public void setOptionA(String optionA) { this.optionA = optionA; }
