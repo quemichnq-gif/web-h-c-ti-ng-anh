@@ -247,7 +247,25 @@ public class LessonController {
         model.addAttribute("bloomLevels", BloomLevel.values());
         model.addAttribute("remedialTests", testRepository.findByAssessmentType(AssessmentType.REMEDIAL_TEST));
         model.addAttribute("lessonRemedialTestIds", buildLessonRemedialTestIds(lesson));
-        model.addAttribute("quizQuestions", lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId));
+        
+        // Pass a simplified version of quiz questions to avoid circular reference crashes during JS serialization
+        List<Map<String, Object>> simplifiedQuestions = lessonQuizQuestionRepository.findByLessonIdOrderBySortOrderAsc(lessonId).stream()
+            .map(q -> {
+                Map<String, Object> map = new java.util.HashMap<>();
+                map.put("id", q.getId());
+                map.put("questionText", q.getQuestionText());
+                map.put("questionType", q.getQuestionType().name());
+                map.put("optionA", q.getOptionA());
+                map.put("optionB", q.getOptionB());
+                map.put("optionC", q.getOptionC());
+                map.put("optionD", q.getOptionD());
+                map.put("correctAnswer", q.getCorrectAnswer());
+                map.put("bloomLevel", q.getBloomLevel() != null ? q.getBloomLevel().name() : "REMEMBER");
+                map.put("explanation", q.getExplanation());
+                return map;
+            }).toList();
+            
+        model.addAttribute("quizQuestions", simplifiedQuestions);
         return "lessons/form";
     }
 

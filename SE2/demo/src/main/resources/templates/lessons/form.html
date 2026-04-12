@@ -156,9 +156,11 @@
 </div>
 
 <script th:inline="javascript">
+/*<![CDATA[*/
 const existingQuizQuestions = /*[[${quizQuestions}]]*/ [];
 const bloomLevels = ['REMEMBER', 'UNDERSTAND', 'APPLY', 'ANALYZE', 'EVALUATE', 'CREATE'];
 let quizIndex = 0;
+/*]]>*/
 const lessonContentEditor = document.getElementById('lesson-content-editor');
 const lessonContentInput = document.getElementById('lesson-content-input');
 
