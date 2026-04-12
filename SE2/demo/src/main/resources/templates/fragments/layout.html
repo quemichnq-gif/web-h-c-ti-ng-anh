@@ -732,7 +732,7 @@
             </div>
             
             <ul class="sidebar-menu">
-                <li class="menu-item"><a th:href="@{/}" class="menu-link active">
+                <li class="menu-item"><a th:href="@{/}" class="menu-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     Dashboard</a></li>
                 <li sec:authorize="hasRole('ADMIN')" class="menu-item"><a th:href="@{/courses}" class="menu-link">
@@ -849,7 +849,12 @@
             const currentPath = window.location.pathname;
             const menuLinks = document.querySelectorAll(".menu-link");
             menuLinks.forEach(link => {
-                const linkPath = link.getAttribute("href");
+                const href = link.getAttribute("href");
+                if (!href) {
+                    link.classList.remove("active");
+                    return;
+                }
+                const linkPath = new URL(href, window.location.origin).pathname;
                 if (currentPath === linkPath || (linkPath !== "/" && currentPath.startsWith(linkPath))) {
                     link.classList.add("active");
                 } else {

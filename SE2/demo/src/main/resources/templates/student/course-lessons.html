@@ -36,7 +36,7 @@
         </div>
 
         <div style="padding:22px 24px;display:grid;grid-template-columns:1.1fr 0.9fr;gap:20px" class="student-lesson-grid">
-            <div>
+            <div style="min-width:0">
                 <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Lesson Notes</div>
                 <div th:if="${view.lesson.hasImage()}" style="margin-bottom:16px">
                     <img th:src="@{'/portal/courses/' + ${course.id} + '/lessons/' + ${view.lesson.id} + '/image'}"
@@ -46,7 +46,7 @@
                 <div class="student-lesson-content" th:utext="${view.lesson.content}">Content</div>
             </div>
 
-            <div style="display:grid;gap:16px;align-content:start">
+            <div style="display:grid;gap:16px;align-content:start;min-width:0">
                 <div style="padding:18px;border-radius:18px;background:#f8fafc;border:1px solid #e2e8f0">
                     <div style="font-size:12px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Study File</div>
                     <div th:if="${view.lesson.hasAttachment()}">
@@ -119,6 +119,10 @@
     line-height: 1.8;
     color: #334155;
     font-size: 14px;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .student-lesson-content img {
@@ -126,11 +130,35 @@
     border-radius: 18px;
     display: block;
     margin: 16px 0;
+    height: auto;
 }
 
 .student-lesson-content a {
     color: #1d4ed8;
     font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.student-lesson-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+.student-lesson-content pre,
+.student-lesson-content code,
+.student-lesson-content blockquote,
+.student-lesson-content iframe,
+.student-lesson-content video {
+    max-width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+
+.student-lesson-grid > * {
+    min-width: 0;
 }
 
 @media (max-width: 900px) {
