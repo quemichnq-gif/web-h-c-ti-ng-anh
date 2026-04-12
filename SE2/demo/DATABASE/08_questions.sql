@@ -1,11 +1,12 @@
+-- ==========================================
+-- BẢNG: questions
+-- Mô tả: Ngân hàng câu hỏi cho bài test
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `questions`
---
-
 DROP TABLE IF EXISTS `questions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `questions` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `test_id` bigint NOT NULL,
@@ -26,5 +27,9 @@ CREATE TABLE `questions` (
   PRIMARY KEY (`id`),
   KEY `fk_questions_tests` (`test_id`),
   CONSTRAINT `fk_questions_tests` FOREIGN KEY (`test_id`) REFERENCES `tests` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ------------------------------------------
+-- Dữ liệu mẫu cho questions
+-- ------------------------------------------
+INSERT INTO `questions` (`test_id`, `content`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_answer`, `question_type`) VALUES (1, 'Which is a noun?', 'Go', 'Eat', 'Apple', 'Fast', 'Apple', 'MULTIPLE_CHOICE');

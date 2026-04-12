@@ -1,20 +1,18 @@
+-- ==========================================
+-- BẢNG: STUDENT_ERRORS
+-- Mô tả: Thống kê các loại lỗi sinh viên mắc phải
+-- ==========================================
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Table structure for table `student_errors`
---
-
 DROP TABLE IF EXISTS `student_errors`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+
 CREATE TABLE `student_errors` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `created_at` datetime(6) NOT NULL,
-  `error_type_id` bigint NOT NULL,
-  `student_id` bigint NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FKd1obj998ct29frdkh49v00n8j` (`error_type_id`),
-  KEY `FKreiie0glfnqm3wvce0pumkhl5` (`student_id`),
-  CONSTRAINT `FKd1obj998ct29frdkh49v00n8j` FOREIGN KEY (`error_type_id`) REFERENCES `error_types` (`id`),
-  CONSTRAINT `FKreiie0glfnqm3wvce0pumkhl5` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`)
+    `id`            BIGINT NOT NULL AUTO_INCREMENT,
+    `student_id`    BIGINT NOT NULL,
+    `error_type_id` BIGINT NOT NULL,
+    `created_at`    DATETIME(6) NOT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_errors_student` FOREIGN KEY (`student_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_errors_type` FOREIGN KEY (`error_type_id`) REFERENCES `error_types` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
